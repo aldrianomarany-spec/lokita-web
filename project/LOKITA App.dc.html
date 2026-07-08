@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&family=Hanken+Grotesque:wght@400;500;600;700;800&family=Spline+Sans+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box}
+  body{margin:0;font-family:'Hanken Grotesque',system-ui,sans-serif;color:#201E18;background:#F1ECE1;-webkit-font-smoothing:antialiased}
+  a{color:#2A5FA8;text-decoration:none}
+  a:hover{color:#1E4578}
+  @keyframes lok-fade{from{opacity:0}to{opacity:1}}
+  @keyframes lok-rise{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+  @keyframes lok-pop{from{opacity:0;transform:scale(.9)}to{opacity:1;transform:scale(1)}}
+  @keyframes lok-load{from{width:0}to{width:100%}}
+  @keyframes lok-spin{to{transform:rotate(360deg)}}
+  @keyframes lok-float{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+  @keyframes lok-splashout{from{opacity:1}to{opacity:0}}
+  .lok-btn{transition:transform .16s ease,box-shadow .18s ease,background .16s ease,border-color .16s ease}
+  .lok-btn:hover{transform:translateY(-1px)}
+  .lok-btn:active{transform:translateY(0)}
+  .lok-in{transition:border-color .16s ease,background .16s ease,box-shadow .16s ease}
+  .lok-link{transition:color .14s ease}
+  .lok-spin{animation:lok-spin .7s linear infinite}
+  .lok-mark{animation:lok-float 3.4s ease-in-out infinite}
+</style>
+</helmet>
+
+<template id="__bundler_thumbnail" data-bg-color="#2A5FA8">
+  <svg viewBox="0 0 1200 800" xmlns="http://www.w3.org/2000/svg">
+    <rect width="1200" height="800" fill="#2A5FA8"/>
+    <rect x="500" y="250" width="200" height="200" rx="46" fill="#F1ECE1"/>
+    <circle cx="600" cy="350" r="22" fill="#2A5FA8"/>
+    <text x="600" y="560" font-family="'Bricolage Grotesque',sans-serif" font-size="72" font-weight="800" fill="#F1ECE1" text-anchor="middle" letter-spacing="2">LOKITA</text>
+  </svg>
+</template>
+
+<div style="--accent:{{ accent }};--accent-deep:{{ accentDeep }};height:100vh;overflow:hidden;background:#F1ECE1;position:relative">
+
+  <!-- ================= SPLASH ================= -->
+  <sc-if value="{{ showSplash }}" hint-placeholder-val="{{ true }}">
+    <div style="position:absolute;inset:0;z-index:50;background:var(--accent,#2A5FA8);display:flex;flex-direction:column;align-items:center;justify-content:center;animation:{{ splashAnim }}">
+      <div style="position:absolute;top:-80px;left:-80px;width:280px;height:280px;border-radius:50%;background:rgba(255,255,255,.05)"></div>
+      <div style="position:absolute;bottom:-120px;right:-60px;width:340px;height:340px;border-radius:50%;background:rgba(255,255,255,.05)"></div>
+      <div class="lok-mark" style="animation:lok-pop .6s cubic-bezier(.2,.9,.3,1.2) both;display:flex;flex-direction:column;align-items:center">
+        <div style="width:96px;height:96px;border-radius:28px;background:#F5F1E8;display:flex;align-items:center;justify-content:center;box-shadow:0 20px 50px -18px rgba(0,0,0,.5);position:relative">
+          <svg width="46" height="46" viewBox="0 0 24 24" fill="none" stroke="var(--accent,#2A5FA8)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21c5-5 8-8.4 8-12a8 8 0 1 0-16 0c0 3.6 3 7 8 12z"></path><circle cx="12" cy="9" r="3"></circle></svg>
+        </div>
+        <div style="font-family:'Bricolage Grotesque',sans-serif;font-weight:800;font-size:38px;letter-spacing:.02em;color:#F5F1E8;margin-top:22px">LOKITA</div>
+        <div style="font-family:'Spline Sans Mono',monospace;font-size:11px;color:rgba(245,241,232,.7);letter-spacing:.34em;margin-top:6px">LOKAL · KITA</div>
+      </div>
+      <div style="position:absolute;bottom:72px;width:180px;height:3px;border-radius:3px;background:rgba(255,255,255,.2);overflow:hidden">
+        <div style="height:100%;background:#F5F1E8;border-radius:3px;animation:lok-load 1.9s cubic-bezier(.5,0,.2,1) forwards"></div>
+      </div>
+      <div style="position:absolute;bottom:44px;font-family:'Spline Sans Mono',monospace;font-size:10px;color:rgba(245,241,232,.55);letter-spacing:.12em">SETTING UP YOUR NEIGHBOURHOOD…</div>
+    </div>
+  </sc-if>
+
+  <!-- ================= AUTH (split) ================= -->
+  <div style="height:100%;display:flex;animation:lok-fade .5s ease both">
+
+    <!-- LEFT BRAND PANEL -->
+    <div style="width:44%;flex:none;background:var(--accent,#2A5FA8);color:#EAF0F8;padding:48px 46px;display:flex;flex-direction:column;position:relative;overflow:hidden">
+      <div style="position:absolute;top:-90px;right:-70px;width:300px;height:300px;border-radius:50%;background:rgba(255,255,255,.06)"></div>
+      <div style="position:absolute;bottom:-140px;left:-60px;width:360px;height:360px;border-radius:50%;background:rgba(255,255,255,.05)"></div>
+
+      <div style="display:flex;align-items:center;gap:12px;position:relative">
+        <div style="width:44px;height:44px;border-radius:13px;background:#F5F1E8;display:flex;align-items:center;justify-content:center">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--accent,#2A5FA8)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21c5-5 8-8.4 8-12a8 8 0 1 0-16 0c0 3.6 3 7 8 12z"></path><circle cx="12" cy="9" r="3"></circle></svg>
+        </div>
+        <div>
+          <div style="font-family:'Bricolage Grotesque',sans-serif;font-weight:800;font-size:21px;letter-spacing:-.01em;color:#F5F1E8;line-height:1">LOKITA</div>
+          <div style="font-family:'Spline Sans Mono',monospace;font-size:9px;color:rgba(245,241,232,.65);letter-spacing:.16em;margin-top:2px">LOKAL · KITA</div>
+        </div>
+      </div>
+
+      <div style="margin-top:auto;position:relative">
+        <div style="font-family:'Spline Sans Mono',monospace;font-size:11px;color:rgba(245,241,232,.7);letter-spacing:.1em;margin-bottom:16px">THE DORM MARKETPLACE · JIU CIKARANG</div>
+        <h1 style="font-family:'Bricolage Grotesque',sans-serif;font-weight:800;font-size:40px;line-height:1.08;letter-spacing:-.025em;margin:0;color:#F8F5EE">Buy &amp; sell with the students next door.</h1>
+        <p style="font-size:15px;line-height:1.6;color:rgba(234,240,248,.82);margin:18px 0 0;max-width:400px">Trade furniture, gadgets and textbooks with verified neighbours in your building. Pay in-app, pick up at the Security Post.</p>
+      </div>
+
+      <div style="margin-top:36px;display:flex;flex-direction:column;gap:14px;position:relative">
+        <sc-for list="{{ perks }}" as="p" hint-placeholder-count="3">
+          <div style="display:flex;align-items:center;gap:13px">
+            <div style="width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,.13);display:flex;align-items:center;justify-content:center;flex:none;color:#F5F1E8">{{ p.icon }}</div>
+            <div style="font-size:13.5px;font-weight:600;color:#EAF0F8">{{ p.label }}</div>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+
+    <!-- RIGHT FORM PANEL -->
+    <div style="flex:1;display:flex;align-items:center;justify-content:center;padding:40px;overflow-y:auto">
+      <div style="width:100%;max-width:396px">
+
+        <!-- LOGIN -->
+        <sc-if value="{{ isLogin }}" hint-placeholder-val="{{ true }}">
+          <div style="animation:lok-rise .4s ease both">
+            <div style="font-family:'Spline Sans Mono',monospace;font-size:11px;color:#9A927F;letter-spacing:.08em;margin-bottom:8px">WELCOME BACK</div>
+            <h2 style="font-family:'Bricolage Grotesque',sans-serif;font-weight:800;font-size:28px;letter-spacing:-.02em;margin:0 0 26px">Log in to Lokita</h2>
+
+            <label style="display:block;font-size:12.5px;font-weight:700;color:#3A362C;margin-bottom:7px">Username</label>
+            <div style="display:flex;align-items:center;gap:10px;background:#FBF8F1;border:1.5px solid #E4DDCE;border-radius:13px;padding:13px 15px;margin-bottom:15px" class="lok-in">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#A29C8B" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="4"></circle><path d="M5 21c0-4 3.5-6 7-6s7 2 7 6"></path></svg>
+              <input value="{{ f.user }}" onChange="{{ onF.user }}" placeholder="aldriano" style="flex:1;border:none;background:none;outline:none;font-family:inherit;font-size:14px;font-weight:500;color:#201E18"/>
+            </div>
+
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:7px">
+              <label style="font-size:12.5px;font-weight:700;color:#3A362C">Password</label>
+              <span onClick="{{ goForgot }}" class="lok-link" style="cursor:pointer;font-size:12px;font-weight:700;color:var(--accent,#2A5FA8)">Forgot password?</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;background:#FBF8F1;border:1.5px solid #E4DDCE;border-radius:13px;padding:13px 15px;margin-bottom:22px" class="lok-in">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#A29C8B" stroke-width="2" stroke-linecap="round"><rect x="4" y="10" width="16" height="10" rx="2.5"></rect><path d="M8 10V7a4 4 0 0 1 8 0v3"></path></svg>
+              <input value="{{ f.pass }}" onChange="{{ onF.pass }}" type="{{ pwType }}" placeholder="••••••••" style="flex:1;border:none;background:none;outline:none;font-family:inherit;font-size:14px;font-weight:500;color:#201E18"/>
+              <span onClick="{{ togglePw }}" style="cursor:pointer;color:#A29C8B;display:flex">{{ eyeIcon }}</span>
+            </div>
+
+            <button class="lok-btn" onClick="{{ submitLogin }}" style="width:100%;border:none;background:var(--accent,#2A5FA8);color:#F5F1E8;font-family:inherit;font-weight:700;font-size:15px;padding:14px;border-radius:13px;cursor:pointer;box-shadow:0 10px 24px -10px rgba(42,95,168,.8);display:flex;align-items:center;justify-content:center;gap:9px">{{ loginBtn }}</button>
+
+            <div style="display:flex;align-items:center;gap:14px;margin:22px 0">
+              <div style="flex:1;height:1px;background:#E4DDCE"></div>
+              <span style="font-family:'Spline Sans Mono',monospace;font-size:10px;color:#A29C8B;letter-spacing:.06em">OR</span>
+              <div style="flex:1;height:1px;background:#E4DDCE"></div>
+            </div>
+
+            <button class="lok-btn" onClick="{{ google }}" style="width:100%;border:1.5px solid #E4DDCE;background:#FBF8F1;color:#201E18;font-family:inherit;font-weight:700;font-size:14px;padding:13px;border-radius:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:11px">
+              <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9 3.6l6.7-6.7C35.6 2.4 30.2 0 24 0 14.6 0 6.5 5.4 2.6 13.2l7.8 6.1C12.3 13.2 17.7 9.5 24 9.5z"></path><path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.7c-.5 3-2.2 5.5-4.7 7.2l7.3 5.7C43.9 37.9 46.5 31.7 46.5 24.5z"></path><path fill="#FBBC05" d="M10.4 28.3c-.5-1.4-.8-3-.8-4.3s.3-2.9.8-4.3l-7.8-6.1C.9 16.8 0 20.3 0 24s.9 7.2 2.6 10.4l7.8-6.1z"></path><path fill="#34A853" d="M24 48c6.2 0 11.4-2 15.2-5.6l-7.3-5.7c-2 1.4-4.7 2.3-7.9 2.3-6.3 0-11.7-3.7-13.6-9.1l-7.8 6.1C6.5 42.6 14.6 48 24 48z"></path></svg>
+              Continue with Google
+            </button>
+
+            <div style="text-align:center;margin-top:26px;font-size:13.5px;color:#6F6A5C;font-weight:500">New to Lokita? <span onClick="{{ goSignup }}" class="lok-link" style="cursor:pointer;font-weight:700;color:var(--accent,#2A5FA8)">Create an account</span></div>
+          </div>
+        </sc-if>
+
+        <!-- SIGN UP -->
+        <sc-if value="{{ isSignup }}" hint-placeholder-val="{{ false }}">
+          <div style="animation:lok-rise .4s ease both">
+            <div style="font-family:'Spline Sans Mono',monospace;font-size:11px;color:#9A927F;letter-spacing:.08em;margin-bottom:8px">JOIN YOUR DORM</div>
+            <h2 style="font-family:'Bricolage Grotesque',sans-serif;font-weight:800;font-size:28px;letter-spacing:-.02em;margin:0 0 22px">Create your account</h2>
+
+            <label style="display:block;font-size:12.5px;font-weight:700;color:#3A362C;margin-bottom:7px">Full name</label>
+            <div style="display:flex;align-items:center;gap:10px;background:#FBF8F1;border:1.5px solid #E4DDCE;border-radius:13px;padding:12px 15px;margin-bottom:13px" class="lok-in">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#A29C8B" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="4"></circle><path d="M5 21c0-4 3.5-6 7-6s7 2 7 6"></path></svg>
+              <input value="{{ f.name }}" onChange="{{ onF.name }}" placeholder="Aldriano" style="flex:1;border:none;background:none;outline:none;font-family:inherit;font-size:14px;font-weight:500;color:#201E18"/>
+            </div>
+
+            <label style="display:block;font-size:12.5px;font-weight:700;color:#3A362C;margin-bottom:7px">Email</label>
+            <div style="display:flex;align-items:center;gap:10px;background:#FBF8F1;border:1.5px solid #E4DDCE;border-radius:13px;padding:12px 15px;margin-bottom:13px" class="lok-in">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#A29C8B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2.5"></rect><path d="m3 7 9 6 9-6"></path></svg>
+              <input value="{{ f.email }}" onChange="{{ onF.email }}" placeholder="you@student.jiu.ac.id" style="flex:1;border:none;background:none;outline:none;font-family:inherit;font-size:14px;font-weight:500;color:#201E18"/>
+            </div>
+
+            <div style="display:flex;gap:11px;margin-bottom:22px">
+              <div style="flex:1">
+                <label style="display:block;font-size:12.5px;font-weight:700;color:#3A362C;margin-bottom:7px">Password</label>
+                <div style="display:flex;align-items:center;background:#FBF8F1;border:1.5px solid #E4DDCE;border-radius:13px;padding:12px 14px" class="lok-in">
+                  <input value="{{ f.np }}" onChange="{{ onF.np }}" type="password" placeholder="••••••" style="flex:1;border:none;background:none;outline:none;font-family:inherit;font-size:14px;font-weight:500;color:#201E18;width:100%"/>
+                </div>
+              </div>
+              <div style="flex:1">
+                <label style="display:block;font-size:12.5px;font-weight:700;color:#3A362C;margin-bottom:7px">Confirm</label>
+                <div style="display:flex;align-items:center;background:#FBF8F1;border:1.5px solid {{ cpBorder }};border-radius:13px;padding:12px 14px" class="lok-in">
+                  <input value="{{ f.cp }}" onChange="{{ onF.cp }}" type="password" placeholder="••••••" style="flex:1;border:none;background:none;outline:none;font-family:inherit;font-size:14px;font-weight:500;color:#201E18;width:100%"/>
+                </div>
+              </div>
+            </div>
+
+            <button class="lok-btn" onClick="{{ submitSignup }}" style="width:100%;border:none;background:var(--accent,#2A5FA8);color:#F5F1E8;font-family:inherit;font-weight:700;font-size:15px;padding:14px;border-radius:13px;cursor:pointer;box-shadow:0 10px 24px -10px rgba(42,95,168,.8);display:flex;align-items:center;justify-content:center;gap:9px">{{ signupBtn }}</button>
+
+            <div style="font-size:11.5px;color:#9A927F;text-align:center;margin-top:14px;line-height:1.5">By creating an account you agree to Lokita's <a href="#">Community Rules</a> &amp; dorm verification.</div>
+
+            <div style="text-align:center;margin-top:20px;font-size:13.5px;color:#6F6A5C;font-weight:500">Already a member? <span onClick="{{ goLogin }}" class="lok-link" style="cursor:pointer;font-weight:700;color:var(--accent,#2A5FA8)">Log in</span></div>
+          </div>
+        </sc-if>
+
+        <!-- FORGOT PASSWORD -->
+        <sc-if value="{{ isForgot }}" hint-placeholder-val="{{ false }}">
+          <div style="animation:lok-rise .4s ease both">
+            <span onClick="{{ goLogin }}" class="lok-link" style="cursor:pointer;display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:700;color:#6F6A5C;margin-bottom:22px">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"></path></svg>Back to log in
+            </span>
+            <div style="width:52px;height:52px;border-radius:15px;background:#EEF3FA;display:flex;align-items:center;justify-content:center;color:var(--accent,#2A5FA8);margin-bottom:18px">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="4" y="10" width="16" height="10" rx="2.5"></rect><path d="M8 10V7a4 4 0 0 1 8 0v3"></path></svg>
+            </div>
+            <h2 style="font-family:'Bricolage Grotesque',sans-serif;font-weight:800;font-size:27px;letter-spacing:-.02em;margin:0 0 8px">Forgot password?</h2>
+            <p style="font-size:14px;color:#6F6A5C;line-height:1.6;margin:0 0 24px">Enter the email tied to your Lokita account and we'll send you a secure reset link.</p>
+
+            <label style="display:block;font-size:12.5px;font-weight:700;color:#3A362C;margin-bottom:7px">Registered email</label>
+            <div style="display:flex;align-items:center;gap:10px;background:#FBF8F1;border:1.5px solid #E4DDCE;border-radius:13px;padding:13px 15px;margin-bottom:22px" class="lok-in">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#A29C8B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2.5"></rect><path d="m3 7 9 6 9-6"></path></svg>
+              <input value="{{ f.fEmail }}" onChange="{{ onF.fEmail }}" placeholder="you@student.jiu.ac.id" style="flex:1;border:none;background:none;outline:none;font-family:inherit;font-size:14px;font-weight:500;color:#201E18"/>
+            </div>
+            <button class="lok-btn" onClick="{{ sendReset }}" style="width:100%;border:none;background:var(--accent,#2A5FA8);color:#F5F1E8;font-family:inherit;font-weight:700;font-size:15px;padding:14px;border-radius:13px;cursor:pointer;box-shadow:0 10px 24px -10px rgba(42,95,168,.8);display:flex;align-items:center;justify-content:center;gap:9px">{{ resetBtn }}</button>
+          </div>
+        </sc-if>
+
+        <!-- RESET SENT -->
+        <sc-if value="{{ isReset }}" hint-placeholder-val="{{ false }}">
+          <div style="animation:lok-pop .4s ease both;text-align:center">
+            <div style="width:70px;height:70px;border-radius:50%;background:#E7F1EA;display:flex;align-items:center;justify-content:center;color:#1B7A4B;margin:0 auto 22px">
+              <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2.5"></rect><path d="m3 7 9 6 9-6"></path><path d="m14 15 2 2 4-4" stroke="#1B7A4B"></path></svg>
+            </div>
+            <h2 style="font-family:'Bricolage Grotesque',sans-serif;font-weight:800;font-size:26px;letter-spacing:-.02em;margin:0 0 10px">Check your inbox</h2>
+            <p style="font-size:14px;color:#6F6A5C;line-height:1.65;margin:0 0 8px">We sent a password reset link to</p>
+            <div style="font-weight:700;font-size:15px;color:#201E18;margin-bottom:22px;word-break:break-all">{{ sentEmail }}</div>
+            <div style="background:#FBF8F1;border:1px solid #E4DDCE;border-radius:14px;padding:14px 16px;font-size:12.5px;color:#6F6A5C;line-height:1.55;margin-bottom:24px;text-align:left">The link expires in 30 minutes. Didn't get it? Check spam, or <span onClick="{{ sendReset }}" class="lok-link" style="cursor:pointer;font-weight:700;color:var(--accent,#2A5FA8)">resend</span>.</div>
+            <button class="lok-btn" onClick="{{ goLogin }}" style="width:100%;border:none;background:var(--accent,#2A5FA8);color:#F5F1E8;font-family:inherit;font-weight:700;font-size:15px;padding:14px;border-radius:13px;cursor:pointer;box-shadow:0 10px 24px -10px rgba(42,95,168,.8)">Back to log in</button>
+          </div>
+        </sc-if>
+
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1440,&quot;height&quot;:900},&quot;accent&quot;:{&quot;editor&quot;:&quot;color&quot;,&quot;default&quot;:&quot;#2A5FA8&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;options&quot;:[&quot;#2A5FA8&quot;,&quot;#1B5E43&quot;,&quot;#8A4E9E&quot;,&quot;#B4531F&quot;],&quot;section&quot;:&quot;Brand&quot;},&quot;accentDeep&quot;:{&quot;editor&quot;:&quot;color&quot;,&quot;default&quot;:&quot;#1E4578&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;options&quot;:[&quot;#1E4578&quot;,&quot;#123f2d&quot;,&quot;#653A75&quot;,&quot;#853C13&quot;],&quot;section&quot;:&quot;Brand&quot;}}">
+class Component extends DCLogic {
+  state = { screen:'splash', splashLeaving:false, view:'login', showPw:false, loading:'', location:'Thomas House',
+    f:{ user:'', pass:'', name:'', email:'', np:'', cp:'', fEmail:'' } };
+
+  componentDidMount() {
+    this.t1 = setTimeout(()=>this.setState({ splashLeaving:true }), 1900);
+    this.t2 = setTimeout(()=>this.setState({ screen:'login' }), 2350);
+  }
+  componentWillUnmount() { clearTimeout(this.t1); clearTimeout(this.t2); }
+
+  go() { window.location.href = encodeURI('LOKITA Web v2.dc.html'); }
+
+  renderVals() {
+    const s = this.state;
+    const setF = (k) => (e) => this.setState({ f:{ ...s.f, [k]:e.target.value } });
+    const setV = (v) => () => this.setState({ view:v, loading:'' });
+
+    const runThen = (key, fn, ms) => () => {
+      if (s.loading) return;
+      this.setState({ loading:key });
+      setTimeout(fn, ms || 900);
+    };
+
+    const spinner = React.createElement('span', { className:'lok-spin', style:{ width:'16px', height:'16px', border:'2px solid rgba(245,241,232,.4)', borderTopColor:'#F5F1E8', borderRadius:'50%', display:'inline-block' } });
+    const btnLabel = (key, idle) => s.loading===key ? spinner : idle;
+
+    const perks = [
+      { icon: React.createElement('svg',{width:16,height:16,viewBox:'0 0 24 24',fill:'currentColor'}, React.createElement('path',{d:'M12 2l2.4 1.8 3-.2 1 2.8 2.6 1.5-.7 2.9L23 12l-1.7 2.4.7 2.9-2.6 1.5-1 2.8-3-.2L12 22l-2.4-1.8-3 .2-1-2.8L2.7 16.3l.7-2.9L1 12l1.7-2.4L2 6.7l2.6-1.5 1-2.8 3 .2z'})), label:'Every trader is a dorm-verified student' },
+      { icon: React.createElement('svg',{width:16,height:16,viewBox:'0 0 24 24',fill:'none',stroke:'currentColor','strokeWidth':2,'strokeLinecap':'round','strokeLinejoin':'round'}, React.createElement('path',{d:'M12 2 4 6v6c0 5 3.4 8.2 8 10 4.6-1.8 8-5 8-10V6z'}), React.createElement('path',{d:'M9 12l2 2 4-4'})), label:'Escrow payments held until pickup' },
+      { icon: React.createElement('svg',{width:16,height:16,viewBox:'0 0 24 24',fill:'none',stroke:'currentColor','strokeWidth':2,'strokeLinecap':'round','strokeLinejoin':'round'}, React.createElement('path',{d:'M12 21c4-4 7-7.4 7-11a7 7 0 1 0-14 0c0 3.6 3 7 7 11z'}), React.createElement('circle',{cx:12,cy:10,r:2.4})), label:'Collect at the campus Security Post' },
+    ];
+
+    const eyeOpen = React.createElement('svg',{width:17,height:17,viewBox:'0 0 24 24',fill:'none',stroke:'currentColor','strokeWidth':2,'strokeLinecap':'round','strokeLinejoin':'round'}, React.createElement('path',{d:'M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z'}), React.createElement('circle',{cx:12,cy:12,r:3}));
+    const eyeOff = React.createElement('svg',{width:17,height:17,viewBox:'0 0 24 24',fill:'none',stroke:'currentColor','strokeWidth':2,'strokeLinecap':'round','strokeLinejoin':'round'}, React.createElement('path',{d:'M3 3l18 18'}), React.createElement('path',{d:'M10.6 5.1A11 11 0 0 1 23 12s-1.3 2.3-3.6 4.1M6.6 6.6C3.7 8.3 1 12 1 12s4 7 11 7c2 0 3.7-.6 5.2-1.4'}), React.createElement('path',{d:'M9.9 9.9a3 3 0 0 0 4.2 4.2'}));
+
+    const cpMismatch = s.f.cp.length>0 && s.f.np !== s.f.cp;
+
+    return {
+      accent: this.props.accent ?? '#2A5FA8',
+      accentDeep: this.props.accentDeep ?? '#1E4578',
+      showSplash: s.screen==='splash',
+      splashAnim: s.splashLeaving ? 'lok-splashout .45s ease forwards' : 'none',
+      perks,
+      isLogin: s.view==='login', isSignup: s.view==='signup', isForgot: s.view==='forgot', isReset: s.view==='reset',
+      f: s.f, onF:{ user:setF('user'), pass:setF('pass'), name:setF('name'), email:setF('email'), np:setF('np'), cp:setF('cp'), fEmail:setF('fEmail') },
+      pwType: s.showPw ? 'text':'password', togglePw:()=>this.setState({showPw:!s.showPw}), eyeIcon: s.showPw ? eyeOff : eyeOpen,
+      cpBorder: cpMismatch ? '#D4562F' : '#E4DDCE',
+      goForgot:setV('forgot'), goSignup:setV('signup'), goLogin:setV('login'),
+      loginBtn: btnLabel('login','Log in'),
+      signupBtn: btnLabel('signup','Create account'),
+      resetBtn: btnLabel('reset','Send reset link'),
+      submitLogin: runThen('login', ()=>this.go()),
+      submitSignup: runThen('signup', ()=>this.go()),
+      google: runThen('login', ()=>this.go(), 1100),
+      sendReset: runThen('reset', ()=>this.setState({ view:'reset', loading:'' })),
+      sentEmail: s.f.fEmail || 'you@student.jiu.ac.id',
+    };
+  }
+}
+</script>
+</body>
+</html>

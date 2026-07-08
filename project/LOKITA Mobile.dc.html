@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box}
+  body{margin:0;font-family:'Plus Jakarta Sans',system-ui,sans-serif;color:#0C1A3A;background:#F5F7FC;-webkit-font-smoothing:antialiased}
+  a{color:#1E50E5;text-decoration:none}
+  a:hover{color:#1740C4}
+  @keyframes lok-float{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+  @keyframes lok-rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+  @keyframes lok-toast{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+  .lok-strip{background-image:repeating-linear-gradient(135deg,rgba(30,80,229,.10) 0 10px,rgba(30,80,229,.03) 10px 20px)}
+  @media (max-width:900px){
+    .lok-hero{grid-template-columns:1fr !important;gap:32px !important;padding:36px 20px 24px !important}
+    .lok-hero h1{font-size:44px !important}
+  }
+  @media (max-width:768px){
+    .lok-cols-3,.lok-features,.lok-cols-2,.lok-trust{grid-template-columns:1fr !important}
+    .lok-big{grid-row:auto !important}
+    h1{font-size:38px !important}
+    h2{font-size:29px !important}
+  }
+  @media (max-width:420px){
+    .lok-phone{width:300px !important}
+    .lok-hero{padding-left:16px !important;padding-right:16px !important}
+  }
+</style>
+</helmet>
+
+<div style="overflow-x:hidden">
+
+<!-- NAV -->
+<header style="position:sticky;top:0;z-index:50;background:rgba(245,247,252,.82);backdrop-filter:blur(12px);border-bottom:1px solid #E4E9F2">
+  <div style="max-width:1200px;margin:0 auto;padding:14px 28px;display:flex;align-items:center;justify-content:space-between">
+    <div style="display:flex;align-items:center;gap:10px">
+      <div style="width:34px;height:34px;border-radius:10px;background:#1E50E5;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:18px;box-shadow:0 4px 12px rgba(30,80,229,.35)">L</div>
+      <div style="font-weight:800;font-size:19px;letter-spacing:-.02em">LOKITA</div>
+      <div style="font-family:'Space Mono',monospace;font-size:10px;color:#5A6B8C;padding:3px 7px;background:#EAF0FF;border-radius:6px">Lokal Kita</div>
+    </div>
+    <nav style="display:flex;align-items:center;gap:28px">
+      <a href="#features" style="color:#5A6B8C;font-weight:600;font-size:14px">Features</a>
+      <a href="#how" style="color:#5A6B8C;font-weight:600;font-size:14px">How it works</a>
+      <a href="#trust" style="color:#5A6B8C;font-weight:600;font-size:14px">Trust &amp; safety</a>
+      <a href="#waitlist" style="background:#1E50E5;color:#fff;font-weight:700;font-size:14px;padding:10px 18px;border-radius:11px;box-shadow:0 4px 14px rgba(30,80,229,.3);transition:background .18s ease" style-hover="background:#1740C4">Join waitlist</a>
+    </nav>
+  </div>
+</header>
+
+<!-- HERO -->
+<section class="lok-hero" style="max-width:1200px;margin:0 auto;padding:64px 28px 40px;display:grid;grid-template-columns:1fr 380px;gap:56px;align-items:center">
+  <div style="animation:lok-rise .6s ease both">
+    <div style="display:inline-flex;align-items:center;gap:8px;font-family:'Space Mono',monospace;font-size:12px;color:#1E50E5;background:#EAF0FF;padding:7px 13px;border-radius:20px;margin-bottom:22px">
+      <span style="width:7px;height:7px;border-radius:50%;background:#16A34A"></span>
+      JAKARTA INTERNATIONAL UNIVERSITY · CIKARANG
+    </div>
+    <h1 style="font-size:58px;line-height:1.02;letter-spacing:-.035em;font-weight:800;margin:0 0 20px">The campus marketplace built on <span style="color:#1E50E5">trust</span>.</h1>
+    <p style="font-size:19px;line-height:1.55;color:#5A6B8C;max-width:520px;margin:0 0 30px">Buy and sell dorm stuff with verified students at your campus. No sketchy meetups, no scams, no messy WhatsApp groups — just <b style="color:#0C1A3A">Lokal Kita</b>.</p>
+    <div id="waitlist" style="display:flex;gap:10px;max-width:460px;margin-bottom:16px">
+      <input placeholder="you@student.jiu.ac.id" value="{{ email }}" onChange="{{ onEmail }}" style="flex:1;padding:15px 16px;border:1.5px solid #D4DCEC;border-radius:13px;font-size:15px;font-family:inherit;background:#fff;outline:none;color:#0C1A3A"/>
+      <button onClick="{{ join }}" style="background:#1E50E5;color:#fff;border:none;font-weight:700;font-size:15px;font-family:inherit;padding:0 22px;border-radius:13px;cursor:pointer;white-space:nowrap;box-shadow:0 6px 18px rgba(30,80,229,.32);transition:background .18s ease,transform .12s ease" style-hover="background:#1740C4" style-active="transform:scale(.97)">Join waitlist</button>
+    </div>
+    <div style="display:flex;align-items:center;gap:16px;font-size:13px;color:#5A6B8C;font-weight:600">
+      <sc-if value="{{ joined }}" hint-placeholder-val="{{ false }}"><span style="color:#16A34A;font-weight:700">✓ You're on the list — sampai jumpa!</span></sc-if>
+      <sc-if value="{{ notJoined }}" hint-placeholder-val="{{ true }}"><span>University email required to sign up. Free to join.</span></sc-if>
+    </div>
+    <div style="display:flex;gap:32px;margin-top:38px">
+      <div><div style="font-size:26px;font-weight:800;letter-spacing:-.02em">100%</div><div style="font-size:13px;color:#5A6B8C;font-weight:600">Verified students</div></div>
+      <div style="width:1px;background:#E4E9F2"></div>
+      <div><div style="font-size:26px;font-weight:800;letter-spacing:-.02em">0</div><div style="font-size:13px;color:#5A6B8C;font-weight:600">Awkward meetups</div></div>
+      <div style="width:1px;background:#E4E9F2"></div>
+      <div><div style="font-size:26px;font-weight:800;letter-spacing:-.02em">6</div><div style="font-size:13px;color:#5A6B8C;font-weight:600">Dorm buildings</div></div>
+    </div>
+  </div>
+
+  <!-- INTERACTIVE PHONE -->
+  <div style="animation:lok-float 6s ease-in-out infinite;justify-self:center">
+    <div style="width:340px;padding:12px;background:#0C1A3A;border-radius:46px;box-shadow:0 30px 70px rgba(12,26,58,.34),inset 0 0 0 2px rgba(255,255,255,.06)" class="lok-phone">
+      <div style="position:relative;background:#F5F7FC;border-radius:36px;overflow:hidden;height:700px;display:flex;flex-direction:column">
+        <!-- notch -->
+        <div style="position:absolute;top:0;left:50%;transform:translateX(-50%);width:130px;height:26px;background:#0C1A3A;border-radius:0 0 16px 16px;z-index:30"></div>
+
+        <!-- APP HEADER -->
+        <div style="padding:34px 18px 12px;background:#fff;border-bottom:1px solid #EEF1F8;z-index:5">
+          <sc-if value="{{ showBrowse }}" hint-placeholder-val="{{ true }}">
+            <div>
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+                <div onClick="{{ toggleLocation }}" style="cursor:pointer;display:flex;align-items:center;gap:6px;font-weight:800;font-size:15px"><span style="color:#1E50E5">📍</span>{{ location }} <span style="color:#9AA6C0;font-weight:600;font-size:12px">▾</span></div>
+                <div style="width:30px;height:30px;border-radius:9px;background:#EAF0FF;display:flex;align-items:center;justify-content:center;font-size:14px">🔔</div>
+              </div>
+              <div style="display:flex;align-items:center;gap:8px;background:#F0F3FA;border-radius:12px;padding:11px 13px">
+                <span style="color:#9AA6C0;font-size:14px">🔍</span>
+                <input value="{{ query }}" onChange="{{ onQuery }}" placeholder="Search dorm items…" style="flex:1;border:none;background:none;outline:none;padding:0;font-family:inherit;font-size:13.5px;font-weight:500;color:#0C1A3A"/>
+              </div>
+            </div>
+          </sc-if>
+          <sc-if value="{{ showTopBack }}" hint-placeholder-val="{{ false }}">
+            <div style="display:flex;align-items:center;gap:12px">
+              <button onClick="{{ back }}" style="border:none;background:#F0F3FA;width:34px;height:34px;border-radius:10px;font-size:17px;cursor:pointer;color:#0C1A3A">‹</button>
+              <div style="font-weight:800;font-size:16px">{{ topTitle }}</div>
+            </div>
+          </sc-if>
+        </div>
+
+        <!-- APP BODY -->
+        <div style="flex:1;overflow-y:auto;overflow-x:hidden">
+
+          <!-- HOME -->
+          <sc-if value="{{ showHome }}" hint-placeholder-val="{{ true }}">
+            <div>
+              <div style="display:flex;gap:8px;padding:12px 14px 6px;overflow-x:auto">
+                <sc-for list="{{ chips }}" as="chip" hint-placeholder-count="5">
+                  <button onClick="{{ chip.select }}" style="border:none;cursor:pointer;font-family:inherit;font-weight:700;font-size:12.5px;padding:8px 13px;border-radius:20px;white-space:nowrap;background:{{ chip.bg }};color:{{ chip.fg }};transition:transform .12s ease" style-active="transform:scale(.93)">{{ chip.label }}</button>
+                </sc-for>
+              </div>
+              <div style="padding:6px 14px 90px;display:flex;flex-direction:column;gap:12px">
+                <sc-for list="{{ list }}" as="it" hint-placeholder-count="5">
+                  <div onClick="{{ it.open }}" style="cursor:pointer;background:#fff;border:1px solid #EEF1F8;border-radius:16px;padding:10px;display:flex;gap:12px;align-items:center;transition:transform .15s ease,box-shadow .15s ease,border-color .15s ease" style-hover="border-color:#C7D6F7;box-shadow:0 6px 18px rgba(30,80,229,.12);transform:translateY(-2px)" style-active="transform:scale(.98)">
+                    <div class="lok-strip" style="width:76px;height:76px;border-radius:12px;flex:none;display:flex;align-items:center;justify-content:center;text-align:center">
+                      <span style="font-family:'Space Mono',monospace;font-size:8.5px;color:#1E50E5;opacity:.7;padding:0 4px">{{ it.photo }}</span>
+                    </div>
+                    <div style="flex:1;min-width:0">
+                      <div style="display:flex;gap:6px;margin-bottom:3px"><sc-if value="{{ it.isBundle }}" hint-placeholder-val="{{ false }}"><span style="font-family:'Space Mono',monospace;font-size:8.5px;font-weight:700;color:#fff;background:#F5A302;padding:2px 6px;border-radius:5px">BUNDLE</span></sc-if></div>
+                      <div style="font-weight:700;font-size:14px;line-height:1.25;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ it.title }}</div>
+                      <div style="font-weight:800;font-size:15px;color:#1E50E5;margin-bottom:4px">{{ it.price }}</div>
+                      <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:#8A96B4;font-weight:600"><span>{{ it.dorm }}</span><span>·</span><span>{{ it.cond }}</span></div>
+                    </div>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+          </sc-if>
+
+          <!-- DETAIL -->
+          <sc-if value="{{ showDetail }}" hint-placeholder-val="{{ false }}">
+            <div style="padding-bottom:96px">
+              <div class="lok-strip" style="height:220px;display:flex;align-items:center;justify-content:center">
+                <span style="font-family:'Space Mono',monospace;font-size:11px;color:#1E50E5;opacity:.7">{{ sel.photo }}</span>
+              </div>
+              <div style="padding:16px 16px 0">
+                <sc-if value="{{ sel.isBundle }}" hint-placeholder-val="{{ false }}"><span style="font-family:'Space Mono',monospace;font-size:9px;font-weight:700;color:#fff;background:#F5A302;padding:3px 8px;border-radius:6px">GRADUATION BUNDLE</span></sc-if>
+                <h3 style="font-size:20px;font-weight:800;margin:10px 0 4px;letter-spacing:-.02em">{{ sel.title }}</h3>
+                <div style="font-size:24px;font-weight:800;color:#1E50E5;margin-bottom:12px">{{ sel.price }}</div>
+                <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px">
+                  <span style="font-size:12px;font-weight:600;color:#5A6B8C;background:#F0F3FA;padding:6px 11px;border-radius:9px">Condition · {{ sel.cond }}</span>
+                  <span style="font-size:12px;font-weight:600;color:#5A6B8C;background:#F0F3FA;padding:6px 11px;border-radius:9px">{{ sel.cat }}</span>
+                </div>
+                <p style="font-size:13.5px;line-height:1.6;color:#5A6B8C;margin:0 0 16px">{{ sel.desc }}</p>
+                <!-- seller -->
+                <div style="background:#fff;border:1px solid #EEF1F8;border-radius:14px;padding:12px;display:flex;align-items:center;gap:11px;margin-bottom:12px">
+                  <div style="width:42px;height:42px;border-radius:50%;background:#EAF0FF;display:flex;align-items:center;justify-content:center;font-weight:800;color:#1E50E5">{{ sel.sellerInitial }}</div>
+                  <div style="flex:1">
+                    <div style="display:flex;align-items:center;gap:6px;font-weight:700;font-size:14px">{{ sel.seller }}<span style="font-size:10px;font-weight:700;color:#16A34A;background:#E7F7ED;padding:2px 6px;border-radius:5px">✓ VERIFIED</span></div>
+                    <div style="font-size:11.5px;color:#8A96B4;font-weight:600;margin-top:2px">{{ sel.dorm }} · ⭐ {{ sel.rating }} dorm rating</div>
+                  </div>
+                </div>
+                <!-- drop off note -->
+                <div style="background:#EAF0FF;border-radius:14px;padding:12px 13px;display:flex;gap:10px;margin-bottom:8px">
+                  <div style="font-size:18px">🏛️</div>
+                  <div><div style="font-weight:700;font-size:12.5px;margin-bottom:2px">Security Post drop-off</div><div style="font-size:11.5px;color:#5A6B8C;line-height:1.45">Pay in-app now. Seller drops it at the campus Security Post — pick it up whenever you want.</div></div>
+                </div>
+              </div>
+            </div>
+          </sc-if>
+
+          <!-- WANTED -->
+          <sc-if value="{{ showWanted }}" hint-placeholder-val="{{ false }}">
+            <div style="padding:14px 14px 90px;display:flex;flex-direction:column;gap:11px">
+              <div style="font-size:12.5px;color:#8A96B4;font-weight:600;padding:2px 2px 4px">Buyers post what they need — sellers reply fast.</div>
+              <sc-for list="{{ wanted }}" as="w" hint-placeholder-count="4">
+                <div style="background:#fff;border:1px solid #EEF1F8;border-radius:16px;padding:13px">
+                  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+                    <span style="font-family:'Space Mono',monospace;font-size:9px;font-weight:700;color:#1E50E5;background:#EAF0FF;padding:3px 7px;border-radius:5px">WANTED</span>
+                    <span style="font-size:11px;color:#9AA6C0;font-weight:600">{{ w.ago }}</span>
+                  </div>
+                  <div style="font-weight:700;font-size:14px;margin-bottom:4px">{{ w.title }}</div>
+                  <div style="font-size:12px;color:#8A96B4;font-weight:600;margin-bottom:10px">Budget {{ w.budget }} · {{ w.by }}</div>
+                  <button onClick="{{ w.reply }}" style="border:1.5px solid #1E50E5;background:#fff;color:#1E50E5;font-family:inherit;font-weight:700;font-size:12.5px;padding:8px 14px;border-radius:10px;cursor:pointer;width:100%;transition:background .15s ease,transform .12s ease" style-hover="background:#EAF0FF" style-active="transform:scale(.98)">I have this →</button>
+                </div>
+              </sc-for>
+            </div>
+          </sc-if>
+
+          <!-- CHAT LIST -->
+          <sc-if value="{{ showChatList }}" hint-placeholder-val="{{ false }}">
+            <div style="padding:8px 0 90px">
+              <sc-for list="{{ chats }}" as="c" hint-placeholder-count="3">
+                <div onClick="{{ c.open }}" style="cursor:pointer;padding:13px 16px;display:flex;gap:12px;align-items:center;border-bottom:1px solid #F1F4FA;transition:background .12s ease" style-hover="background:#F7F9FE" style-active="background:#EFF3FB">
+                  <div style="width:46px;height:46px;border-radius:50%;background:#EAF0FF;display:flex;align-items:center;justify-content:center;font-weight:800;color:#1E50E5;flex:none">{{ c.initial }}</div>
+                  <div style="flex:1;min-width:0">
+                    <div style="display:flex;justify-content:space-between;align-items:center"><div style="font-weight:700;font-size:14px">{{ c.name }}</div><div style="font-size:11px;color:#9AA6C0;font-weight:600">{{ c.ago }}</div></div>
+                    <div style="font-size:12.5px;color:#8A96B4;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px">{{ c.item }} · {{ c.last }}</div>
+                  </div>
+                  <sc-if value="{{ c.unread }}" hint-placeholder-val="{{ false }}"><div style="width:9px;height:9px;border-radius:50%;background:#1E50E5;flex:none"></div></sc-if>
+                </div>
+              </sc-for>
+            </div>
+          </sc-if>
+
+          <!-- THREAD -->
+          <sc-if value="{{ showThread }}" hint-placeholder-val="{{ false }}">
+            <div style="display:flex;flex-direction:column;height:100%">
+              <div style="flex:1;overflow-y:auto;padding:14px 14px 14px;display:flex;flex-direction:column;gap:9px;background:#F5F7FC">
+                <sc-for list="{{ thread }}" as="m" hint-placeholder-count="4">
+                  <div style="align-self:{{ m.align }};max-width:76%;background:{{ m.bg }};color:{{ m.fg }};font-size:13px;line-height:1.4;padding:9px 12px;border-radius:{{ m.radius }};font-weight:500">{{ m.text }}</div>
+                </sc-for>
+              </div>
+              <div style="padding:10px 12px 14px;background:#fff;border-top:1px solid #EEF1F8;display:flex;gap:8px;align-items:center">
+                <div style="flex:1;background:#F0F3FA;border-radius:20px;padding:11px 14px;font-size:12.5px;color:#9AA6C0;font-weight:500">Message…</div>
+                <div style="width:38px;height:38px;border-radius:50%;background:#1E50E5;display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px">↑</div>
+              </div>
+            </div>
+          </sc-if>
+
+          <!-- PROFILE -->
+          <sc-if value="{{ showProfile }}" hint-placeholder-val="{{ false }}">
+            <div style="padding:18px 16px 90px">
+              <div style="display:flex;align-items:center;gap:14px;margin-bottom:18px">
+                <div style="width:64px;height:64px;border-radius:50%;background:#1E50E5;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:24px">A</div>
+                <div>
+                  <div style="font-weight:800;font-size:18px">Aldriano</div>
+                  <div style="font-size:12.5px;color:#8A96B4;font-weight:600;margin-top:2px">Thomas House · T108 · JIU</div>
+                </div>
+              </div>
+              <div style="background:linear-gradient(135deg,#1E50E5,#3B6BF0);border-radius:16px;padding:15px;color:#fff;margin-bottom:14px">
+                <div style="display:flex;align-items:center;gap:8px;font-weight:700;font-size:14px;margin-bottom:6px">✓ Dorm-Verified Identity</div>
+                <div style="font-size:12px;opacity:.9;line-height:1.5">Your university email and dorm room are confirmed. Your dorm-wide rating keeps every trade honest.</div>
+              </div>
+              <div style="display:flex;gap:10px;margin-bottom:14px">
+                <div style="flex:1;background:#fff;border:1px solid #EEF1F8;border-radius:14px;padding:13px;text-align:center"><div style="font-size:22px;font-weight:800;color:#1E50E5">⭐ 4.9</div><div style="font-size:11px;color:#8A96B4;font-weight:600;margin-top:2px">Dorm rating</div></div>
+                <div style="flex:1;background:#fff;border:1px solid #EEF1F8;border-radius:14px;padding:13px;text-align:center"><div style="font-size:22px;font-weight:800;color:#0C1A3A">12</div><div style="font-size:11px;color:#8A96B4;font-weight:600;margin-top:2px">Trades done</div></div>
+              </div>
+              <div style="background:#fff;border:1px solid #EEF1F8;border-radius:14px;overflow:hidden">
+                <div onClick="{{ openListings }}" style="cursor:pointer;padding:13px 14px;border-bottom:1px solid #F1F4FA;font-size:13.5px;font-weight:600;display:flex;justify-content:space-between;transition:background .12s ease" style-hover="background:#F7F9FE" style-active="background:#EFF3FB">My listings <span style="color:#9AA6C0">›</span></div>
+                <div onClick="{{ openReviews }}" style="cursor:pointer;padding:13px 14px;border-bottom:1px solid #F1F4FA;font-size:13.5px;font-weight:600;display:flex;justify-content:space-between;transition:background .12s ease" style-hover="background:#F7F9FE" style-active="background:#EFF3FB">Reviews about me <span style="color:#9AA6C0">›</span></div>
+                <div onClick="{{ openGrad }}" style="cursor:pointer;padding:13px 14px;font-size:13.5px;font-weight:600;display:flex;justify-content:space-between;transition:background .12s ease" style-hover="background:#F7F9FE" style-active="background:#EFF3FB">Graduation package <span style="color:#9AA6C0">›</span></div>
+              </div>
+            </div>
+          </sc-if>
+
+          <!-- SUB: MY LISTINGS -->
+          <sc-if value="{{ showListings }}" hint-placeholder-val="{{ false }}">
+            <div style="padding:12px 14px 90px;display:flex;flex-direction:column;gap:12px">
+              <div style="font-size:12.5px;color:#8A96B4;font-weight:600;padding:2px">2 active listings · tap to preview</div>
+              <sc-for list="{{ myItems }}" as="it" hint-placeholder-count="2">
+                <div onClick="{{ it.open }}" style="cursor:pointer;background:#fff;border:1px solid #EEF1F8;border-radius:16px;padding:10px;display:flex;gap:12px;align-items:center;transition:transform .15s ease,box-shadow .15s ease" style-hover="box-shadow:0 6px 18px rgba(30,80,229,.12);transform:translateY(-2px)" style-active="transform:scale(.98)">
+                  <div class="lok-strip" style="width:64px;height:64px;border-radius:12px;flex:none;display:flex;align-items:center;justify-content:center;text-align:center"><span style="font-family:'Space Mono',monospace;font-size:8px;color:#1E50E5;opacity:.7;padding:0 4px">{{ it.photo }}</span></div>
+                  <div style="flex:1;min-width:0">
+                    <div style="font-weight:700;font-size:14px;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ it.title }}</div>
+                    <div style="font-weight:800;font-size:14px;color:#1E50E5">{{ it.price }}</div>
+                  </div>
+                  <span style="font-size:10px;font-weight:700;color:#16A34A;background:#E7F7ED;padding:3px 8px;border-radius:6px">LIVE</span>
+                </div>
+              </sc-for>
+            </div>
+          </sc-if>
+
+          <!-- SUB: REVIEWS -->
+          <sc-if value="{{ showReviews }}" hint-placeholder-val="{{ false }}">
+            <div style="padding:12px 14px 90px;display:flex;flex-direction:column;gap:11px">
+              <div style="display:flex;align-items:center;gap:8px;padding:2px 2px 4px"><span style="font-size:20px;font-weight:800;color:#1E50E5">⭐ 4.9</span><span style="font-size:12px;color:#8A96B4;font-weight:600">from 11 dorm-mates</span></div>
+              <sc-for list="{{ reviews }}" as="r" hint-placeholder-count="3">
+                <div style="background:#fff;border:1px solid #EEF1F8;border-radius:16px;padding:13px">
+                  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+                    <div style="display:flex;align-items:center;gap:9px"><div style="width:34px;height:34px;border-radius:50%;background:#EAF0FF;display:flex;align-items:center;justify-content:center;font-weight:800;color:#1E50E5;font-size:13px">{{ r.initial }}</div><div style="font-weight:700;font-size:13px">{{ r.name }}</div></div>
+                    <div style="font-size:12px;color:#F5A302;font-weight:700">{{ r.stars }}</div>
+                  </div>
+                  <div style="font-size:12.5px;line-height:1.5;color:#5A6B8C">{{ r.text }}</div>
+                </div>
+              </sc-for>
+            </div>
+          </sc-if>
+
+          <!-- SUB: GRAD PACKAGE -->
+          <sc-if value="{{ showGrad }}" hint-placeholder-val="{{ false }}">
+            <div style="padding:16px 16px 90px">
+              <div style="background:linear-gradient(135deg,#1E50E5,#153bb8);border-radius:18px;padding:22px;color:#fff;margin-bottom:14px">
+                <div style="font-size:34px;margin-bottom:12px">🎓</div>
+                <div style="font-weight:800;font-size:18px;margin-bottom:8px">Sell your whole room at once</div>
+                <div style="font-size:13px;line-height:1.55;color:#C9D6FF">Graduating? Bundle your bed, desk, fan and more into one listing. Move out fast and pass your setup to the next student — buyers love the deal.</div>
+              </div>
+              <div style="background:#fff;border:1px solid #EEF1F8;border-radius:16px;padding:16px;margin-bottom:16px">
+                <div style="font-size:12.5px;font-weight:700;color:#8A96B4;margin-bottom:10px">WHY BUNDLE</div>
+                <div style="display:flex;flex-direction:column;gap:10px">
+                  <div style="display:flex;gap:10px;align-items:flex-start"><span style="color:#16A34A;font-weight:800">✓</span><span style="font-size:13px;color:#0C1A3A;font-weight:600">One drop-off instead of five</span></div>
+                  <div style="display:flex;gap:10px;align-items:flex-start"><span style="color:#16A34A;font-weight:800">✓</span><span style="font-size:13px;color:#0C1A3A;font-weight:600">Sells faster before move-out day</span></div>
+                  <div style="display:flex;gap:10px;align-items:flex-start"><span style="color:#16A34A;font-weight:800">✓</span><span style="font-size:13px;color:#0C1A3A;font-weight:600">Featured with a BUNDLE badge</span></div>
+                </div>
+              </div>
+              <button onClick="{{ goSellBundle }}" style="width:100%;border:none;background:#1E50E5;color:#fff;font-family:inherit;font-weight:700;font-size:14px;padding:14px;border-radius:13px;cursor:pointer;box-shadow:0 6px 16px rgba(30,80,229,.32);transition:background .18s ease,transform .12s ease" style-hover="background:#1740C4" style-active="transform:scale(.98)">Create my bundle →</button>
+            </div>
+          </sc-if>
+
+          <!-- SELL -->
+          <sc-if value="{{ showSell }}" hint-placeholder-val="{{ false }}">
+            <div style="padding:16px 16px 90px">
+              <div style="font-weight:800;font-size:17px;margin-bottom:4px">List an item</div>
+              <div style="font-size:12.5px;color:#8A96B4;font-weight:600;margin-bottom:16px">Takes under a minute. Post it, drop it, done.</div>
+              <div class="lok-strip" style="height:120px;border-radius:14px;display:flex;align-items:center;justify-content:center;margin-bottom:14px;border:1.5px dashed #B9C6E6;cursor:pointer;transition:border-color .15s ease" style-hover="border-color:#1E50E5"><span style="font-family:'Space Mono',monospace;font-size:10px;color:#1E50E5;opacity:.7">+ add photos</span></div>
+              <div style="display:flex;flex-direction:column;gap:10px">
+                <input value="{{ f.title }}" onChange="{{ onF.title }}" placeholder="Item title" style="background:#F0F3FA;border:1.5px solid transparent;border-radius:12px;padding:13px;font-size:13px;font-family:inherit;font-weight:500;color:#0C1A3A;outline:none" style-focus="border-color:#1E50E5;background:#fff"/>
+                <input value="{{ f.price }}" onChange="{{ onF.price }}" placeholder="Price (Rp)" style="background:#F0F3FA;border:1.5px solid transparent;border-radius:12px;padding:13px;font-size:13px;font-family:inherit;font-weight:500;color:#0C1A3A;outline:none" style-focus="border-color:#1E50E5;background:#fff"/>
+                <div style="display:flex;gap:10px">
+                  <select value="{{ f.cat }}" onChange="{{ onF.cat }}" style="flex:1;background:#F0F3FA;border:1.5px solid transparent;border-radius:12px;padding:13px;font-size:13px;font-family:inherit;font-weight:600;color:#0C1A3A;outline:none;-webkit-appearance:none;appearance:none" style-focus="border-color:#1E50E5;background:#fff">
+                    <option>Furniture</option><option>Electronics</option><option>Appliances</option><option>Clothes</option><option>Books</option><option>Bundles</option>
+                  </select>
+                  <select value="{{ f.cond }}" onChange="{{ onF.cond }}" style="flex:1;background:#F0F3FA;border:1.5px solid transparent;border-radius:12px;padding:13px;font-size:13px;font-family:inherit;font-weight:600;color:#0C1A3A;outline:none;-webkit-appearance:none;appearance:none" style-focus="border-color:#1E50E5;background:#fff">
+                    <option>Like new</option><option>Good</option><option>Fair</option>
+                  </select>
+                </div>
+                <div onClick="{{ toggleBundle }}" style="display:flex;align-items:center;gap:10px;background:#EAF0FF;border-radius:12px;padding:12px 13px;margin-top:2px;cursor:pointer">
+                  <div style="width:38px;height:22px;border-radius:20px;background:{{ bundleTrack }};position:relative;flex:none;transition:background .2s ease"><div style="position:absolute;top:2px;left:{{ bundleKnob }};width:18px;height:18px;border-radius:50%;background:#fff;transition:left .2s ease"></div></div>
+                  <div style="font-size:12.5px;font-weight:700">Sell as Graduation Bundle</div>
+                </div>
+                <button onClick="{{ submitListing }}" style="margin-top:8px;width:100%;border:none;background:{{ listBg }};color:#fff;font-family:inherit;font-weight:700;font-size:14px;padding:14px;border-radius:13px;cursor:pointer;box-shadow:0 6px 16px rgba(30,80,229,.28);transition:transform .15s ease,background .2s ease" style-active="transform:scale(.98)">{{ listLabel }}</button>
+              </div>
+            </div>
+          </sc-if>
+
+        </div>
+
+        <!-- BUY BAR (detail only) -->
+        <sc-if value="{{ showDetail }}" hint-placeholder-val="{{ false }}">
+          <div style="position:absolute;bottom:0;left:0;right:0;padding:12px 16px 16px;background:#fff;border-top:1px solid #EEF1F8;display:flex;gap:10px;z-index:20">
+            <button onClick="{{ chatSeller }}" style="border:1.5px solid #D4DCEC;background:#fff;color:#0C1A3A;font-family:inherit;font-weight:700;font-size:14px;padding:13px 18px;border-radius:13px;cursor:pointer;transition:background .15s ease,transform .12s ease" style-hover="background:#F0F3FA" style-active="transform:scale(.97)">Chat</button>
+            <button onClick="{{ buy }}" style="flex:1;border:none;background:#1E50E5;color:#fff;font-family:inherit;font-weight:700;font-size:14px;padding:13px;border-radius:13px;cursor:pointer;box-shadow:0 6px 16px rgba(30,80,229,.32);transition:background .15s ease,transform .12s ease" style-hover="background:#1740C4" style-active="transform:scale(.98)">Pay in-app · {{ sel.price }}</button>
+          </div>
+        </sc-if>
+
+        <!-- BOTTOM NAV -->
+        <sc-if value="{{ showNav }}" hint-placeholder-val="{{ true }}">
+          <div style="display:flex;background:#fff;border-top:1px solid #EEF1F8;padding:8px 4px 14px;z-index:20">
+            <sc-for list="{{ nav }}" as="n" hint-placeholder-count="5">
+              <button onClick="{{ n.go }}" style="flex:1;border:none;background:none;cursor:pointer;font-family:inherit;display:flex;flex-direction:column;align-items:center;gap:3px;padding:4px 0;transition:transform .12s ease" style-active="transform:scale(.9)">
+                <span style="font-size:17px;filter:{{ n.filter }}">{{ n.icon }}</span>
+                <span style="font-size:10px;font-weight:700;color:{{ n.color }}">{{ n.label }}</span>
+              </button>
+            </sc-for>
+          </div>
+        </sc-if>
+
+        <!-- TOAST -->
+        <sc-if value="{{ toast }}" hint-placeholder-val="{{ false }}">
+          <div style="position:absolute;inset:0;background:rgba(12,26,58,.55);z-index:40;display:flex;align-items:center;justify-content:center;padding:24px">
+            <div style="background:#fff;border-radius:22px;padding:26px 22px;text-align:center;animation:lok-toast .3s ease both;width:100%">
+              <div style="width:60px;height:60px;border-radius:50%;background:#E7F7ED;display:flex;align-items:center;justify-content:center;font-size:30px;margin:0 auto 14px">✓</div>
+              <div style="font-weight:800;font-size:17px;margin-bottom:8px">Payment held safely</div>
+              <div style="font-size:13px;color:#5A6B8C;line-height:1.55;margin-bottom:18px">Your money is in escrow. The seller will drop <b style="color:#0C1A3A">{{ sel.title }}</b> at the <b style="color:#0C1A3A">{{ location }} Security Post</b> — pick it up whenever suits you.</div>
+              <button onClick="{{ closeToast }}" style="width:100%;border:none;background:#1E50E5;color:#fff;font-family:inherit;font-weight:700;font-size:14px;padding:13px;border-radius:13px;cursor:pointer">Got it</button>
+            </div>
+          </div>
+        </sc-if>
+
+      </div>
+    </div>
+    <div style="text-align:center;font-family:'Space Mono',monospace;font-size:11px;color:#9AA6C0;margin-top:14px">↑ tap around — it's live</div>
+  </div>
+</section>
+
+<!-- PROBLEM -->
+<section data-reveal style="background:#0C1A3A;color:#fff;padding:80px 28px;margin-top:40px">
+  <div style="max-width:1100px;margin:0 auto">
+    <div style="font-family:'Space Mono',monospace;font-size:12px;color:#7FA0FF;margin-bottom:14px">THE PROBLEM</div>
+    <h2 style="font-size:40px;font-weight:800;letter-spacing:-.03em;margin:0 0 44px;max-width:720px;line-height:1.1">Selling used dorm stuff today is risky, awkward, and a total mess.</h2>
+    <div class="lok-cols-3" style="display:grid;grid-template-columns:repeat(3,1fr);gap:20px">
+      <div style="background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.09);border-radius:18px;padding:24px">
+        <div style="font-size:28px;margin-bottom:14px">💸</div>
+        <div style="font-weight:700;font-size:17px;margin-bottom:8px">Tight budgets, risky buys</div>
+        <div style="font-size:14px;line-height:1.55;color:#9DB0D8">Buying used feels like a gamble — no way to know if the seller is honest or the item's a dud.</div>
+      </div>
+      <div style="background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.09);border-radius:18px;padding:24px">
+        <div style="font-size:28px;margin-bottom:14px">😳</div>
+        <div style="font-weight:700;font-size:17px;margin-bottom:8px">Too much effort, too awkward</div>
+        <div style="font-size:14px;line-height:1.55;color:#9DB0D8">Selling takes forever, and students feel embarrassed to post publicly or haggle face-to-face.</div>
+      </div>
+      <div style="background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.09);border-radius:18px;padding:24px">
+        <div style="font-size:28px;margin-bottom:14px">📱</div>
+        <div style="font-weight:700;font-size:17px;margin-bottom:8px">Messy WhatsApp &amp; FB groups</div>
+        <div style="font-size:14px;line-height:1.55;color:#9DB0D8">Chat groups are unstructured, unsafe, and impossible to search. Good deals vanish in the scroll.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section id="features" data-reveal style="max-width:1100px;margin:0 auto;padding:88px 28px 40px">
+  <div style="font-family:'Space Mono',monospace;font-size:12px;color:#1E50E5;margin-bottom:14px">WHAT MAKES LOKITA DIFFERENT</div>
+  <h2 style="font-size:42px;font-weight:800;letter-spacing:-.03em;margin:0 0 12px;max-width:720px;line-height:1.08">Security a generic app can't match — built for campus trust.</h2>
+  <p style="font-size:18px;color:#5A6B8C;max-width:620px;margin:0 0 48px;line-height:1.55">Five features designed around one idea: everyone here is a verified neighbour.</p>
+
+  <div class="lok-features" style="display:grid;grid-template-columns:1.2fr 1fr;gap:20px">
+    <!-- big feature -->
+    <div class="lok-big" style="grid-row:span 2;background:linear-gradient(150deg,#1E50E5,#153bb8);border-radius:24px;padding:34px;color:#fff;position:relative;overflow:hidden">
+      <div style="font-family:'Space Mono',monospace;font-size:11px;opacity:.7;margin-bottom:18px">FEATURE 01</div>
+      <div style="font-size:44px;margin-bottom:16px">🛡️</div>
+      <h3 style="font-size:28px;font-weight:800;letter-spacing:-.02em;margin:0 0 12px;line-height:1.1">Dorm-Verified<br/>Identity System</h3>
+      <p style="font-size:15px;line-height:1.6;color:#C9D6FF;margin:0 0 22px;max-width:360px">Every user signs up with a university email <b style="color:#fff">and</b> exact dorm room — like Thomas House T108. A dorm-wide rating exposes dishonest sellers, so social accountability stops bad behaviour before it starts.</p>
+      <div style="display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,.14);padding:8px 13px;border-radius:11px;font-size:12.5px;font-weight:700">✓ Real names · Real rooms · Real reviews</div>
+    </div>
+
+    <div style="background:#fff;border:1px solid #EEF1F8;border-radius:24px;padding:28px;transition:transform .2s ease,box-shadow .2s ease" style-hover="transform:translateY(-4px);box-shadow:0 14px 30px rgba(12,26,58,.09)">
+      <div style="font-family:'Space Mono',monospace;font-size:11px;color:#9AA6C0;margin-bottom:14px">FEATURE 02</div>
+      <div style="font-size:32px;margin-bottom:12px">🏛️</div>
+      <h3 style="font-size:21px;font-weight:800;letter-spacing:-.02em;margin:0 0 10px">No meetings needed</h3>
+      <p style="font-size:14px;line-height:1.6;color:#5A6B8C;margin:0">Buyer pays in-app first. Seller drops the item at the campus Security Post or Dorm Office. Buyer picks it up on their own time — no scheduling, no awkward meetups, no conflicts.</p>
+    </div>
+
+    <div style="background:#fff;border:1px solid #EEF1F8;border-radius:24px;padding:28px;transition:transform .2s ease,box-shadow .2s ease" style-hover="transform:translateY(-4px);box-shadow:0 14px 30px rgba(12,26,58,.09)">
+      <div style="display:flex;gap:20px">
+        <div style="flex:1">
+          <div style="font-family:'Space Mono',monospace;font-size:11px;color:#9AA6C0;margin-bottom:14px">FEATURE 03</div>
+          <div style="font-size:32px;margin-bottom:12px">🎓</div>
+          <h3 style="font-size:21px;font-weight:800;letter-spacing:-.02em;margin:0 0 10px">Graduation Package</h3>
+          <p style="font-size:14px;line-height:1.6;color:#5A6B8C;margin:0">Seniors sell an entire room — bed, fan, desk — as one big bundle. Move out fast, hand your setup to the next student.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="lok-cols-2" style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:20px">
+    <div style="background:#fff;border:1px solid #EEF1F8;border-radius:24px;padding:28px;transition:transform .2s ease,box-shadow .2s ease" style-hover="transform:translateY(-4px);box-shadow:0 14px 30px rgba(12,26,58,.09)">
+      <div style="font-family:'Space Mono',monospace;font-size:11px;color:#9AA6C0;margin-bottom:14px">FEATURE 04</div>
+      <div style="font-size:32px;margin-bottom:12px">🙋</div>
+      <h3 style="font-size:21px;font-weight:800;letter-spacing:-.02em;margin:0 0 10px">Wanted requests</h3>
+      <p style="font-size:14px;line-height:1.6;color:#5A6B8C;margin:0">Can't find it? Post a "Wanted" request and sellers respond fast — turning idle stuff into quick deals.</p>
+    </div>
+    <div style="background:#fff;border:1px solid #EEF1F8;border-radius:24px;padding:28px;transition:transform .2s ease,box-shadow .2s ease" style-hover="transform:translateY(-4px);box-shadow:0 14px 30px rgba(12,26,58,.09)">
+      <div style="font-family:'Space Mono',monospace;font-size:11px;color:#9AA6C0;margin-bottom:14px">FEATURE 05</div>
+      <div style="font-size:32px;margin-bottom:12px">💬</div>
+      <h3 style="font-size:21px;font-weight:800;letter-spacing:-.02em;margin:0 0 10px">Reviews &amp; simple chat</h3>
+      <p style="font-size:14px;line-height:1.6;color:#5A6B8C;margin:0">Post-transaction feedback stays visible to your dorm community, and in-app messaging keeps quick negotiations easy and on the record.</p>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section id="how" data-reveal style="max-width:1100px;margin:0 auto;padding:70px 28px">
+  <div style="background:#EAF0FF;border-radius:28px;padding:48px 40px">
+    <div style="font-family:'Space Mono',monospace;font-size:12px;color:#1E50E5;margin-bottom:14px">HASSLE-FREE EXCHANGE</div>
+    <h2 style="font-size:34px;font-weight:800;letter-spacing:-.03em;margin:0 0 40px;max-width:600px;line-height:1.1">Three steps. Zero awkward meetups.</h2>
+    <div class="lok-cols-3" style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px">
+      <div style="background:#fff;border-radius:18px;padding:26px;transition:transform .2s ease,box-shadow .2s ease" style-hover="transform:translateY(-4px);box-shadow:0 14px 30px rgba(12,26,58,.09)">
+        <div style="width:40px;height:40px;border-radius:12px;background:#1E50E5;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:18px;margin-bottom:16px">1</div>
+        <div style="font-weight:700;font-size:17px;margin-bottom:8px">Buyer pays in-app</div>
+        <div style="font-size:13.5px;line-height:1.55;color:#5A6B8C">Money is held safely in escrow — the seller knows it's a real, committed buyer.</div>
+      </div>
+      <div style="background:#fff;border-radius:18px;padding:26px;transition:transform .2s ease,box-shadow .2s ease" style-hover="transform:translateY(-4px);box-shadow:0 14px 30px rgba(12,26,58,.09)">
+        <div style="width:40px;height:40px;border-radius:12px;background:#1E50E5;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:18px;margin-bottom:16px">2</div>
+        <div style="font-weight:700;font-size:17px;margin-bottom:8px">Seller drops it off</div>
+        <div style="font-size:13.5px;line-height:1.55;color:#5A6B8C">At the campus Security Post or Dorm Office — a place both people already trust.</div>
+      </div>
+      <div style="background:#fff;border-radius:18px;padding:26px;transition:transform .2s ease,box-shadow .2s ease" style-hover="transform:translateY(-4px);box-shadow:0 14px 30px rgba(12,26,58,.09)">
+        <div style="width:40px;height:40px;border-radius:12px;background:#16A34A;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:18px;margin-bottom:16px">3</div>
+        <div style="font-weight:700;font-size:17px;margin-bottom:8px">Buyer picks it up</div>
+        <div style="font-size:13.5px;line-height:1.55;color:#5A6B8C">Whenever it's convenient. Payment releases to the seller. Everyone's happy.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TRUST -->
+<section id="trust" data-reveal class="lok-trust" style="max-width:1100px;margin:0 auto;padding:50px 28px 70px;display:grid;grid-template-columns:1fr 1fr;gap:56px;align-items:center">
+  <div>
+    <div style="font-family:'Space Mono',monospace;font-size:12px;color:#1E50E5;margin-bottom:14px">TRUST &amp; SAFETY</div>
+    <h2 style="font-size:36px;font-weight:800;letter-spacing:-.03em;margin:0 0 18px;line-height:1.1">Accountability is the whole point.</h2>
+    <p style="font-size:16px;line-height:1.6;color:#5A6B8C;margin:0 0 24px">On LOKITA you're never trading with a stranger. You're trading with the person in Charles House down the hall — whose real name, real room, and real rating everyone can see.</p>
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;gap:12px;align-items:flex-start"><span style="color:#16A34A;font-weight:800">✓</span><span style="font-size:15px;color:#0C1A3A;font-weight:600">University email + dorm room verification</span></div>
+      <div style="display:flex;gap:12px;align-items:flex-start"><span style="color:#16A34A;font-weight:800">✓</span><span style="font-size:15px;color:#0C1A3A;font-weight:600">Dorm-wide visible ratings on every member</span></div>
+      <div style="display:flex;gap:12px;align-items:flex-start"><span style="color:#16A34A;font-weight:800">✓</span><span style="font-size:15px;color:#0C1A3A;font-weight:600">Escrow payments — money only releases on pickup</span></div>
+    </div>
+  </div>
+  <div class="lok-strip" style="border-radius:24px;height:320px;display:flex;align-items:center;justify-content:center;border:1px solid #DCE4F5">
+    <span style="font-family:'Space Mono',monospace;font-size:12px;color:#1E50E5;opacity:.7;text-align:center;line-height:1.6">campus / dorm photo<br/>Cikarang community</span>
+  </div>
+</section>
+
+<!-- VISION / CTA -->
+<section data-reveal style="background:linear-gradient(150deg,#1E50E5,#153bb8);color:#fff;padding:88px 28px;text-align:center">
+  <div style="max-width:720px;margin:0 auto">
+    <div style="font-family:'Space Mono',monospace;font-size:12px;color:#B9CBFF;margin-bottom:20px">OUR VISION FOR LOKITA</div>
+    <h2 style="font-size:44px;font-weight:800;letter-spacing:-.03em;margin:0 0 16px;line-height:1.1">The safest, easiest campus marketplace — a student-driven circular economy.</h2>
+    <p style="font-size:26px;font-style:italic;font-weight:500;color:#C9D6FF;margin:0 0 36px">"Dari kita, untuk kita."</p>
+    <div style="display:flex;gap:10px;max-width:440px;margin:0 auto">
+      <input placeholder="you@student.jiu.ac.id" value="{{ email }}" onChange="{{ onEmail }}" style="flex:1;padding:15px 16px;border:none;border-radius:13px;font-size:15px;font-family:inherit;outline:none;color:#0C1A3A"/>
+      <button onClick="{{ join }}" style="background:#F5A302;color:#0C1A3A;border:none;font-weight:800;font-size:15px;font-family:inherit;padding:0 22px;border-radius:13px;cursor:pointer;white-space:nowrap;transition:background .18s ease,transform .12s ease" style-hover="background:#E39400" style-active="transform:scale(.97)">Join waitlist</button>
+    </div>
+    <sc-if value="{{ joined }}" hint-placeholder-val="{{ false }}"><div style="margin-top:14px;font-weight:700;color:#fff">✓ You're on the list — sampai jumpa!</div></sc-if>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer style="background:#0C1A3A;color:#9DB0D8;padding:40px 28px">
+  <div style="max-width:1100px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px">
+    <div style="display:flex;align-items:center;gap:10px">
+      <div style="width:30px;height:30px;border-radius:9px;background:#1E50E5;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800">L</div>
+      <span style="font-weight:800;color:#fff;font-size:16px">LOKITA</span>
+      <span style="font-family:'Space Mono',monospace;font-size:11px;color:#5B70A0">lokita.id · @lokita.id</span>
+    </div>
+    <div style="font-size:13px;color:#5B70A0">Campus Marketplace · Cikarang · Presented by Team 5</div>
+  </div>
+</footer>
+
+</div>
+
+<template id="__bundler_thumbnail" data-bg-color="#0C1A3A">
+  <svg viewBox="0 0 1200 800" xmlns="http://www.w3.org/2000/svg">
+    <rect width="1200" height="800" fill="#0C1A3A"/>
+    <rect x="470" y="300" width="260" height="200" rx="56" fill="#1E50E5"/>
+    <text x="600" y="470" font-family="'Plus Jakarta Sans',sans-serif" font-size="150" font-weight="800" fill="#ffffff" text-anchor="middle">L</text>
+    <text x="600" y="620" font-family="'Plus Jakarta Sans',sans-serif" font-size="64" font-weight="800" fill="#ffffff" text-anchor="middle" letter-spacing="4">LOKITA</text>
+  </svg>
+</template></x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1200,&quot;height&quot;:900}}">
+class Component extends DCLogic {
+  state = { screen: 'home', sel: null, cat: 'All', chat: null, toast: false, email: '', joined: false, query: '', sub: null, listState: 'idle', bundleOn: false, location: 'Thomas House', f: { title:'', price:'', cat:'Furniture', cond:'Like new' } };
+
+  componentDidMount() {
+    try {
+      const els = [...document.querySelectorAll('[data-reveal]')];
+      const reveal = (el) => { el.style.opacity='1'; el.style.transform='none'; };
+      const inView = (el) => { const r = el.getBoundingClientRect(); return r.top < (window.innerHeight || 800) - 40 && r.bottom > 0; };
+      els.forEach(el => { el.style.opacity='0'; el.style.transform='translateY(24px)'; el.style.transition='opacity .6s ease, transform .6s ease'; });
+      // reveal anything already visible on load
+      requestAnimationFrame(() => els.forEach(el => { if (inView(el)) reveal(el); }));
+      // reveal on scroll (works even where IntersectionObserver is silent)
+      const onScroll = () => { els.forEach(el => { if (el.style.opacity !== '1' && inView(el)) reveal(el); }); };
+      window.addEventListener('scroll', onScroll, { passive: true });
+      let io = null;
+      try {
+        io = new IntersectionObserver((ents) => {
+          ents.forEach(e => { if (e.isIntersecting) { reveal(e.target); io.unobserve(e.target); } });
+        }, { threshold: 0.12 });
+        els.forEach(el => io.observe(el));
+      } catch (e) {}
+      // hard safety net: never leave content permanently hidden
+      setTimeout(() => els.forEach(reveal), 1200);
+    } catch (e) {}
+  }
+
+  data() {
+    const items = [
+      { id:1, title:'Study Desk + Chair', price:'Rp 180.000', dorm:'Thomas House T108', cond:'Good', cat:'Furniture', rating:'4.9', seller:'Aldriano', sellerInitial:'A', photo:'desk + chair', desc:'Sturdy wooden study desk with a matching chair. Barely used — selling because I graduate this term. Fits standard dorm rooms perfectly.' },
+      { id:2, title:'Mini Fridge 50L', price:'Rp 350.000', dorm:'Union Building U204', cond:'Like new', cat:'Appliances', rating:'5.0', seller:'Bimo S.', sellerInitial:'B', photo:'mini fridge', desc:'Compact 50L fridge, super quiet, keeps drinks cold. Perfect for late-night study snacks. Clean and fully working.' },
+      { id:3, title:'Whole Room — Graduation Bundle', price:'Rp 1.200.000', dorm:'Thomas House T108', cond:'Good', cat:'Bundles', rating:'4.9', seller:'Aldriano', sellerInitial:'A', photo:'bed · fan · desk · shelf', desc:'Everything in my room in one deal: single bed, standing fan, desk, chair and a shelf. Move-in ready for the next student. Grab it all and save.', isBundle:true },
+      { id:4, title:'Standing Fan', price:'Rp 90.000', dorm:'Union Building U112', cond:'Fair', cat:'Appliances', rating:'4.7', seller:'Citra D.', sellerInitial:'C', photo:'standing fan', desc:'Three-speed standing fan, works great through Cikarang heat. Small scuff on the base but runs perfectly.' },
+      { id:5, title:'IKEA Desk Lamp', price:'Rp 45.000', dorm:'Thomas House T110', cond:'Like new', cat:'Furniture', rating:'4.8', seller:'Dewi R.', sellerInitial:'D', photo:'desk lamp', desc:'Warm LED desk lamp, adjustable arm. Easy on the eyes for late study sessions.' },
+      { id:6, title:'Calculus + Physics Textbooks', price:'Rp 60.000', dorm:'Union Building U220', cond:'Good', cat:'Books', rating:'5.0', seller:'Eka W.', sellerInitial:'E', photo:'textbook bundle', desc:'First-year Calculus and Physics textbooks, minimal highlighting. Save a fortune vs. buying new.' },
+      { id:7, title:'JIU Hoodie — Size M', price:'Rp 85.000', dorm:'Thomas House T108', cond:'Like new', cat:'Clothes', rating:'4.9', seller:'Aldriano', sellerInitial:'A', photo:'campus hoodie', desc:'Official JIU campus hoodie, size M. Worn twice — warm and barely used. Great for cold lecture halls.' },
+      { id:8, title:'Batik Shirt (Formal)', price:'Rp 55.000', dorm:'Union Building U118', cond:'Good', cat:'Clothes', rating:'4.8', seller:'Dewi R.', sellerInitial:'D', photo:'batik shirt', desc:'Formal batik shirt, size L. Perfect for campus presentations and formal events. Freshly laundered.' },
+    ];
+    const wanted = [
+      { id:1, title:'Looking for a rice cooker under Rp 100k', budget:'≤ Rp 100.000', by:'Union Building', ago:'2h' },
+      { id:2, title:'Need an extension cord / power strip', budget:'≤ Rp 40.000', by:'Thomas House', ago:'5h' },
+      { id:3, title:'Standing mirror, any condition', budget:'≤ Rp 150.000', by:'Union Building', ago:'1d' },
+      { id:4, title:'Second-hand Statistics textbook', budget:'≤ Rp 50.000', by:'Thomas House', ago:'2d' },
+    ];
+    const chats = [
+      { id:1, name:'Bimo S.', initial:'B', item:'Mini Fridge 50L', last:'Sure, I can drop it today 👍', ago:'now', unread:true,
+        thread:[ {who:'them',text:'Hi! Is the mini fridge still available?'},{who:'me',text:'Yes it is! Like new, barely used.'},{who:'them',text:'Great. Can you drop it at the Security Post?'},{who:'me',text:'Sure, I can drop it today 👍'} ] },
+      { id:2, name:'Dewi R.', initial:'D', item:'IKEA Desk Lamp', last:'Paid! Picking up after class.', ago:'1h', unread:false,
+        thread:[ {who:'me',text:'Lamp is at the Thomas House post now.'},{who:'them',text:'Paid! Picking up after class.'} ] },
+      { id:3, name:'Eka W.', initial:'E', item:'Textbook bundle', last:'Is a small discount possible?', ago:'3h', unread:false,
+        thread:[ {who:'them',text:'Hi, interested in the textbooks.'},{who:'them',text:'Is a small discount possible?'} ] },
+    ];
+    const reviews = [
+      { name:'Bimo S.', initial:'B', stars:'★★★★★', text:'Fridge was exactly as described. Dropped at the post, picked it up between classes. Super easy.' },
+      { name:'Dewi R.', initial:'D', stars:'★★★★★', text:'Lamp works great and Aldriano was quick to reply. Would buy again!' },
+      { name:'Eka W.', initial:'E', stars:'★★★★☆', text:'Good textbooks, fair price. Smooth drop-off at the Security Post.' },
+    ];
+    return { items, wanted, chats, reviews };
+  }
+
+  renderVals() {
+    const s = this.state;
+    const { items, wanted, chats, reviews } = this.data();
+    const cats = ['All','Furniture','Electronics','Appliances','Clothes','Books','Bundles'];
+    const inDetail = !!s.sel;
+    const inThread = !!s.chat;
+    const inSub = !!s.sub;
+
+    const showHome    = s.screen==='home' && !inDetail;
+    const showDetail  = inDetail;
+    const showWanted  = s.screen==='wanted';
+    const showChatList= s.screen==='chat' && !inThread;
+    const showThread  = s.screen==='chat' && inThread;
+    const showProfile = s.screen==='profile' && !inSub;
+    const showSell    = s.screen==='sell';
+    const showListings= s.sub==='listings';
+    const showReviews = s.sub==='reviews';
+    const showGrad    = s.sub==='grad';
+    const showBrowse  = showHome;
+    const showTopBack = showDetail || showThread || inSub;
+    const showNav     = !inDetail && !inThread && !inSub;
+
+    const setTab = (t) => this.setState({ screen:t, sel:null, chat:null, sub:null });
+    const openItem = (it) => this.setState({ sel:it });
+    const back = () => { if (inThread) this.setState({ chat:null }); else if (inSub) this.setState({ sub:null }); else this.setState({ sel:null }); };
+    const buy = () => this.setState({ toast:true });
+    const closeToast = () => this.setState({ toast:false, sel:null, screen:'home' });
+    const openChat = (c) => this.setState({ screen:'chat', chat:c });
+    const chatSeller = () => this.setState({ sel:null, screen:'chat', chat:chats[0] });
+
+    const q = s.query.trim().toLowerCase();
+    let list = (s.cat==='All') ? items : items.filter(i => i.cat===s.cat);
+    if (q) list = list.filter(i => i.title.toLowerCase().includes(q) || i.cat.toLowerCase().includes(q) || i.dorm.toLowerCase().includes(q));
+
+    const myItems = items.filter(i => i.seller==='Aldriano').map(it => ({ ...it, open:()=>openItem(it) }));
+    const setF = (k) => (e) => this.setState({ f: { ...s.f, [k]: e.target.value } });
+    const submitListing = () => {
+      if (s.listState !== 'idle') return;
+      this.setState({ listState:'saving' });
+      setTimeout(() => {
+        this.setState({ listState:'done' });
+        setTimeout(() => this.setState({ screen:'home', listState:'idle', f:{ title:'', price:'', cat:'Furniture', cond:'Like new' }, bundleOn:false }), 1100);
+      }, 550);
+    };
+    const listLabel = s.listState==='saving' ? 'Listing…' : (s.listState==='done' ? 'Listed! ✓' : 'List item');
+    const listBg = s.listState==='done' ? '#16A34A' : '#1E50E5';
+
+    const chips = cats.map(c => ({
+      label:c, select:()=>this.setState({cat:c}),
+      bg: c===s.cat ? '#1E50E5' : '#F0F3FA',
+      fg: c===s.cat ? '#fff' : '#5A6B8C',
+    }));
+
+    const mappedList = list.map(it => ({ ...it, open:()=>openItem(it) }));
+    const mappedWanted = wanted.map(w => ({ ...w, reply:()=>chatSeller() }));
+    const mappedChats = chats.map(c => ({ ...c, open:()=>openChat(c) }));
+    const thread = (s.chat?.thread || []).map(m => ({
+      text:m.text,
+      align: m.who==='me' ? 'flex-end' : 'flex-start',
+      bg: m.who==='me' ? '#1E50E5' : '#fff',
+      fg: m.who==='me' ? '#fff' : '#0C1A3A',
+      radius: m.who==='me' ? '16px 16px 4px 16px' : '16px 16px 16px 4px',
+    }));
+
+    const nav = [
+      { key:'home', label:'Home', icon:'🏠' },
+      { key:'wanted', label:'Wanted', icon:'🙋' },
+      { key:'sell', label:'Sell', icon:'➕' },
+      { key:'chat', label:'Chat', icon:'💬' },
+      { key:'profile', label:'Me', icon:'👤' },
+    ].map(n => {
+      const active = s.screen===n.key;
+      return { ...n, go:()=>setTab(n.key),
+        color: active ? '#1E50E5' : '#9AA6C0',
+        filter: active ? 'none' : 'grayscale(1) opacity(.55)' };
+    });
+
+    const subTitles = { listings:'My listings', reviews:'Reviews about me', grad:'Graduation package' };
+    const topTitle = inThread ? (s.chat?.name || '') : (inSub ? (subTitles[s.sub] || '') : (s.sel?.title || ''));
+
+    return {
+      email:s.email, onEmail:(e)=>this.setState({email:e.target.value}),
+      join:()=>{ if(s.email.trim()) this.setState({joined:true}); }, joined:s.joined, notJoined:!s.joined,
+      showHome, showDetail, showWanted, showChatList, showThread, showProfile, showSell,
+      showListings, showReviews, showGrad,
+      showBrowse, showTopBack, showNav, topTitle,
+      sel:s.sel || {}, toast:s.toast,
+      query:s.query, onQuery:(e)=>this.setState({query:e.target.value}),
+      chips, list:mappedList, wanted:mappedWanted, chats:mappedChats, thread, nav,
+      myItems, reviews,
+      openListings:()=>this.setState({sub:'listings'}), openReviews:()=>this.setState({sub:'reviews'}), openGrad:()=>this.setState({sub:'grad'}),
+      goSellBundle:()=>this.setState({screen:'sell', sub:null, bundleOn:true}),
+      f:s.f, onF:{ title:setF('title'), price:setF('price'), cat:setF('cat'), cond:setF('cond') },
+      toggleBundle:()=>this.setState({bundleOn:!s.bundleOn}),
+      bundleTrack: s.bundleOn ? '#16A34A' : '#F5A302', bundleKnob: s.bundleOn ? '18px' : '2px',
+      submitListing, listLabel, listBg,
+      setTab, openItem, back, buy, closeToast, openChat, chatSeller,
+      location:s.location, toggleLocation:()=>this.setState({ location: s.location==='Thomas House' ? 'Union Building' : 'Thomas House' }),
+    };
+  }
+}
+</script>
+</body>
+</html>
