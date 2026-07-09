@@ -20,11 +20,23 @@ import {
   subscribeOrders,
   submitOrderReview,
   getUserId,
+  fetchConversations,
+  fetchMessages,
+  getOrCreateConversation,
+  sendMessage as apiSendMessage,
+  markConversationRead,
+  fetchNotifications,
+  markAllNotificationsRead,
+  markNotificationRead,
+  subscribeMessages,
+  subscribeNotifications,
   type ProfileStats,
   type OrderRow,
+  type ConversationRow,
+  type MessageRow,
+  type NotifRow,
 } from '../lib/api'
-import { CHATS } from '../data'
-import type { EnrichedItem, Item, Profile, SellerReview, ThreadMsg } from '../types'
+import type { EnrichedItem, Item, Profile } from '../types'
 
 // blank profile until the real one loads (fresh-install: nothing populated)
 const EMPTY_PROFILE: Profile = {
@@ -68,22 +80,25 @@ export interface State {
   orders: OrderRow[]
   ordersLoading: boolean
   ordersError: string | null
-  chatId: number | null
+  // messages (real)
+  convs: ConversationRow[]
+  convsLoading: boolean
+  activeConvId: string | null
+  msgs: MessageRow[]
+  msgsLoading: boolean
   msgDraft: string
-  extra: Record<number, ThreadMsg[]>
-  read: Record<number, boolean>
+  // notifications (real)
+  notifs: NotifRow[]
+  notifsLoading: boolean
   notifFilter: string
-  notifRead: Record<number, boolean>
   photo: string | null
   editOpen: boolean
   checkoutOpen: boolean
   coStep: CoStep
   pay: 'cod' | 'qris'
   pickup: 'meet' | 'leave' | 'security'
-  rvStars: number
-  rvText: string
-  reviewsBySeller: Record<string, SellerReview[]>
   sellerOpen: boolean
+  sellerId: string | null
   sellerName: string | null
   profile: Profile
   pf: Profile
@@ -117,22 +132,23 @@ const initialState: State = {
   orders: [],
   ordersLoading: false,
   ordersError: null,
-  chatId: null,
+  convs: [],
+  convsLoading: false,
+  activeConvId: null,
+  msgs: [],
+  msgsLoading: false,
   msgDraft: '',
-  extra: {},
-  read: {},
+  notifs: [],
+  notifsLoading: false,
   notifFilter: 'all',
-  notifRead: {},
   photo: null,
   editOpen: false,
   checkoutOpen: false,
   coStep: 'options',
   pay: 'cod',
   pickup: 'security',
-  rvStars: 0,
-  rvText: '',
-  reviewsBySeller: {},
   sellerOpen: false,
+  sellerId: null,
   sellerName: null,
   profile: { ...EMPTY_PROFILE },
   pf: { ...EMPTY_PROFILE },
@@ -175,13 +191,13 @@ export interface MarketplaceApi {
   deleteMyListing: (id: string) => Promise<void>
   toggleMenu: () => void
   openMessages: () => void
-  openChat: (id: number) => void
+  openConversation: (id: string) => void
   setMsgDraft: (v: string) => void
-  sendMsg: (activeId: number) => void
+  sendMsg: () => void
   openNotifs: () => void
   selectNotifFilter: (k: string) => void
   markAllRead: () => void
-  openNotifTarget: (n: { type: string; chatId?: number; itemId?: number; id: number }) => void
+  openNotifTarget: (n: NotifRow) => void
   openProfile: () => void
   openEdit: () => void
   closeEdit: () => void
@@ -201,11 +217,7 @@ export interface MarketplaceApi {
   confirmOrderPickup: (id: string) => Promise<void>
   cancelMyOrder: (id: string) => Promise<void>
   submitReviewFor: (order: OrderRow, rating: number, comment: string) => Promise<void>
-  coReview: () => void
-  setRvStars: (n: number) => void
-  setRvText: (v: string) => void
-  submitReview: () => void
-  openSellerProfile: (name: string | null) => void
+  openSellerProfile: (id: string | null, name: string | null) => void
   closeSellerProfile: () => void
   openWa: (wa: string | undefined, title: string | undefined) => void
   logout: () => void
@@ -276,6 +288,59 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
     })
     return () => unsub?.()
   }, [loadOrders])
+
+  // ---- messages + notifications (real, realtime) ----
+  const loadConversations = useCallback(async () => {
+    patch({ convsLoading: true })
+    try {
+      patch({ convs: await fetchConversations(), convsLoading: false })
+    } catch {
+      patch({ convsLoading: false })
+    }
+  }, [patch])
+
+  const loadMessages = useCallback(async (convId: string) => {
+    patch({ msgsLoading: true })
+    try {
+      patch({ msgs: await fetchMessages(convId), msgsLoading: false })
+    } catch {
+      patch({ msgsLoading: false })
+    }
+  }, [patch])
+
+  const loadNotifications = useCallback(async () => {
+    patch({ notifsLoading: true })
+    try {
+      patch({ notifs: await fetchNotifications(), notifsLoading: false })
+    } catch {
+      patch({ notifsLoading: false })
+    }
+  }, [patch])
+
+  // ref so the realtime callback always sees the currently-open thread
+  const activeConvRef = useRef<string | null>(null)
+  useEffect(() => {
+    activeConvRef.current = state.activeConvId
+  }, [state.activeConvId])
+
+  useEffect(() => {
+    let unsubM: (() => void) | undefined
+    let unsubN: (() => void) | undefined
+    getUserId().then((uid) => {
+      if (!uid) return
+      loadConversations()
+      loadNotifications()
+      unsubM = subscribeMessages(uid, () => {
+        loadConversations()
+        if (activeConvRef.current) loadMessages(activeConvRef.current)
+      })
+      unsubN = subscribeNotifications(uid, () => loadNotifications())
+    })
+    return () => {
+      unsubM?.()
+      unsubN?.()
+    }
+  }, [loadConversations, loadNotifications, loadMessages])
 
   const pickupCode = (p: State['pickup']) =>
     p === 'meet' ? 'meet_in_person' : p === 'leave' ? 'trusted_handoff' : 'security_post'
@@ -349,12 +414,17 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
 
     openItem: (it) => patch({ sel: it, menuOpen: false }),
     closeDetail: () => patch({ sel: null }),
-    chatSeller: () =>
-      patch((prev) => {
-        const match = CHATS.find((c) => c.name === (prev.sel && prev.sel.seller))
-        const cid = match ? match.id : CHATS[0].id
-        return { sel: null, view: 'messages', chatId: cid, read: { ...prev.read, [cid]: true }, menuOpen: false }
-      }),
+    chatSeller: async () => {
+      const sel = state.sel
+      if (!sel || !sel.ownerId) return
+      try {
+        const cid = await getOrCreateConversation(sel.id, sel.ownerId)
+        patch({ sel: null, view: 'messages', activeConvId: cid, msgDraft: '', menuOpen: false })
+        await Promise.all([loadConversations(), loadMessages(cid)])
+      } catch (e) {
+        alert('Could not open chat: ' + (e instanceof Error ? e.message : 'unknown error'))
+      }
+    },
 
     openSell: () => patch({ sellOpen: true, menuOpen: false, sel: null }),
     closeSell: () =>
@@ -417,40 +487,55 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
 
     toggleMenu: () => patch((prev) => ({ menuOpen: !prev.menuOpen })),
 
-    openMessages: () => patch({ view: 'messages', menuOpen: false, sel: null }),
-    openChat: (id) => patch((prev) => ({ chatId: id, read: { ...prev.read, [id]: true } })),
+    openMessages: () => {
+      patch({ view: 'messages', menuOpen: false, sel: null })
+      loadConversations()
+    },
+    openConversation: (id) => {
+      patch({ activeConvId: id, msgDraft: '' })
+      loadMessages(id)
+      markConversationRead(id).then(() => loadConversations())
+    },
     setMsgDraft: (v) => patch({ msgDraft: v }),
-    sendMsg: (activeId) =>
-      patch((prev) => {
-        const d = prev.msgDraft.trim()
-        if (!d) return {}
-        return {
-          extra: { ...prev.extra, [activeId]: (prev.extra[activeId] || []).concat([{ who: 'me', text: d }]) },
-          msgDraft: '',
-        }
-      }),
+    sendMsg: async () => {
+      const convId = state.activeConvId
+      const d = state.msgDraft.trim()
+      if (!convId || !d) return
+      patch({ msgDraft: '' })
+      try {
+        await apiSendMessage(convId, d)
+        await loadMessages(convId)
+        loadConversations()
+      } catch (e) {
+        patch({ msgDraft: d })
+        alert('Could not send: ' + (e instanceof Error ? e.message : 'unknown error'))
+      }
+    },
 
-    openNotifs: () => patch({ view: 'notifications', menuOpen: false, sel: null }),
+    openNotifs: () => {
+      patch({ view: 'notifications', menuOpen: false, sel: null })
+      loadNotifications()
+    },
     selectNotifFilter: (k) => patch({ notifFilter: k }),
-    markAllRead: () =>
-      patch((prev) => {
-        const nr = { ...prev.notifRead }
-        // NOTIFS ids are static
-        for (let i = 1; i <= 7; i++) nr[i] = true
-        return { notifRead: nr }
-      }),
-    openNotifTarget: (n) =>
-      patch((prev) => {
-        const nr = { ...prev.notifRead, [n.id]: true }
-        if (n.type === 'message' && n.chatId != null) {
-          return { notifRead: nr, view: 'messages', chatId: n.chatId, read: { ...prev.read, [n.chatId]: true } }
-        }
-        if (n.itemId != null) {
-          const it = enrichedItems.find((x) => x.id === String(n.itemId)) || null
-          return { notifRead: nr, sel: it }
-        }
-        return { notifRead: nr }
-      }),
+    markAllRead: async () => {
+      await markAllNotificationsRead()
+      loadNotifications()
+    },
+    openNotifTarget: async (n) => {
+      markNotificationRead(n.id).catch(() => {})
+      if (n.type === 'new_message' && n.reference_id) {
+        patch({ view: 'messages', activeConvId: n.reference_id, menuOpen: false, sel: null })
+        loadMessages(n.reference_id)
+        markConversationRead(n.reference_id).then(() => loadConversations())
+      } else if (n.type === 'order_update') {
+        patch({ view: 'orders', menuOpen: false, sel: null })
+      } else if (n.reference_id) {
+        // price drop / item update → open the listing if it's in the current feed
+        const it = state.feed.find((x) => x.id === n.reference_id) || null
+        patch({ sel: it, view: it ? state.view : 'browse', menuOpen: false })
+      }
+      loadNotifications()
+    },
 
     openProfile: () => patch({ view: 'profile', menuOpen: false, sel: null }),
     openEdit: () => patch((prev) => ({ editOpen: true, pf: { ...prev.profile }, pfError: null })),
@@ -524,27 +609,8 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
       await submitOrderReview(order, rating, comment)
       await Promise.all([loadOrders(), loadProfile()])
     },
-    coReview: () => patch({ coStep: 'review', rvStars: 0, rvText: '' }),
-    setRvStars: (n) => patch({ rvStars: n }),
-    setRvText: (v) => patch({ rvText: v }),
-    submitReview: () =>
-      patch((prev) => {
-        const name = prev.sel && prev.sel.seller
-        if (!name || !prev.rvStars) return {}
-        const rev: SellerReview = {
-          by: prev.profile.name,
-          initial: (prev.profile.name || 'A').charAt(0),
-          tone: 'sand',
-          stars: prev.rvStars,
-          ago: 'just now',
-          item: prev.sel!.title,
-          text: prev.rvText.trim() || 'Great trade — smooth, friendly and on time.',
-        }
-        const cur = prev.reviewsBySeller[name] || []
-        return { reviewsBySeller: { ...prev.reviewsBySeller, [name]: [rev, ...cur] }, coStep: 'reviewdone' }
-      }),
 
-    openSellerProfile: (name) => patch({ sellerOpen: true, sellerName: name }),
+    openSellerProfile: (id, name) => patch({ sellerOpen: true, sellerId: id, sellerName: name }),
     closeSellerProfile: () => patch({ sellerOpen: false }),
 
     openWa: (wa, title) => {

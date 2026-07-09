@@ -1,5 +1,4 @@
 import { useM } from './context'
-import { CHATS, NOTIFS } from '../data'
 import { Search, Plus, Heart, MessageBubble, Bell, Verified } from '../components/Icons'
 
 const navBtn: React.CSSProperties = {
@@ -64,8 +63,8 @@ export default function TopBar() {
   const s = state
 
   const savedCount = Object.keys(s.saved).length
-  const unreadCount = CHATS.filter((c) => c.unread && !s.read[c.id]).length
-  const notifBadge = NOTIFS.filter((n) => n.unread && !s.notifRead[n.id]).length
+  const unreadCount = s.convs.reduce((sum, c) => sum + c.unread, 0)
+  const notifBadge = s.notifs.filter((n) => !n.is_read).length
 
   const profileInitial = (s.profile.name || '?').trim().charAt(0).toUpperCase()
   const stats = s.stats

@@ -68,7 +68,7 @@ export default function DetailModal() {
           <p style={{ fontSize: 14, lineHeight: 1.65, color: '#5A5648', margin: '0 0 18px' }}>{sel.desc}</p>
 
           {/* seller card */}
-          <div onClick={() => openSellerProfile(sel.seller)} className="lok-btn" style={{ cursor: 'pointer', background: '#F4EFE5', border: '1px solid #E4DDCE', borderRadius: 16, padding: 15, display: 'flex', alignItems: 'center', gap: 13, marginBottom: 13 }}>
+          <div onClick={() => openSellerProfile(sel.ownerId ?? null, sel.seller)} className="lok-btn" style={{ cursor: 'pointer', background: '#F4EFE5', border: '1px solid #E4DDCE', borderRadius: 16, padding: 15, display: 'flex', alignItems: 'center', gap: 13, marginBottom: 13 }}>
             <div style={{ width: 46, height: 46, borderRadius: '50%', background: t.tint, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, color: '#3A362C', flex: 'none', fontFamily: "'Bricolage Grotesque',sans-serif" }}>{sel.sellerInitial}</div>
             <div style={{ flex: 1 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 7, fontWeight: 700, fontSize: 15 }}>

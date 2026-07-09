@@ -182,10 +182,15 @@ export interface ReviewRow {
 export async function fetchReviewsAboutMe(): Promise<ReviewRow[]> {
   const user = await getUser()
   if (!user) return []
+  return fetchReviewsForUser(user.id)
+}
+
+// Public reviews about any user (for the seller-profile modal).
+export async function fetchReviewsForUser(userId: string): Promise<ReviewRow[]> {
   const { data, error } = await supabase
     .from('reviews')
     .select('id, rating, comment, created_at, reviewer_id')
-    .eq('reviewee_id', user.id)
+    .eq('reviewee_id', userId)
     .order('created_at', { ascending: false })
   if (error) throw error
   const rows = (data as { id: string; rating: number; comment: string | null; created_at: string; reviewer_id: string | null }[]) || []
@@ -542,4 +547,175 @@ export async function submitOrderReview(order: OrderRow, rating: number, comment
     comment: comment.trim() || null,
   })
   if (error) throw error
+}
+
+// ===========================================================================
+// MESSAGES + NOTIFICATIONS (Section 4) — real conversations, messages,
+// notifications, and realtime subscriptions. All RLS-scoped to the caller.
+// ===========================================================================
+export interface ConversationRow {
+  id: string
+  listing_id: string | null
+  other_id: string
+  other_name: string
+  other_photo: string | null
+  other_verified: boolean
+  last_content: string
+  last_at: string
+  unread: number
+  item_title: string
+}
+
+export async function fetchConversations(): Promise<ConversationRow[]> {
+  const uid = await getUserId()
+  if (!uid) return []
+  const { data: convs, error } = await supabase
+    .from('conversations')
+    .select('*, listing:listing_id(title)')
+    .or(`buyer_id.eq.${uid},seller_id.eq.${uid}`)
+  if (error) throw error
+  const rows = (convs as (Record<string, unknown> & { id: string; buyer_id: string; seller_id: string; listing_id: string | null; created_at: string; listing: { title: string } | null })[]) || []
+  if (!rows.length) return []
+  const ids = rows.map((r) => r.id)
+  const { data: msgs } = await supabase
+    .from('messages')
+    .select('conversation_id, sender_id, content, is_read, created_at')
+    .in('conversation_id', ids)
+    .order('created_at', { ascending: true })
+  const byConv = new Map<string, { sender_id: string; content: string; is_read: boolean; created_at: string }[]>()
+  for (const m of (msgs as { conversation_id: string; sender_id: string; content: string; is_read: boolean; created_at: string }[] | null) || []) {
+    const arr = byConv.get(m.conversation_id) || []
+    arr.push(m)
+    byConv.set(m.conversation_id, arr)
+  }
+  const otherIds = [...new Set(rows.map((r) => (r.buyer_id === uid ? r.seller_id : r.buyer_id)).filter(Boolean))]
+  const { data: people } = otherIds.length
+    ? await supabase.from('public_profiles').select('id, name, profile_photo_url, verification_status').in('id', otherIds)
+    : { data: [] as SellerLite[] }
+  const byId = new Map(((people as SellerLite[] | null) || []).map((p) => [p.id, p]))
+  const result: ConversationRow[] = rows.map((r) => {
+    const otherId = r.buyer_id === uid ? r.seller_id : r.buyer_id
+    const other = byId.get(otherId)
+    const ms = byConv.get(r.id) || []
+    const last = ms[ms.length - 1]
+    return {
+      id: r.id,
+      listing_id: r.listing_id,
+      other_id: otherId,
+      other_name: other?.name || 'Student',
+      other_photo: other?.profile_photo_url || null,
+      other_verified: other?.verification_status === 'verified',
+      last_content: last?.content || '',
+      last_at: last?.created_at || r.created_at,
+      unread: ms.filter((m) => m.sender_id !== uid && !m.is_read).length,
+      item_title: r.listing?.title || 'a listing',
+    }
+  })
+  result.sort((a, b) => new Date(b.last_at).getTime() - new Date(a.last_at).getTime())
+  return result
+}
+
+export interface MessageRow {
+  id: string
+  conversation_id: string
+  sender_id: string
+  content: string
+  is_read: boolean
+  created_at: string
+}
+
+export async function fetchMessages(conversationId: string): Promise<MessageRow[]> {
+  const { data, error } = await supabase
+    .from('messages')
+    .select('*')
+    .eq('conversation_id', conversationId)
+    .order('created_at', { ascending: true })
+  if (error) throw error
+  return (data as MessageRow[]) || []
+}
+
+// buyer messaging a seller about a listing — reuse the existing thread if any
+export async function getOrCreateConversation(listingId: string, sellerId: string): Promise<string> {
+  const uid = await getUserId()
+  if (!uid) throw new Error('Not signed in')
+  if (sellerId === uid) throw new Error("That's your own listing.")
+  const { data: existing } = await supabase
+    .from('conversations')
+    .select('id')
+    .eq('listing_id', listingId)
+    .eq('buyer_id', uid)
+    .maybeSingle()
+  if (existing) return (existing as { id: string }).id
+  const { data, error } = await supabase
+    .from('conversations')
+    .insert({ listing_id: listingId, buyer_id: uid, seller_id: sellerId })
+    .select('id')
+    .single()
+  if (error) throw error
+  return (data as { id: string }).id
+}
+
+export async function sendMessage(conversationId: string, content: string): Promise<void> {
+  const uid = await getUserId()
+  if (!uid) throw new Error('Not signed in')
+  const trimmed = content.trim()
+  if (!trimmed) return
+  const { error } = await supabase.from('messages').insert({ conversation_id: conversationId, sender_id: uid, content: trimmed })
+  if (error) throw error
+}
+
+export async function markConversationRead(conversationId: string): Promise<void> {
+  const uid = await getUserId()
+  if (!uid) return
+  await supabase.from('messages').update({ is_read: true }).eq('conversation_id', conversationId).neq('sender_id', uid).eq('is_read', false)
+}
+
+// ---- notifications ----
+export type NotifType = 'new_message' | 'item_update' | 'price_drop' | 'order_update' | 'system'
+export interface NotifRow {
+  id: string
+  type: NotifType
+  reference_id: string | null
+  title: string
+  body: string | null
+  is_read: boolean
+  created_at: string
+}
+
+export async function fetchNotifications(): Promise<NotifRow[]> {
+  const { data, error } = await supabase.from('notifications').select('*').order('created_at', { ascending: false }).limit(100)
+  if (error) throw error
+  return (data as NotifRow[]) || []
+}
+
+export async function markAllNotificationsRead(): Promise<void> {
+  const uid = await getUserId()
+  if (!uid) return
+  await supabase.from('notifications').update({ is_read: true }).eq('user_id', uid).eq('is_read', false)
+}
+
+export async function markNotificationRead(id: string): Promise<void> {
+  await supabase.from('notifications').update({ is_read: true }).eq('id', id)
+}
+
+// ---- realtime (RLS-filtered by Supabase to the current user's rows) ----
+export function subscribeMessages(userId: string, onChange: () => void): () => void {
+  const ch = supabase
+    .channel('msgs-' + userId)
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'messages' }, onChange)
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'conversations' }, onChange)
+    .subscribe()
+  return () => {
+    supabase.removeChannel(ch)
+  }
+}
+
+export function subscribeNotifications(userId: string, onChange: () => void): () => void {
+  const ch = supabase
+    .channel('notifs-' + userId)
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'notifications', filter: `user_id=eq.${userId}` }, onChange)
+    .subscribe()
+  return () => {
+    supabase.removeChannel(ch)
+  }
 }
