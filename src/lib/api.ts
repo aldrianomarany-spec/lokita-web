@@ -462,16 +462,41 @@ export async function createOrder(o: NewOrder): Promise<string> {
       buyer_id: user.id,
       seller_id: o.sellerId,
       payment_method: o.payment_method,
-      payment_status: o.payment_method === 'qris' ? 'paid' : 'pending',
+      // money is only "paid" once the Midtrans webhook confirms it (QRIS) or
+      // cash changes hands at pickup (COD)
+      payment_status: 'pending',
       pickup_method: o.pickup_method,
       status: 'paid',
-      paid_at: o.payment_method === 'qris' ? new Date(now).toISOString() : null,
+      paid_at: null,
       dropoff_deadline: new Date(now + 2 * DAY).toISOString(),
     })
     .select('id')
     .single()
   if (error) throw error
   return (data as { id: string }).id
+}
+
+// ---- real QRIS payment (Midtrans via our Vercel serverless functions) ----
+export interface QrisCharge {
+  orderId: string
+  qrUrl: string
+  amount: number
+}
+
+// Ask the server to create a Midtrans QRIS charge for an order we just placed.
+// Returns the QR image URL to display; the webhook marks the order paid.
+export async function createQrisCharge(transactionId: string): Promise<QrisCharge> {
+  const { data } = await supabase.auth.getSession()
+  const token = data.session?.access_token
+  if (!token) throw new Error('Not signed in')
+  const r = await fetch('/api/qris/create', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+    body: JSON.stringify({ transactionId }),
+  })
+  const j = (await r.json().catch(() => ({}))) as Partial<QrisCharge> & { error?: string }
+  if (!r.ok) throw new Error(j.error || 'Could not start QRIS payment')
+  return j as QrisCharge
 }
 
 export async function markDroppedOff(id: string): Promise<void> {

@@ -67,7 +67,11 @@ function OrderCard({ o }: { o: OrderRow }) {
       </div>
 
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', margin: '12px 0' }}>
-        <span style={chip}>{o.payment_method === 'qris' ? 'QRIS' : 'Cash on Delivery'} · {o.payment_status}</span>
+        <span style={chip}>
+          {o.payment_method === 'qris'
+            ? o.payment_status === 'paid' ? 'QRIS · Paid ✓' : o.payment_status === 'failed' ? 'QRIS · Payment failed' : 'QRIS · Unpaid'
+            : 'Cash · Pay at pickup'}
+        </span>
         <span style={chip}>{o.pickup_method ? PICKUP_LABEL[o.pickup_method] : 'Pickup'}</span>
         {o.status === 'paid' && o.dropoff_deadline && <span style={chip}>Drop-off by {when(o.dropoff_deadline)}</span>}
         {o.status === 'dropped_off' && o.pickup_deadline && <span style={chip}>Pick up by {when(o.pickup_deadline)}</span>}

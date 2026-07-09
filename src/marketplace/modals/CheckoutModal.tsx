@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { useM } from '../context'
 import Overlay, { stop } from './Overlay'
 import { Check } from '../../components/Icons'
@@ -19,9 +20,18 @@ const PAY_OPTS = [
 ]
 
 export default function CheckoutModal() {
-  const { state, closeCheckout, setPay, setPickup, coContinue, coPaid, openOrders } = useM()
+  const { state, patch, closeCheckout, setPay, setPickup, coContinue, cancelQrisPayment, openOrders } = useM()
   const s = state
   const sel = s.sel
+
+  // QRIS: the Midtrans webhook marks the order paid; realtime refreshes orders,
+  // and this flips the modal to the confirmation step automatically.
+  const paidOrderId = s.qris?.orderId
+  const qrisPaid = !!paidOrderId && s.orders.some((o) => o.id === paidOrderId && o.payment_status === 'paid')
+  useEffect(() => {
+    if (s.coStep === 'qris' && qrisPaid) patch({ coStep: 'done' })
+  }, [s.coStep, qrisPaid, patch])
+
   if (!sel) return null
 
   const payLabel = s.pay === 'qris' ? 'QRIS' : 'Cash on Delivery'
@@ -85,13 +95,25 @@ export default function CheckoutModal() {
         {s.coStep === 'qris' && (
           <div style={{ textAlign: 'center' }}>
             <div style={{ fontFamily: "'Bricolage Grotesque',sans-serif", fontSize: 20, fontWeight: 800, marginBottom: 4 }}>Scan to pay</div>
-            <div style={{ fontSize: 13, color: '#6F6A5C', marginBottom: 18 }}>Open any QRIS-enabled app and scan</div>
-            <div style={{ width: 200, height: 200, margin: '0 auto 16px', borderRadius: 18, background: '#fff', border: '1px solid #E4DDCE', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 18 }}>
-              <div style={{ width: '100%', height: '100%', backgroundImage: 'repeating-linear-gradient(0deg,#201E18 0 7px,transparent 7px 14px),repeating-linear-gradient(90deg,#201E18 0 7px,transparent 7px 14px)', opacity: 0.82, borderRadius: 4 }} />
+            <div style={{ fontSize: 13, color: '#6F6A5C', marginBottom: 18 }}>Open any QRIS-enabled app (GoPay, OVO, DANA, mobile banking) and scan</div>
+            <div style={{ width: 220, height: 220, margin: '0 auto 16px', borderRadius: 18, background: '#fff', border: '1px solid #E4DDCE', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 12, overflow: 'hidden' }}>
+              {s.qrisLoading ? (
+                <span className="lok-spin" style={{ width: 28, height: 28, border: '3px solid #DAD1BF', borderTopColor: 'var(--accent,#2A5FA8)', borderRadius: '50%', display: 'inline-block' }} />
+              ) : s.qris ? (
+                <img src={s.qris.qrUrl} alt="QRIS payment code" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+              ) : (
+                <span style={{ fontSize: 12.5, color: '#B23A1B', fontWeight: 600, padding: '0 10px' }}>Couldn't load the QR code.</span>
+              )}
             </div>
             <div style={{ fontFamily: "'Bricolage Grotesque',sans-serif", fontWeight: 800, fontSize: 22, color: 'var(--accent,#2A5FA8)' }}>{sel.price}</div>
-            <div style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 11, color: '#A29C8B', marginBottom: 20 }}>LOKITA · QRIS</div>
-            <button onClick={coPaid} className="lok-btn" style={{ width: '100%', border: 'none', background: 'var(--accent,#2A5FA8)', color: '#F7F3EA', fontFamily: 'inherit', fontWeight: 700, fontSize: 14.5, padding: 14, borderRadius: 14, cursor: 'pointer' }}>I've completed payment</button>
+            <div style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 11, color: '#A29C8B', marginBottom: 18 }}>LOKITA · QRIS</div>
+            {s.qris && (
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 9, background: '#EAF1EC', border: '1px solid #CFE2D7', borderRadius: 12, padding: '11px 14px', marginBottom: 12, fontSize: 12.5, fontWeight: 600, color: '#12503A' }}>
+                <span className="lok-spin" style={{ width: 14, height: 14, border: '2px solid #A9CBB8', borderTopColor: '#12503A', borderRadius: '50%', display: 'inline-block' }} />
+                Waiting for your payment — this confirms automatically.
+              </div>
+            )}
+            <button onClick={cancelQrisPayment} className="lok-btn" style={{ width: '100%', border: '1px solid #E4C4B8', background: '#FBEEE9', color: '#C0492A', fontFamily: 'inherit', fontWeight: 700, fontSize: 13.5, padding: 12, borderRadius: 13, cursor: 'pointer' }}>Cancel payment</button>
           </div>
         )}
 

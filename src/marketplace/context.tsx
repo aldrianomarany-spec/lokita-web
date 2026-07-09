@@ -13,6 +13,7 @@ import {
   createListing,
   deleteListing,
   createOrder,
+  createQrisCharge,
   fetchMyOrders,
   markDroppedOff,
   confirmPickup,
@@ -99,6 +100,9 @@ export interface State {
   coStep: CoStep
   pay: 'cod' | 'qris'
   pickup: 'meet' | 'leave' | 'security'
+  // real QRIS payment in progress (QR to display + which order it pays for)
+  qris: { orderId: string; qrUrl: string; amount: number } | null
+  qrisLoading: boolean
   sellerOpen: boolean
   sellerId: string | null
   sellerName: string | null
@@ -148,6 +152,8 @@ const initialState: State = {
   coStep: 'options',
   pay: 'cod',
   pickup: 'security',
+  qris: null,
+  qrisLoading: false,
   sellerOpen: false,
   sellerId: null,
   sellerName: null,
@@ -211,7 +217,7 @@ export interface MarketplaceApi {
   setPay: (v: 'cod' | 'qris') => void
   setPickup: (v: 'meet' | 'leave' | 'security') => void
   coContinue: () => void
-  coPaid: () => void
+  cancelQrisPayment: () => void
   openOrders: () => void
   markOrderDropped: (id: string) => Promise<void>
   confirmOrderPickup: (id: string) => Promise<void>
@@ -395,25 +401,26 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
   const pickupCode = (p: State['pickup']) =>
     p === 'meet' ? 'meet_in_person' : p === 'leave' ? 'trusted_handoff' : 'security_post'
 
-  // place a real order from the checkout; refresh feed/orders/stats
-  const placeOrder = async (): Promise<boolean> => {
+  // place a real order from the checkout; refresh feed/orders/stats.
+  // Returns the new order's id, or null on failure.
+  const placeOrder = async (): Promise<string | null> => {
     const sel = state.sel
     if (!sel || !sel.ownerId) {
       alert('This listing is no longer available.')
-      return false
+      return null
     }
     try {
-      await createOrder({ listingId: sel.id, sellerId: sel.ownerId, payment_method: state.pay, pickup_method: pickupCode(state.pickup) })
+      const id = await createOrder({ listingId: sel.id, sellerId: sel.ownerId, payment_method: state.pay, pickup_method: pickupCode(state.pickup) })
       const floorCode = state.profile.floor ? state.profile.floor.toLowerCase() : null
       await Promise.all([
         loadFeed({ cat: state.cat, cond: state.cond, sort: state.sort, query: state.query }, floorCode),
         loadOrders(),
       ])
       loadProfile()
-      return true
+      return id
     } catch (e) {
       alert('Could not place order: ' + (e instanceof Error ? e.message : 'unknown error'))
-      return false
+      return null
     }
   }
 
@@ -625,19 +632,47 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
       }
     },
 
-    openCheckout: () => patch({ checkoutOpen: true, coStep: 'options', pay: 'cod', pickup: 'security' }),
-    closeCheckout: () => patch({ checkoutOpen: false, coStep: 'options', sel: null }),
+    openCheckout: () => patch({ checkoutOpen: true, coStep: 'options', pay: 'cod', pickup: 'security', qris: null, qrisLoading: false }),
+    closeCheckout: () => patch({ checkoutOpen: false, coStep: 'options', sel: null, qris: null, qrisLoading: false }),
     setPay: (v) => patch({ pay: v }),
     setPickup: (v) => patch({ pickup: v }),
     coContinue: async () => {
       if (state.pay === 'qris') {
-        patch({ coStep: 'qris' })
+        // place the order first (reserves the listing), then create a REAL
+        // Midtrans charge; the webhook + realtime flip it to paid.
+        const id = await placeOrder()
+        if (!id) return
+        patch({ coStep: 'qris', qrisLoading: true, qris: null })
+        try {
+          const q = await createQrisCharge(id)
+          patch({ qris: q, qrisLoading: false })
+        } catch (e) {
+          // roll the order back so the listing frees up, and stay on options
+          try {
+            await cancelOrder(id)
+          } catch {
+            /* already cancelled / gone */
+          }
+          const floorCode = state.profile.floor ? state.profile.floor.toLowerCase() : null
+          await Promise.all([loadOrders(), loadFeed({ cat: state.cat, cond: state.cond, sort: state.sort, query: state.query }, floorCode)])
+          patch({ coStep: 'options', qrisLoading: false, qris: null })
+          alert(e instanceof Error ? e.message : 'Could not start QRIS payment')
+        }
         return
       }
       if (await placeOrder()) patch({ coStep: 'done' })
     },
-    coPaid: async () => {
-      if (await placeOrder()) patch({ coStep: 'done' })
+    cancelQrisPayment: async () => {
+      const id = state.qris?.orderId
+      patch({ checkoutOpen: false, coStep: 'options', sel: null, qris: null, qrisLoading: false })
+      if (!id) return
+      try {
+        await cancelOrder(id)
+      } catch {
+        /* may already be paid — leave it */
+      }
+      const floorCode = state.profile.floor ? state.profile.floor.toLowerCase() : null
+      await Promise.all([loadOrders(), loadFeed({ cat: state.cat, cond: state.cond, sort: state.sort, query: state.query }, floorCode)])
     },
     openOrders: () => patch({ view: 'orders', menuOpen: false, sel: null, checkoutOpen: false }),
     markOrderDropped: async (id) => {
