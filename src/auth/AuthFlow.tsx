@@ -9,6 +9,7 @@ import {
   getMyProfile,
   resetPassword,
   isProfileComplete,
+  onAuthStateChange,
 } from '../lib/auth'
 
 const errMsg = (e: unknown) => (e instanceof Error ? e.message : 'Something went wrong. Please try again.')
@@ -157,17 +158,35 @@ export default function AuthFlow() {
   }, [])
 
   // Already signed in (returning user, or back from Google OAuth)? Skip the
-  // auth UI and route by whether onboarding is done.
+  // auth UI and route by whether onboarding is done. The OAuth return stores
+  // the session asynchronously AFTER first render, so a one-shot getSession()
+  // check misses it — we also subscribe to auth state changes and route the
+  // moment the session lands (fixes "Google login bounces back to login").
   useEffect(() => {
-    getSession().then(async (session) => {
-      if (!session) return
+    let active = true
+    let routed = false
+    const route = async () => {
+      if (routed) return
+      routed = true
       try {
         const p = await getMyProfile()
-        navigate(isProfileComplete(p) ? '/app' : '/onboarding', { replace: true })
+        if (active) navigate(isProfileComplete(p) ? '/app' : '/onboarding', { replace: true })
       } catch {
-        /* stay on login */
+        // session exists but the profile read failed — send them to onboarding
+        // rather than stranding them on the login screen
+        if (active) navigate('/onboarding', { replace: true })
       }
+    }
+    getSession().then((session) => {
+      if (session) route()
     })
+    const unsub = onAuthStateChange((session) => {
+      if (session) route()
+    })
+    return () => {
+      active = false
+      unsub()
+    }
   }, [navigate])
 
   const set = (k: keyof typeof f) => (e: React.ChangeEvent<HTMLInputElement>) =>
