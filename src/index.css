@@ -1,0 +1,253 @@
+/* ============================================================
+   LOKITA — global styles
+   Ported from the LOKITA Web v2 + App prototypes.
+   Warm editorial identity: cream "paper" canvas, ink type.
+   ============================================================ */
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: 'Hanken Grotesque', system-ui, sans-serif;
+  color: #201e18;
+  background: #f1ece1;
+  -webkit-font-smoothing: antialiased;
+}
+
+a {
+  color: var(--accent, #2a5fa8);
+  text-decoration: none;
+}
+a:hover {
+  color: var(--accent-deep, #1e4578);
+}
+
+/* scrollbars — paper-toned */
+::-webkit-scrollbar {
+  width: 11px;
+  height: 11px;
+}
+::-webkit-scrollbar-thumb {
+  background: #dad1bf;
+  border-radius: 8px;
+  border: 3px solid #f1ece1;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #c9bfa8;
+}
+
+/* ---------- keyframes ---------- */
+@keyframes lok-rise {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes lok-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+@keyframes lok-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes lok-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.35);
+    opacity: 0.55;
+  }
+}
+@keyframes lok-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-2px);
+  }
+}
+/* auth-flow keyframes */
+@keyframes lok-rise-lg {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes lok-pop-lg {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+@keyframes lok-load {
+  from {
+    width: 0;
+  }
+  to {
+    width: 100%;
+  }
+}
+@keyframes lok-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes lok-float-lg {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}
+@keyframes lok-splashout {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+/* ---------- interaction utility classes ---------- */
+.lok-card {
+  transition:
+    transform 0.22s cubic-bezier(0.2, 0.8, 0.3, 1),
+    box-shadow 0.22s ease,
+    border-color 0.22s ease;
+}
+.lok-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 18px 38px -14px rgba(32, 30, 24, 0.32);
+  border-color: #201e18;
+}
+.lok-card:active {
+  transform: translateY(-2px);
+}
+.lok-img {
+  transition: transform 0.5s cubic-bezier(0.2, 0.8, 0.3, 1);
+}
+.lok-card:hover .lok-img {
+  transform: scale(1.05);
+}
+.lok-heart {
+  transition:
+    transform 0.18s ease,
+    background 0.18s ease,
+    color 0.18s ease;
+}
+.lok-heart:hover {
+  transform: scale(1.12);
+}
+.lok-heart:active {
+  transform: scale(0.96);
+}
+.lok-chip {
+  transition:
+    background 0.16s ease,
+    color 0.16s ease,
+    border-color 0.16s ease;
+}
+.lok-navi {
+  transition:
+    background 0.16s ease,
+    color 0.16s ease;
+}
+.lok-navi:hover {
+  background: #ebe4d5;
+}
+.lok-btn {
+  transition:
+    transform 0.16s ease,
+    box-shadow 0.16s ease,
+    background 0.16s ease,
+    border-color 0.16s ease;
+}
+.lok-btn:hover {
+  transform: translateY(-1px);
+}
+.lok-btn:active {
+  transform: translateY(0);
+}
+.lok-locpin {
+  animation: lok-float 3.2s ease-in-out infinite;
+}
+.lok-in {
+  transition:
+    border-color 0.16s ease,
+    background 0.16s ease,
+    box-shadow 0.16s ease;
+}
+.lok-in:focus-within {
+  border-color: var(--accent, #2a5fa8);
+  background: #fff;
+}
+.lok-link {
+  transition: color 0.14s ease;
+}
+.lok-spin {
+  animation: lok-spin 0.7s linear infinite;
+}
+.lok-mark {
+  animation: lok-float-lg 3.4s ease-in-out infinite;
+}
+
+/* inputs/selects: focus treatment matching prototype's style-focus */
+.lok-field {
+  outline: none;
+  transition:
+    border-color 0.16s ease,
+    background 0.16s ease;
+}
+.lok-field:focus {
+  border-color: var(--accent, #2a5fa8);
+  background: #fff;
+}
+
+/* remove number input spinners, keep native select arrow off (custom look) */
+select.lok-field {
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+/* ---------- responsiveness ---------- */
+@media (max-width: 900px) {
+  .lok-sidebar {
+    display: none !important;
+  }
+}
+@media (max-width: 760px) {
+  .lok-authbrand {
+    display: none !important;
+  }
+}
