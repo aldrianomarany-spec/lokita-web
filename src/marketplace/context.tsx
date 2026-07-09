@@ -19,6 +19,9 @@ import {
   cancelOrder,
   subscribeOrders,
   submitOrderReview,
+  fetchWishlistIds,
+  addToWishlist,
+  removeFromWishlist,
   getUserId,
   fetchConversations,
   fetchMessages,
@@ -268,6 +271,35 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
 
   const enrichedItems = state.feed
 
+  // Load the signed-in user's real profile + stats (fresh-install: blank until set).
+  const loadProfile = useCallback(async () => {
+    patch({ profileLoading: true, profileError: null })
+    try {
+      const db = await fetchMyProfile()
+      if (!db) {
+        patch({ profileLoading: false, profileError: 'Not signed in' })
+        return
+      }
+      const ui = dbToUiProfile(db)
+      const stats = await fetchProfileStats(db.id)
+      patch({ profile: ui, pf: ui, photo: ui.profile_photo_url || null, stats, profileLoading: false })
+    } catch (e) {
+      patch({ profileLoading: false, profileError: e instanceof Error ? e.message : 'Failed to load profile' })
+    }
+  }, [patch])
+
+  // Hydrate the ♡ save map from the wishlist table so saves survive refresh.
+  const loadWishlist = useCallback(async () => {
+    try {
+      const ids = await fetchWishlistIds()
+      const map: Record<string, boolean> = {}
+      for (const id of ids) map[id] = true
+      patch({ saved: map })
+    } catch {
+      /* keep whatever's in memory */
+    }
+  }, [patch])
+
   // orders (transactions) — my purchases & sales, with realtime updates
   const loadOrders = useCallback(async () => {
     patch({ ordersLoading: true, ordersError: null })
@@ -284,10 +316,15 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
     getUserId().then((uid) => {
       if (!uid) return
       loadOrders()
-      unsub = subscribeOrders(uid, () => loadOrders())
+      // refresh both the orders list AND profile stats — so a seller's "Sold"
+      // (and either party's "Buying") tick up live when the counterparty acts.
+      unsub = subscribeOrders(uid, () => {
+        loadOrders()
+        loadProfile()
+      })
     })
     return () => unsub?.()
-  }, [loadOrders])
+  }, [loadOrders, loadProfile])
 
   // ---- messages + notifications (real, realtime) ----
   const loadConversations = useCallback(async () => {
@@ -367,26 +404,10 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
     }
   }
 
-  // Load the signed-in user's real profile + stats (fresh-install: blank until set).
-  const loadProfile = useCallback(async () => {
-    patch({ profileLoading: true, profileError: null })
-    try {
-      const db = await fetchMyProfile()
-      if (!db) {
-        patch({ profileLoading: false, profileError: 'Not signed in' })
-        return
-      }
-      const ui = dbToUiProfile(db)
-      const stats = await fetchProfileStats(db.id)
-      patch({ profile: ui, pf: ui, photo: ui.profile_photo_url || null, stats, profileLoading: false })
-    } catch (e) {
-      patch({ profileLoading: false, profileError: e instanceof Error ? e.message : 'Failed to load profile' })
-    }
-  }, [patch])
-
   useEffect(() => {
     loadProfile()
-  }, [loadProfile])
+    loadWishlist()
+  }, [loadProfile, loadWishlist])
 
   const api: MarketplaceApi = {
     state,
@@ -404,13 +425,29 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
     selectSort: (k) => patch({ sort: k }),
     toggleSavedView: () =>
       patch((prev) => ({ savedOnly: !prev.savedOnly, cat: 'All', query: '', menuOpen: false, view: 'browse' })),
-    toggleSaveItem: (id: string) =>
+    toggleSaveItem: async (id: string) => {
+      const wasSaved = !!state.saved[id]
+      // optimistic UI: flip the heart immediately
       patch((prev) => {
         const nx = { ...prev.saved }
-        if (nx[id]) delete nx[id]
+        if (wasSaved) delete nx[id]
         else nx[id] = true
         return { saved: nx }
-      }),
+      })
+      try {
+        if (wasSaved) await removeFromWishlist(id)
+        else await addToWishlist(id)
+      } catch (e) {
+        // revert on failure
+        patch((prev) => {
+          const nx = { ...prev.saved }
+          if (wasSaved) nx[id] = true
+          else delete nx[id]
+          return { saved: nx }
+        })
+        alert('Could not update your saved items: ' + (e instanceof Error ? e.message : 'unknown error'))
+      }
+    },
 
     openItem: (it) => patch({ sel: it, menuOpen: false }),
     closeDetail: () => patch({ sel: null }),

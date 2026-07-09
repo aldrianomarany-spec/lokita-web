@@ -207,6 +207,33 @@ export async function fetchReviewsForUser(userId: string): Promise<ReviewRow[]> 
   }))
 }
 
+// Just the listing ids the caller has saved — used to hydrate the ♡ state map.
+export async function fetchWishlistIds(): Promise<string[]> {
+  const user = await getUser()
+  if (!user) return []
+  const { data, error } = await supabase.from('wishlist').select('listing_id').eq('user_id', user.id)
+  if (error) throw error
+  return ((data as { listing_id: string }[]) || []).map((r) => r.listing_id)
+}
+
+export async function addToWishlist(listingId: string): Promise<void> {
+  const user = await getUser()
+  if (!user) throw new Error('Not signed in')
+  // idempotent: ignore a duplicate-key error if it's already saved
+  const { error } = await supabase.from('wishlist').upsert(
+    { user_id: user.id, listing_id: listingId },
+    { onConflict: 'user_id,listing_id', ignoreDuplicates: true },
+  )
+  if (error) throw error
+}
+
+export async function removeFromWishlist(listingId: string): Promise<void> {
+  const user = await getUser()
+  if (!user) throw new Error('Not signed in')
+  const { error } = await supabase.from('wishlist').delete().eq('user_id', user.id).eq('listing_id', listingId)
+  if (error) throw error
+}
+
 export async function fetchMyWishlist(): Promise<DbListing[]> {
   const user = await getUser()
   if (!user) return []

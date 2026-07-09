@@ -3,10 +3,10 @@ import { useM } from '../context'
 import { T } from '../../theme'
 import { tagStyle } from '../tagStyle'
 import Overlay, { stop } from './Overlay'
-import { ChevronRight, MapPin, MessageBubble, ShieldCheck, Verified } from '../../components/Icons'
+import { ChevronRight, Heart, MapPin, MessageBubble, ShieldCheck, Verified } from '../../components/Icons'
 
 export default function DetailModal() {
-  const { state, closeDetail, chatSeller, openCheckout, openSellerProfile, deleteMyListing } = useM()
+  const { state, closeDetail, chatSeller, openCheckout, openSellerProfile, deleteMyListing, toggleSaveItem } = useM()
   const [deleting, setDeleting] = useState(false)
   const sel = state.sel
   if (!sel) return null
@@ -18,6 +18,7 @@ export default function DetailModal() {
   const proxTag = (sel as { proxTag?: string }).proxTag || ''
   const hasPhoto = !!sel.photoUrl
   const isOwner = !!sel.mine
+  const isSaved = !!state.saved[sel.id]
 
   const onDelete = async () => {
     if (deleting) return
@@ -45,6 +46,16 @@ export default function DetailModal() {
             </div>
           )}
           {ts.tag && <span style={{ position: 'absolute', top: 16, left: 16, fontFamily: "'Spline Sans Mono',monospace", fontSize: 10, fontWeight: 600, color: ts.tagFg, background: ts.tagBg, padding: '5px 10px', borderRadius: 8, letterSpacing: '.04em' }}>{ts.tag}</span>}
+          {!isOwner && (
+            <button
+              onClick={() => toggleSaveItem(sel.id)}
+              className="lok-heart"
+              title={isSaved ? 'Remove from saved' : 'Save item'}
+              style={{ position: 'absolute', top: 14, right: 14, width: 40, height: 40, borderRadius: '50%', border: 'none', background: 'rgba(251,248,241,.92)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: isSaved ? '#D4562F' : '#5A5648', boxShadow: '0 2px 8px rgba(32,30,24,.15)' }}
+            >
+              <Heart fill={isSaved ? '#D4562F' : 'none'} size={19} />
+            </button>
+          )}
         </div>
 
         {/* right content */}

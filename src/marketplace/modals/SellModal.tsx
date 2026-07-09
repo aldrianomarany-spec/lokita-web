@@ -76,17 +76,21 @@ export default function SellModal() {
           </div>
 
           <div style={{ display: 'flex', gap: 10, margin: '2px 2px -2px' }}>
-            <span style={cap}>PICKUP BUILDING</span>
+            <span style={cap}>ITEM'S BUILDING</span>
             <span style={cap}>FLOOR</span>
           </div>
           <div style={{ display: 'flex', gap: 10 }}>
-            <select className="lok-field" value={f.loc} onChange={(e) => setF('loc', e.target.value)} title="Pickup building" style={{ ...fieldBase, flex: 1, fontWeight: 600 }}>
+            <select className="lok-field" value={f.loc} onChange={(e) => setF('loc', e.target.value)} title="Where the item is now" style={{ ...fieldBase, flex: 1, fontWeight: 600 }}>
               {BUILDINGS.map((b) => <option key={b}>{b}</option>)}
             </select>
             <select className="lok-field" value={f.floor} onChange={(e) => setF('floor', e.target.value)} title="Floor" style={{ ...fieldBase, flex: 1, fontWeight: 600 }}>
               <option value="">Floor…</option>
               {FLOORS.map((fl) => <option key={fl} value={fl.toLowerCase()}>{fl}</option>)}
             </select>
+          </div>
+          <div style={{ fontSize: 11, color: '#8A8578', fontWeight: 500, lineHeight: 1.5, margin: '-2px 2px 0', display: 'flex', gap: 6 }}>
+            <span style={{ color: 'var(--accent,#2A5FA8)', flex: 'none' }}>ⓘ</span>
+            Just tells buyers how near the item is. The actual hand-off always happens at the shared campus Security Post — the buyer picks the exchange method at checkout.
           </div>
 
           <textarea className="lok-field" value={f.desc} onChange={(e) => setF('desc', e.target.value)} placeholder="Description — condition, why you're selling…" style={{ ...fieldBase, minHeight: 66, resize: 'none' }} />

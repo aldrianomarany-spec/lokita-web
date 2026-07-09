@@ -237,7 +237,7 @@ export default function AuthFlow() {
     setError('')
     setLoading('reset')
     try {
-      await resetPassword(f.fEmail.trim(), window.location.origin)
+      await resetPassword(f.fEmail.trim())
       setView('reset')
       setLoading('')
     } catch (e) {

@@ -63,9 +63,19 @@ export async function signInWithEmail(params: { email: string; password: string 
   return data
 }
 
+// The canonical URL auth emails / OAuth should return to. In production set
+// VITE_SITE_URL (e.g. https://lokita.vercel.app) so reset links don't point at
+// localhost; in dev it falls back to whatever origin the app is served from.
+// NOTE: this URL must also be whitelisted in Supabase → Auth → URL Configuration
+// (Site URL + Redirect URLs), otherwise Supabase ignores it.
+export function siteUrl(): string {
+  const env = (import.meta.env.VITE_SITE_URL as string | undefined)?.trim()
+  return env || window.location.origin
+}
+
 // Google OAuth. Redirects to Google, then back to `redirectTo` (defaults to the
-// app root). Configure the Google provider in the Supabase dashboard first.
-export async function signInWithGoogle(redirectTo: string = window.location.origin) {
+// configured site URL). Configure the Google provider in the Supabase dashboard first.
+export async function signInWithGoogle(redirectTo: string = siteUrl()) {
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
     options: { redirectTo },
@@ -79,8 +89,9 @@ export async function signOut() {
   if (error) throw error
 }
 
-// Send a password-reset email. `redirectTo` is where the link lands.
-export async function resetPassword(email: string, redirectTo: string = window.location.origin) {
+// Send a password-reset email. `redirectTo` is where the link lands — defaults
+// to the configured site URL (see siteUrl) so it never hard-codes localhost.
+export async function resetPassword(email: string, redirectTo: string = siteUrl()) {
   const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo })
   if (error) throw error
 }
