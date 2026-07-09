@@ -14,6 +14,7 @@ import {
   deleteListing,
   createOrder,
   createQrisCharge,
+  markOrderPaidManually,
   fetchMyOrders,
   markDroppedOff,
   confirmPickup,
@@ -42,6 +43,11 @@ import {
   type NotifRow,
 } from '../lib/api'
 import type { EnrichedItem, Item, Profile } from '../types'
+
+// Prototype payment mode: when VITE_QRIS_IMAGE_URL is set, checkout shows this
+// fixed QRIS image and the buyer confirms manually (no gateway/webhook). When
+// unset, checkout uses the real Midtrans flow via /api/qris/*.
+export const STATIC_QR_URL = ((import.meta.env.VITE_QRIS_IMAGE_URL as string | undefined) || '').trim()
 
 // blank profile until the real one loads (fresh-install: nothing populated)
 const EMPTY_PROFILE: Profile = {
@@ -217,6 +223,7 @@ export interface MarketplaceApi {
   setPay: (v: 'cod' | 'qris') => void
   setPickup: (v: 'meet' | 'leave' | 'security') => void
   coContinue: () => void
+  confirmQrisPaid: () => void
   cancelQrisPayment: () => void
   openOrders: () => void
   markOrderDropped: (id: string) => Promise<void>
@@ -642,6 +649,11 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
         // Midtrans charge; the webhook + realtime flip it to paid.
         const id = await placeOrder()
         if (!id) return
+        // prototype mode: show the owner's fixed QRIS image, no gateway
+        if (STATIC_QR_URL) {
+          patch({ coStep: 'qris', qrisLoading: false, qris: { orderId: id, qrUrl: STATIC_QR_URL, amount: state.sel?.priceNum ?? 0 } })
+          return
+        }
         patch({ coStep: 'qris', qrisLoading: true, qris: null })
         try {
           const q = await createQrisCharge(id)
@@ -661,6 +673,19 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
         return
       }
       if (await placeOrder()) patch({ coStep: 'done' })
+    },
+    confirmQrisPaid: async () => {
+      // static-QR prototype: the buyer says they've paid; the seller must still
+      // verify the money actually arrived before dropping the item off.
+      const id = state.qris?.orderId
+      if (!id) return
+      try {
+        await markOrderPaidManually(id)
+        patch({ coStep: 'done' })
+        loadOrders()
+      } catch (e) {
+        alert('Could not record the payment: ' + (e instanceof Error ? e.message : 'unknown error'))
+      }
     },
     cancelQrisPayment: async () => {
       const id = state.qris?.orderId

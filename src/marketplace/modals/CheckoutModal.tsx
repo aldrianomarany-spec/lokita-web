@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { useM } from '../context'
+import { useM, STATIC_QR_URL } from '../context'
 import Overlay, { stop } from './Overlay'
 import { Check } from '../../components/Icons'
 
@@ -20,9 +20,10 @@ const PAY_OPTS = [
 ]
 
 export default function CheckoutModal() {
-  const { state, patch, closeCheckout, setPay, setPickup, coContinue, cancelQrisPayment, openOrders } = useM()
+  const { state, patch, closeCheckout, setPay, setPickup, coContinue, confirmQrisPaid, cancelQrisPayment, openOrders } = useM()
   const s = state
   const sel = s.sel
+  const manualQr = !!STATIC_QR_URL // prototype: fixed QR + manual confirmation
 
   // QRIS: the Midtrans webhook marks the order paid; realtime refreshes orders,
   // and this flips the modal to the confirmation step automatically.
@@ -107,7 +108,13 @@ export default function CheckoutModal() {
             </div>
             <div style={{ fontFamily: "'Bricolage Grotesque',sans-serif", fontWeight: 800, fontSize: 22, color: 'var(--accent,#2A5FA8)' }}>{sel.price}</div>
             <div style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 11, color: '#A29C8B', marginBottom: 18 }}>LOKITA · QRIS</div>
-            {s.qris && (
+            {s.qris && manualQr && (
+              <>
+                <button onClick={confirmQrisPaid} className="lok-btn" style={{ width: '100%', border: 'none', background: 'var(--accent,#2A5FA8)', color: '#F7F3EA', fontFamily: 'inherit', fontWeight: 700, fontSize: 14.5, padding: 14, borderRadius: 14, cursor: 'pointer', marginBottom: 10 }}>I've completed payment</button>
+                <div style={{ fontSize: 11.5, color: '#8A8578', fontWeight: 500, lineHeight: 1.5, marginBottom: 12 }}>The seller will verify the payment arrived before dropping the item off.</div>
+              </>
+            )}
+            {s.qris && !manualQr && (
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 9, background: '#EAF1EC', border: '1px solid #CFE2D7', borderRadius: 12, padding: '11px 14px', marginBottom: 12, fontSize: 12.5, fontWeight: 600, color: '#12503A' }}>
                 <span className="lok-spin" style={{ width: 14, height: 14, border: '2px solid #A9CBB8', borderTopColor: '#12503A', borderRadius: '50%', display: 'inline-block' }} />
                 Waiting for your payment — this confirms automatically.

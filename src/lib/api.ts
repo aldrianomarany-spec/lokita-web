@@ -476,6 +476,16 @@ export async function createOrder(o: NewOrder): Promise<string> {
   return (data as { id: string }).id
 }
 
+// Static-QR prototype mode: the buyer scans the owner's fixed QRIS image and
+// then confirms manually. No webhook — the seller must verify money arrived.
+export async function markOrderPaidManually(id: string): Promise<void> {
+  const { error } = await supabase
+    .from('transactions')
+    .update({ payment_status: 'paid', paid_at: new Date().toISOString() })
+    .eq('id', id)
+  if (error) throw error
+}
+
 // ---- real QRIS payment (Midtrans via our Vercel serverless functions) ----
 export interface QrisCharge {
   orderId: string
