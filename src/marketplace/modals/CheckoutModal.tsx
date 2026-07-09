@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { useM, STATIC_QR_URL } from '../context'
+import { useM } from '../context'
 import Overlay, { stop } from './Overlay'
 import { Check } from '../../components/Icons'
 
@@ -23,7 +23,7 @@ export default function CheckoutModal() {
   const { state, patch, closeCheckout, setPay, setPickup, coContinue, confirmQrisPaid, cancelQrisPayment, openOrders } = useM()
   const s = state
   const sel = s.sel
-  const manualQr = !!STATIC_QR_URL // prototype: fixed QR + manual confirmation
+  const manualQr = !!s.qris?.manual // static/demo modes: buyer confirms manually
 
   // QRIS: the Midtrans webhook marks the order paid; realtime refreshes orders,
   // and this flips the modal to the confirmation step automatically.
@@ -107,7 +107,7 @@ export default function CheckoutModal() {
               )}
             </div>
             <div style={{ fontFamily: "'Bricolage Grotesque',sans-serif", fontWeight: 800, fontSize: 22, color: 'var(--accent,#2A5FA8)' }}>{sel.price}</div>
-            <div style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 11, color: '#A29C8B', marginBottom: 18 }}>LOKITA · QRIS</div>
+            <div style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 11, color: '#A29C8B', marginBottom: 18 }}>LOKITA · QRIS{manualQr ? ' · PROTOTYPE' : ''}</div>
             {s.qris && manualQr && (
               <>
                 <button onClick={confirmQrisPaid} className="lok-btn" style={{ width: '100%', border: 'none', background: 'var(--accent,#2A5FA8)', color: '#F7F3EA', fontFamily: 'inherit', fontWeight: 700, fontSize: 14.5, padding: 14, borderRadius: 14, cursor: 'pointer', marginBottom: 10 }}>I've completed payment</button>

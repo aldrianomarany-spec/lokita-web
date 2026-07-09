@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import QRCode from 'qrcode'
 import { signOut } from '../lib/auth'
 import {
   fetchMyProfile,
@@ -44,10 +45,14 @@ import {
 } from '../lib/api'
 import type { EnrichedItem, Item, Profile } from '../types'
 
-// Prototype payment mode: when VITE_QRIS_IMAGE_URL is set, checkout shows this
-// fixed QRIS image and the buyer confirms manually (no gateway/webhook). When
-// unset, checkout uses the real Midtrans flow via /api/qris/*.
+// Payment modes, picked by env — no code changes needed to upgrade:
+//  1. VITE_QRIS_IMAGE_URL set          → show the owner's fixed QRIS image
+//  2. VITE_PAYMENT_MODE = "midtrans"   → real Midtrans charge via /api/qris/*
+//  3. neither (default)                → PROTOTYPE: generate a scannable demo
+//     QR per order (encodes order + amount; no real money moves)
+// Modes 1 and 3 are manual: the buyer taps "I've completed payment".
 export const STATIC_QR_URL = ((import.meta.env.VITE_QRIS_IMAGE_URL as string | undefined) || '').trim()
+export const PAYMENT_MODE = ((import.meta.env.VITE_PAYMENT_MODE as string | undefined) || '').trim().toLowerCase()
 
 // blank profile until the real one loads (fresh-install: nothing populated)
 const EMPTY_PROFILE: Profile = {
@@ -106,8 +111,10 @@ export interface State {
   coStep: CoStep
   pay: 'cod' | 'qris'
   pickup: 'meet' | 'leave' | 'security'
-  // real QRIS payment in progress (QR to display + which order it pays for)
-  qris: { orderId: string; qrUrl: string; amount: number } | null
+  // QRIS payment in progress (QR to display + which order it pays for).
+  // manual=true → buyer confirms with a button (static/demo modes);
+  // manual=false → Midtrans webhook confirms automatically.
+  qris: { orderId: string; qrUrl: string; amount: number; manual: boolean } | null
   qrisLoading: boolean
   sellerOpen: boolean
   sellerId: string | null
@@ -649,15 +656,30 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
         // Midtrans charge; the webhook + realtime flip it to paid.
         const id = await placeOrder()
         if (!id) return
-        // prototype mode: show the owner's fixed QRIS image, no gateway
+        const amount = state.sel?.priceNum ?? 0
+        // mode 1: the owner's fixed QRIS image
         if (STATIC_QR_URL) {
-          patch({ coStep: 'qris', qrisLoading: false, qris: { orderId: id, qrUrl: STATIC_QR_URL, amount: state.sel?.priceNum ?? 0 } })
+          patch({ coStep: 'qris', qrisLoading: false, qris: { orderId: id, qrUrl: STATIC_QR_URL, amount, manual: true } })
           return
         }
+        // mode 3 (default): prototype — generate a real, scannable QR that
+        // encodes the order details; no gateway, no real money
+        if (PAYMENT_MODE !== 'midtrans') {
+          try {
+            const payload = `LOKITA PROTOTYPE PAYMENT\nOrder: ${id}\nAmount: Rp ${amount.toLocaleString('id-ID')}\nItem: ${state.sel?.title ?? ''}\n(No real money moves — demo only.)`
+            const qrUrl = await QRCode.toDataURL(payload, { width: 440, margin: 1, color: { dark: '#201E18', light: '#FFFFFF' } })
+            patch({ coStep: 'qris', qrisLoading: false, qris: { orderId: id, qrUrl, amount, manual: true } })
+          } catch {
+            // QR generation never really fails, but keep the order usable
+            patch({ coStep: 'qris', qrisLoading: false, qris: { orderId: id, qrUrl: '', amount, manual: true } })
+          }
+          return
+        }
+        // mode 2: real Midtrans charge, webhook confirms automatically
         patch({ coStep: 'qris', qrisLoading: true, qris: null })
         try {
           const q = await createQrisCharge(id)
-          patch({ qris: q, qrisLoading: false })
+          patch({ qris: { ...q, manual: false }, qrisLoading: false })
         } catch (e) {
           // roll the order back so the listing frees up, and stay on options
           try {
