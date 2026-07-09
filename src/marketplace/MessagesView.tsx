@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useM } from './context'
+import { useIsPhone } from './useIsMobile'
 import { getUserId } from '../lib/api'
 import { Verified } from '../components/Icons'
 
@@ -20,20 +21,26 @@ function Avatar({ photo, initial, size }: { photo: string | null; initial: strin
 }
 
 export default function MessagesView() {
-  const { state, openConversation, sendMsg, setMsgDraft } = useM()
+  const { state, openConversation, sendMsg, setMsgDraft, patch } = useM()
   const s = state
+  const isPhone = useIsPhone()
   const [uid, setUid] = useState<string | null>(null)
   useEffect(() => {
     getUserId().then(setUid)
   }, [])
 
-  // auto-open the most recent conversation when entering the view
+  // auto-open the most recent conversation when entering the view — desktop only.
+  // On phone we keep the list visible until the user taps a conversation.
   useEffect(() => {
-    if (!s.activeConvId && s.convs.length > 0) openConversation(s.convs[0].id)
+    if (!isPhone && !s.activeConvId && s.convs.length > 0) openConversation(s.convs[0].id)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [s.convs, s.activeConvId])
+  }, [s.convs, s.activeConvId, isPhone])
 
   const active = s.convs.find((c) => c.id === s.activeConvId) || null
+  const back = () => patch({ activeConvId: null, msgs: [] })
+  // on phone show one pane at a time
+  const showList = !isPhone || !s.activeConvId
+  const showThread = !isPhone || !!s.activeConvId
 
   return (
     <div style={{ animation: 'lok-fade .3s ease both', height: '100%', display: 'flex', flexDirection: 'column' }}>
@@ -55,7 +62,8 @@ export default function MessagesView() {
       ) : (
         <div style={{ flex: 1, display: 'flex', gap: 16, minHeight: 0 }}>
           {/* conversation list */}
-          <div style={{ width: 300, flex: 'none', background: '#FBF8F1', border: '1px solid #E4DDCE', borderRadius: 20, overflow: 'hidden', overflowY: 'auto' }}>
+          {showList && (
+          <div style={{ width: isPhone ? '100%' : 300, flex: 'none', background: '#FBF8F1', border: '1px solid #E4DDCE', borderRadius: 20, overflow: 'hidden', overflowY: 'auto' }}>
             {s.convs.map((c) => (
               <div key={c.id} onClick={() => openConversation(c.id)} className="lok-navi" style={{ cursor: 'pointer', padding: '14px 16px', display: 'flex', gap: 12, alignItems: 'center', borderBottom: '1px solid #EEE7D8', background: c.id === s.activeConvId ? '#F1ECE1' : '#FBF8F1' }}>
                 <Avatar photo={c.other_photo} initial={(c.other_name.charAt(0) || '?').toUpperCase()} size={44} />
@@ -70,11 +78,16 @@ export default function MessagesView() {
               </div>
             ))}
           </div>
+          )}
 
           {/* thread */}
+          {showThread && (
           <div style={{ flex: 1, background: '#FBF8F1', border: '1px solid #E4DDCE', borderRadius: 20, display: 'flex', flexDirection: 'column', overflow: 'hidden', minWidth: 0 }}>
             {active && (
               <div style={{ padding: '15px 18px', borderBottom: '1px solid #EEE7D8', display: 'flex', alignItems: 'center', gap: 12 }}>
+                {isPhone && (
+                  <button onClick={back} aria-label="Back" className="lok-navi" style={{ flex: 'none', border: '1px solid #E4DDCE', background: '#F4EFE5', width: 34, height: 34, borderRadius: 10, cursor: 'pointer', color: '#5A5648', fontSize: 16, fontWeight: 700 }}>‹</button>
+                )}
                 <Avatar photo={active.other_photo} initial={(active.other_name.charAt(0) || '?').toUpperCase()} size={40} />
                 <div style={{ flex: 1 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 7, fontWeight: 700, fontSize: 15 }}>
@@ -110,6 +123,7 @@ export default function MessagesView() {
               <button onClick={() => sendMsg()} className="lok-btn" style={{ border: 'none', background: 'var(--accent,#2A5FA8)', color: '#F7F3EA', fontFamily: 'inherit', fontWeight: 700, fontSize: 13.5, padding: '12px 20px', borderRadius: 13, cursor: 'pointer' }}>Send</button>
             </div>
           </div>
+          )}
         </div>
       )}
     </div>

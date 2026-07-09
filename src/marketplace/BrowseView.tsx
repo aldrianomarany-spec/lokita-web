@@ -1,6 +1,8 @@
 import { useM, type Sort } from './context'
 import ListingCard from './ListingCard'
-import { Search } from '../components/Icons'
+import { Search, Heart } from '../components/Icons'
+import { CATEGORIES, CAT_META, type Category } from '../theme'
+import { useIsNarrow } from './useIsMobile'
 import type { EnrichedItem } from '../types'
 
 const CONDS = ['All', 'Like new', 'Good', 'Fair']
@@ -11,8 +13,11 @@ const SORTS: { key: Sort; label: string }[] = [
 ]
 
 export default function BrowseView() {
-  const { state, enrichedItems, selectCond, selectSort, resetFilters, openSell } = useM()
+  const { state, enrichedItems, selectCond, selectSort, resetFilters, openSell, selectCat, toggleSavedView } = useM()
   const s = state
+  const isNarrow = useIsNarrow()
+  const counts = s.categoryCounts
+  const totalCount = Object.values(counts).reduce((a, n) => a + n, 0)
 
   const q = s.query.trim().toLowerCase()
   // feed is already filtered/sorted/capped server-side; only the local "Saved"
@@ -37,6 +42,36 @@ export default function BrowseView() {
 
   return (
     <div style={{ animation: 'lok-fade .3s ease both' }}>
+      {/* mobile category strip — replaces the sidebar when it's hidden */}
+      {isNarrow && (
+        <div className="lok-catbar">
+          <button
+            onClick={toggleSavedView}
+            className="lok-chip"
+            style={{ flex: 'none', cursor: 'pointer', fontFamily: 'inherit', fontWeight: 700, fontSize: 13, padding: '8px 13px', borderRadius: 20, display: 'flex', alignItems: 'center', gap: 6, border: `1px solid ${s.savedOnly ? '#D4562F' : '#E4DDCE'}`, background: s.savedOnly ? '#FBEEE9' : '#FBF8F1', color: s.savedOnly ? '#C0492A' : '#4A463B' }}
+          >
+            <Heart fill={s.savedOnly ? '#D4562F' : 'none'} size={14} />
+            Saved
+          </button>
+          {CATEGORIES.map((label: Category) => {
+            const active = s.cat === label && !s.savedOnly
+            const count = label === 'All' ? totalCount : counts[label] || 0
+            return (
+              <button
+                key={label}
+                onClick={() => selectCat(label)}
+                className="lok-chip"
+                style={{ flex: 'none', cursor: 'pointer', fontFamily: 'inherit', fontWeight: 600, fontSize: 13, padding: '8px 13px', borderRadius: 20, display: 'flex', alignItems: 'center', gap: 7, border: `1px solid ${active ? '#201E18' : '#E4DDCE'}`, background: active ? '#201E18' : '#FBF8F1', color: active ? '#F7F3EA' : '#4A463B' }}
+              >
+                <span style={{ fontSize: 14 }}>{CAT_META[label]}</span>
+                {label}
+                {count > 0 && <span style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 10, opacity: 0.7 }}>{count}</span>}
+              </button>
+            )
+          })}
+        </div>
+      )}
+
       {/* hero header */}
       <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 20, marginBottom: 20 }}>
         <div>

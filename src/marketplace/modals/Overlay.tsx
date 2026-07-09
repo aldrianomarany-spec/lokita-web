@@ -12,6 +12,7 @@ export default function Overlay({
   return (
     <div
       onClick={onClose}
+      className="lok-overlay"
       style={{ position: 'fixed', inset: 0, background: 'rgba(32,30,24,.55)', zIndex: z, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 40, animation: 'lok-fade .2s ease both', backdropFilter: 'blur(3px)' }}
     >
       {children}

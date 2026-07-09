@@ -2,12 +2,14 @@ import { useState } from 'react'
 import { useM } from '../context'
 import { T } from '../../theme'
 import { tagStyle } from '../tagStyle'
+import { useIsPhone } from '../useIsMobile'
 import Overlay, { stop } from './Overlay'
 import { ChevronRight, Heart, MapPin, MessageBubble, ShieldCheck, Verified } from '../../components/Icons'
 
 export default function DetailModal() {
   const { state, closeDetail, chatSeller, openCheckout, openSellerProfile, deleteMyListing, toggleSaveItem } = useM()
   const [deleting, setDeleting] = useState(false)
+  const isPhone = useIsPhone()
   const sel = state.sel
   if (!sel) return null
 
@@ -35,9 +37,9 @@ export default function DetailModal() {
 
   return (
     <Overlay onClose={closeDetail}>
-      <div onClick={stop} style={{ background: '#FBF8F1', borderRadius: 26, overflow: 'hidden', width: '100%', maxWidth: 900, maxHeight: '88vh', display: 'flex', animation: 'lok-pop .26s cubic-bezier(.2,.8,.3,1) both', boxShadow: '0 40px 90px -20px rgba(32,30,24,.5)' }}>
-        {/* left panel — real photo or tinted placeholder */}
-        <div style={{ width: '47%', flex: 'none', background: t.tint, position: 'relative', minHeight: 480, overflow: 'hidden' }}>
+      <div onClick={stop} style={{ background: '#FBF8F1', borderRadius: isPhone ? 20 : 26, overflow: 'hidden', width: '100%', maxWidth: 900, maxHeight: isPhone ? '94vh' : '88vh', display: 'flex', flexDirection: isPhone ? 'column' : 'row', overflowY: isPhone ? 'auto' : 'hidden', animation: 'lok-pop .26s cubic-bezier(.2,.8,.3,1) both', boxShadow: '0 40px 90px -20px rgba(32,30,24,.5)' }}>
+        {/* image panel — full width on phone, left column on desktop */}
+        <div style={{ width: isPhone ? '100%' : '47%', flex: 'none', background: t.tint, position: 'relative', minHeight: isPhone ? 240 : 480, height: isPhone ? 240 : 'auto', overflow: 'hidden' }}>
           {hasPhoto ? (
             <img src={sel.photoUrl!} alt={sel.title} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
           ) : (
@@ -58,8 +60,8 @@ export default function DetailModal() {
           )}
         </div>
 
-        {/* right content */}
-        <div style={{ flex: 1, padding: '30px 32px', overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
+        {/* right content — parent scrolls on phone, this panel scrolls on desktop */}
+        <div style={{ flex: 1, padding: isPhone ? '20px 20px 26px' : '30px 32px', overflowY: isPhone ? 'visible' : 'auto', display: 'flex', flexDirection: 'column' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 4 }}>
             <span style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 10.5, color: '#A29C8B', letterSpacing: '.06em', paddingTop: 6 }}>{sel.cat}</span>
             <button onClick={closeDetail} className="lok-navi" style={{ border: '1px solid #E4DDCE', background: '#F4EFE5', width: 36, height: 36, borderRadius: 11, fontSize: 16, cursor: 'pointer', color: '#5A5648', flex: 'none' }}>✕</button>

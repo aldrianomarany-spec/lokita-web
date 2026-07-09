@@ -175,7 +175,7 @@ export default function ProfileView() {
       </div>
 
       {/* stats */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 14, marginBottom: 28 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(120px,1fr))', gap: 14, marginBottom: 28 }}>
         {statTiles.map((st) => (
           <div key={st.label} style={{ background: '#FBF8F1', border: '1px solid #E4DDCE', borderRadius: 16, padding: '16px 18px', textAlign: 'center' }}>
             <div style={{ fontFamily: "'Bricolage Grotesque',sans-serif", fontSize: 26, fontWeight: 800, color: st.color, lineHeight: 1 }}>{st.value}</div>

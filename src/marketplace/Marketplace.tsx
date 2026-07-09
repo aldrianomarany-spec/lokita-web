@@ -1,5 +1,7 @@
 import { MarketplaceProvider, useM } from './context'
 import { ACCENT, ACCENT_DEEP } from '../theme'
+import { useIsPhone } from './useIsMobile'
+import { Plus } from '../components/Icons'
 import TopBar from './TopBar'
 import Sidebar from './Sidebar'
 import BrowseView from './BrowseView'
@@ -26,8 +28,9 @@ const rootStyle = {
 } as React.CSSProperties
 
 function Shell() {
-  const { state, onPhoto } = useM()
+  const { state, onPhoto, openSell } = useM()
   const s = state
+  const isPhone = useIsPhone()
 
   return (
     <div style={rootStyle}>
@@ -37,7 +40,7 @@ function Shell() {
 
       <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
         <Sidebar />
-        <main style={{ flex: 1, overflowY: 'auto', padding: '26px 32px 40px' }}>
+        <main className="lok-main" style={{ flex: 1, overflowY: 'auto', padding: '26px 32px 40px' }}>
           {s.view === 'browse' && <BrowseView />}
           {s.view === 'messages' && <MessagesView />}
           {s.view === 'notifications' && <NotificationsView />}
@@ -45,6 +48,17 @@ function Shell() {
           {s.view === 'profile' && <ProfileView />}
         </main>
       </div>
+
+      {/* floating Post button on phones (top-bar button is hidden there) */}
+      {isPhone && s.view === 'browse' && (
+        <button
+          onClick={openSell}
+          aria-label="Post an item"
+          style={{ position: 'fixed', right: 18, bottom: 20, width: 56, height: 56, borderRadius: '50%', border: 'none', background: 'var(--accent,#2A5FA8)', color: '#F7F3EA', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: '0 10px 24px -8px rgba(42,95,168,.7)', zIndex: 45 }}
+        >
+          <Plus size={24} />
+        </button>
+      )}
 
       {/* modals */}
       {s.sel && <DetailModal />}

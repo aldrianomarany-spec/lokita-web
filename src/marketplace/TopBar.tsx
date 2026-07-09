@@ -1,4 +1,5 @@
 import { useM } from './context'
+import { useIsPhone } from './useIsMobile'
 import { Search, Plus, Heart, MessageBubble, Bell, Verified } from '../components/Icons'
 
 const navBtn: React.CSSProperties = {
@@ -61,6 +62,7 @@ const Avatar = ({ photo, initial, size, radius, fontSize }: { photo: string | nu
 export default function TopBar() {
   const { state, patch, goHome, openEdit, setQuery, clearQuery, openSell, toggleSavedView, openMessages, openNotifs, toggleMenu, openProfile, openOrders, logout } = useM()
   const s = state
+  const isPhone = useIsPhone()
   const myBuilding = s.profile.building || 'Set your dorm'
 
   const savedCount = Object.keys(s.saved).length
@@ -90,44 +92,48 @@ export default function TopBar() {
         borderBottom: '1px solid #E4DDCE',
         display: 'flex',
         alignItems: 'center',
-        gap: 20,
-        padding: '0 24px',
+        gap: isPhone ? 10 : 20,
+        padding: isPhone ? '0 12px' : '0 24px',
         zIndex: 40,
       }}
     >
-      {/* brand */}
+      {/* brand — logo only on phone */}
       <div onClick={goHome} style={{ display: 'flex', alignItems: 'center', gap: 11, cursor: 'pointer', flex: 'none' }}>
         <div className="lok-locpin" style={{ width: 38, height: 38, borderRadius: 12, background: 'var(--accent,#2A5FA8)', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
           <div style={{ width: 14, height: 14, borderRadius: '50%', background: '#F1ECE1' }} />
         </div>
-        <div>
-          <div style={{ fontFamily: "'Bricolage Grotesque',sans-serif", fontWeight: 800, fontSize: 20, letterSpacing: '-.02em', lineHeight: 1 }}>LOKITA</div>
-          <div style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 9, color: '#8A8578', letterSpacing: '.14em', marginTop: 2 }}>LOKAL · KITA</div>
-        </div>
+        {!isPhone && (
+          <div>
+            <div style={{ fontFamily: "'Bricolage Grotesque',sans-serif", fontWeight: 800, fontSize: 20, letterSpacing: '-.02em', lineHeight: 1 }}>LOKITA</div>
+            <div style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 9, color: '#8A8578', letterSpacing: '.14em', marginTop: 2 }}>LOKAL · KITA</div>
+          </div>
+        )}
       </div>
 
-      {/* your dorm — reflects your real building; click to edit it */}
-      <button
-        className="lok-btn"
-        onClick={openEdit}
-        title="Your dorm — click to change"
-        style={{ flex: 'none', cursor: 'pointer', border: '1px solid #E4DDCE', display: 'flex', alignItems: 'center', gap: 9, fontFamily: 'inherit', fontWeight: 700, fontSize: 13.5, color: '#201E18', background: '#F4EFE5', padding: '9px 13px', borderRadius: 12 }}
-      >
-        <span style={{ width: 7, height: 7, borderRadius: '50%', background: 'var(--accent,#2A5FA8)' }} />
-        {myBuilding}
-        <span style={{ fontFamily: "'Spline Sans Mono',monospace", fontWeight: 500, fontSize: 10, color: '#A29C8B' }}>JIU · CIKARANG</span>
-      </button>
+      {/* your dorm — hidden on phone (edit it from your profile) */}
+      {!isPhone && (
+        <button
+          className="lok-btn"
+          onClick={openEdit}
+          title="Your dorm — click to change"
+          style={{ flex: 'none', cursor: 'pointer', border: '1px solid #E4DDCE', display: 'flex', alignItems: 'center', gap: 9, fontFamily: 'inherit', fontWeight: 700, fontSize: 13.5, color: '#201E18', background: '#F4EFE5', padding: '9px 13px', borderRadius: 12 }}
+        >
+          <span style={{ width: 7, height: 7, borderRadius: '50%', background: 'var(--accent,#2A5FA8)' }} />
+          {myBuilding}
+          <span style={{ fontFamily: "'Spline Sans Mono',monospace", fontWeight: 500, fontSize: 10, color: '#A29C8B' }}>JIU · CIKARANG</span>
+        </button>
+      )}
 
       {/* search */}
-      <div style={{ flex: 1, maxWidth: 560, display: 'flex', alignItems: 'center', gap: 11, background: '#F4EFE5', border: '1px solid #E4DDCE', borderRadius: 14, padding: '11px 16px' }}>
-        <span style={{ color: '#A29C8B', display: 'flex' }}>
+      <div style={{ flex: 1, minWidth: 0, maxWidth: 560, display: 'flex', alignItems: 'center', gap: isPhone ? 8 : 11, background: '#F4EFE5', border: '1px solid #E4DDCE', borderRadius: 14, padding: isPhone ? '10px 12px' : '11px 16px' }}>
+        <span style={{ color: '#A29C8B', display: 'flex', flex: 'none' }}>
           <Search />
         </span>
         <input
           value={s.query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search your dorm — desk, mini fridge, textbooks…"
-          style={{ flex: 1, border: 'none', background: 'none', outline: 'none', fontFamily: 'inherit', fontSize: 14, fontWeight: 500, color: '#201E18' }}
+          placeholder={isPhone ? 'Search…' : 'Search your dorm — desk, mini fridge, textbooks…'}
+          style={{ flex: 1, minWidth: 0, border: 'none', background: 'none', outline: 'none', fontFamily: 'inherit', fontSize: 14, fontWeight: 500, color: '#201E18' }}
         />
         {s.query && (
           <span onClick={clearQuery} style={{ cursor: 'pointer', color: '#A29C8B', fontSize: 13, fontWeight: 700 }}>
@@ -137,20 +143,26 @@ export default function TopBar() {
       </div>
 
       {/* actions */}
-      <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 12, flex: 'none' }}>
-        <button
-          className="lok-btn"
-          onClick={openSell}
-          style={{ border: 'none', background: 'var(--accent,#2A5FA8)', color: '#F7F3EA', fontFamily: 'inherit', fontWeight: 700, fontSize: 14, padding: '11px 18px', borderRadius: 12, cursor: 'pointer', boxShadow: '0 6px 16px -6px rgba(27,94,67,.7)', display: 'flex', alignItems: 'center', gap: 8 }}
-        >
-          <Plus />
-          Post an item
-        </button>
+      <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: isPhone ? 8 : 12, flex: 'none' }}>
+        {/* Post: full button on desktop; on phone it's a floating button (see Shell) */}
+        {!isPhone && (
+          <button
+            className="lok-btn"
+            onClick={openSell}
+            style={{ border: 'none', background: 'var(--accent,#2A5FA8)', color: '#F7F3EA', fontFamily: 'inherit', fontWeight: 700, fontSize: 14, padding: '11px 18px', borderRadius: 12, cursor: 'pointer', boxShadow: '0 6px 16px -6px rgba(27,94,67,.7)', display: 'flex', alignItems: 'center', gap: 8 }}
+          >
+            <Plus />
+            Post an item
+          </button>
+        )}
 
-        <button className="lok-navi" onClick={toggleSavedView} title="Saved" style={{ ...navBtn, background: '#F4EFE5', color: '#5A5648' }}>
-          <Heart fill={s.savedOnly ? 'currentColor' : 'none'} size={18} />
-          {savedCount > 0 && badge(savedCount)}
-        </button>
+        {/* Saved: on phone it lives as a chip in the category bar */}
+        {!isPhone && (
+          <button className="lok-navi" onClick={toggleSavedView} title="Saved" style={{ ...navBtn, background: '#F4EFE5', color: '#5A5648' }}>
+            <Heart fill={s.savedOnly ? 'currentColor' : 'none'} size={18} />
+            {savedCount > 0 && badge(savedCount)}
+          </button>
+        )}
 
         <button className="lok-navi" onClick={openMessages} title="Messages" style={{ ...navBtn, background: msgActive ? '#EAF1EC' : '#F4EFE5', color: msgActive ? '#12503A' : '#5A5648' }}>
           <MessageBubble />

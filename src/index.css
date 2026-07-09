@@ -251,3 +251,28 @@ select.lok-field {
     display: none !important;
   }
 }
+/* main content gets tighter gutters on small screens */
+@media (max-width: 640px) {
+  .lok-main {
+    padding: 16px 14px 40px !important;
+  }
+}
+/* modals become near-full-screen sheets on phones */
+@media (max-width: 640px) {
+  .lok-overlay {
+    padding: 8px !important;
+  }
+}
+/* horizontal category strip shown on mobile in place of the sidebar */
+.lok-catbar {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  margin: 0 0 18px;
+  padding-bottom: 2px;
+}
+.lok-catbar::-webkit-scrollbar {
+  display: none;
+}
