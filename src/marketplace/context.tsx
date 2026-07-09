@@ -1,14 +1,29 @@
-import { createContext, useCallback, useContext, useMemo, useRef, useState } from 'react'
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { signOut } from '../lib/auth'
+import {
+  fetchMyProfile,
+  updateMyProfile,
+  uploadAvatar,
+  fetchProfileStats,
+  dbToUiProfile,
+  uiEditsToDb,
+  type ProfileStats,
+} from '../lib/api'
 import {
   ITEMS,
   CHATS,
   FLOOR_BY_ID,
   WA_BY_SELLER,
-  DEFAULT_PROFILE,
 } from '../data'
 import type { EnrichedItem, Item, Profile, SellerReview, ThreadMsg } from '../types'
+
+// blank profile until the real one loads (fresh-install: nothing populated)
+const EMPTY_PROFILE: Profile = {
+  name: '', studentId: '', whatsapp: '', building: '', room: '',
+  floor: '', batch: '', standing: '', since: '',
+  verification_status: 'pending', profile_photo_url: null,
+}
 
 export type View = 'browse' | 'messages' | 'notifications' | 'profile'
 export type Sort = 'Nearest' | 'Newest' | 'Price'
@@ -55,6 +70,12 @@ export interface State {
   sellerName: string | null
   profile: Profile
   pf: Profile
+  profileLoading: boolean
+  profileError: string | null
+  stats: ProfileStats | null
+  pfSaving: boolean
+  pfError: string | null
+  photoUploading: boolean
   listState: ListState
   bundleOn: boolean
   f: SellForm
@@ -89,8 +110,14 @@ const initialState: State = {
   reviewsBySeller: {},
   sellerOpen: false,
   sellerName: null,
-  profile: { ...DEFAULT_PROFILE },
-  pf: { ...DEFAULT_PROFILE },
+  profile: { ...EMPTY_PROFILE },
+  pf: { ...EMPTY_PROFILE },
+  profileLoading: true,
+  profileError: null,
+  stats: null,
+  pfSaving: false,
+  pfError: null,
+  photoUploading: false,
   listState: 'idle',
   bundleOn: false,
   f: { title: '', price: '', cat: 'Furniture', loc: 'Thomas Building', desc: '' },
@@ -148,6 +175,7 @@ export interface MarketplaceApi {
   closeEdit: () => void
   setPf: (k: keyof Profile, v: string) => void
   savePf: () => void
+  refetchProfile: () => void
   pickPhoto: () => void
   onPhoto: (e: React.ChangeEvent<HTMLInputElement>) => void
   openCheckout: () => void
@@ -195,6 +223,27 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
       return { ...it, floor, wa: WA_BY_SELLER[it.seller], proxTag: pr.tag, proxRank: pr.rank }
     })
   }, [state.profile.floor])
+
+  // Load the signed-in user's real profile + stats (fresh-install: blank until set).
+  const loadProfile = useCallback(async () => {
+    patch({ profileLoading: true, profileError: null })
+    try {
+      const db = await fetchMyProfile()
+      if (!db) {
+        patch({ profileLoading: false, profileError: 'Not signed in' })
+        return
+      }
+      const ui = dbToUiProfile(db)
+      const stats = await fetchProfileStats(db.id)
+      patch({ profile: ui, pf: ui, photo: ui.profile_photo_url || null, stats, profileLoading: false })
+    } catch (e) {
+      patch({ profileLoading: false, profileError: e instanceof Error ? e.message : 'Failed to load profile' })
+    }
+  }, [patch])
+
+  useEffect(() => {
+    loadProfile()
+  }, [loadProfile])
 
   const api: MarketplaceApi = {
     state,
@@ -288,17 +337,43 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
       }),
 
     openProfile: () => patch({ view: 'profile', menuOpen: false, sel: null }),
-    openEdit: () => patch((prev) => ({ editOpen: true, pf: { ...prev.profile } })),
-    closeEdit: () => patch({ editOpen: false }),
+    openEdit: () => patch((prev) => ({ editOpen: true, pf: { ...prev.profile }, pfError: null })),
+    closeEdit: () => patch({ editOpen: false, pfError: null }),
     setPf: (k, v) => patch((prev) => ({ pf: { ...prev.pf, [k]: v } })),
-    savePf: () => patch((prev) => ({ profile: { ...prev.pf }, editOpen: false })),
+    savePf: async () => {
+      if (state.pfSaving) return
+      if (!state.pf.name.trim()) {
+        patch({ pfError: 'Name is required.' })
+        return
+      }
+      patch({ pfSaving: true, pfError: null })
+      try {
+        await updateMyProfile(uiEditsToDb(state.pf))
+        await loadProfile() // refetch so the UI reflects the saved values immediately
+        patch({ pfSaving: false, editOpen: false })
+      } catch (e) {
+        patch({ pfSaving: false, pfError: e instanceof Error ? e.message : 'Could not save. Please try again.' })
+      }
+    },
+    refetchProfile: () => {
+      loadProfile()
+    },
     pickPhoto: () => {
       const el = document.getElementById('lok-photo-input') as HTMLInputElement | null
       el?.click()
     },
-    onPhoto: (e) => {
+    onPhoto: async (e) => {
       const file = e.target.files && e.target.files[0]
-      if (file) patch({ photo: URL.createObjectURL(file) })
+      e.target.value = '' // allow re-selecting the same file later
+      if (!file) return
+      patch({ photoUploading: true, pfError: null })
+      try {
+        const url = await uploadAvatar(file)
+        patch({ photo: url, photoUploading: false })
+        await loadProfile()
+      } catch (err) {
+        patch({ photoUploading: false, pfError: err instanceof Error ? err.message : 'Photo upload failed.' })
+      }
     },
 
     openCheckout: () => patch({ checkoutOpen: true, coStep: 'options', pay: 'cod', pickup: 'security' }),

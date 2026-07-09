@@ -35,6 +35,10 @@ export default function EditProfileModal() {
         </div>
         <p style={{ fontSize: 13, color: '#8A8578', fontWeight: 600, margin: '0 0 18px' }}>Keep your details current so neighbours know they can trust the trade.</p>
 
+        {state.pfError && (
+          <div style={{ background: '#FBEEE9', border: '1px solid #E4C4B8', color: '#B23A1B', fontSize: 12.5, fontWeight: 600, borderRadius: 11, padding: '10px 13px', marginBottom: 16, lineHeight: 1.45 }}>{state.pfError}</div>
+        )}
+
         <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 18 }}>
           <div style={{ width: 66, height: 66, borderRadius: 20, background: 'var(--accent,#2A5FA8)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#F7F3EA', fontWeight: 800, fontSize: 26, fontFamily: "'Bricolage Grotesque',sans-serif", overflow: 'hidden', flex: 'none' }}>
             {state.photo ? <img src={state.photo} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : profileInitial}
@@ -100,7 +104,9 @@ export default function EditProfileModal() {
 
         <div style={{ display: 'flex', gap: 11, marginTop: 20 }}>
           <button onClick={closeEdit} className="lok-btn" style={{ flex: 'none', border: '1px solid #D8CFBB', background: '#F4EFE5', color: '#201E18', fontFamily: 'inherit', fontWeight: 700, fontSize: 14, padding: '13px 20px', borderRadius: 13, cursor: 'pointer' }}>Cancel</button>
-          <button onClick={savePf} className="lok-btn" style={{ flex: 1, border: 'none', background: 'var(--accent,#2A5FA8)', color: '#F7F3EA', fontFamily: 'inherit', fontWeight: 700, fontSize: 14, padding: 13, borderRadius: 13, cursor: 'pointer', boxShadow: '0 8px 20px -8px rgba(27,94,67,.7)' }}>Save changes</button>
+          <button onClick={savePf} disabled={state.pfSaving} className="lok-btn" style={{ flex: 1, border: 'none', background: 'var(--accent,#2A5FA8)', color: '#F7F3EA', fontFamily: 'inherit', fontWeight: 700, fontSize: 14, padding: 13, borderRadius: 13, cursor: 'pointer', boxShadow: '0 8px 20px -8px rgba(27,94,67,.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+            {state.pfSaving ? <span className="lok-spin" style={{ width: 15, height: 15, border: '2px solid rgba(247,243,234,.4)', borderTopColor: '#F7F3EA', borderRadius: '50%', display: 'inline-block' }} /> : 'Save changes'}
+          </button>
         </div>
       </div>
     </Overlay>

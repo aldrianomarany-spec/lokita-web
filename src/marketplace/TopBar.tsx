@@ -38,7 +38,7 @@ const badge = (n: number) => (
   </span>
 )
 
-const Avatar = ({ photo, size, radius, fontSize }: { photo: string | null; size: number; radius: string; fontSize: number }) => (
+const Avatar = ({ photo, initial, size, radius, fontSize }: { photo: string | null; initial: string; size: number; radius: string; fontSize: number }) => (
   <div
     style={{
       width: size,
@@ -55,7 +55,7 @@ const Avatar = ({ photo, size, radius, fontSize }: { photo: string | null; size:
       fontSize,
     }}
   >
-    {photo ? <img src={photo} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : 'A'}
+    {photo ? <img src={photo} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : initial}
   </div>
 )
 
@@ -66,6 +66,10 @@ export default function TopBar() {
   const savedCount = Object.keys(s.saved).length
   const unreadCount = CHATS.filter((c) => c.unread && !s.read[c.id]).length
   const notifBadge = NOTIFS.filter((n) => n.unread && !s.notifRead[n.id]).length
+
+  const profileInitial = (s.profile.name || '?').trim().charAt(0).toUpperCase()
+  const stats = s.stats
+  const ratingLabel = stats && stats.avgRating != null ? stats.avgRating.toFixed(1) : '—'
 
   const msgActive = s.view === 'messages'
   const notifActive = s.view === 'notifications'
@@ -159,7 +163,7 @@ export default function TopBar() {
 
         {/* avatar */}
         <div onClick={toggleMenu} title="Account" style={{ width: 42, height: 42, cursor: 'pointer', position: 'relative', flex: 'none' }}>
-          <Avatar photo={s.photo} size={42} radius="50%" fontSize={16} />
+          <Avatar photo={s.photo} initial={profileInitial} size={42} radius="50%" fontSize={16} />
           <span style={{ position: 'absolute', bottom: 0, right: 0, width: 11, height: 11, borderRadius: '50%', background: '#3DBB6E', border: '2px solid #FBF8F1' }} />
         </div>
       </div>
@@ -170,26 +174,28 @@ export default function TopBar() {
           style={{ position: 'absolute', top: 64, right: 22, width: 264, background: '#FBF8F1', border: '1px solid #E4DDCE', borderRadius: 18, boxShadow: '0 24px 50px -18px rgba(32,30,24,.4)', padding: 16, zIndex: 60, animation: 'lok-pop .18s ease both' }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, paddingBottom: 13, borderBottom: '1px solid #EEE7D8' }}>
-            <Avatar photo={s.photo} size={46} radius="50%" fontSize={19} />
+            <Avatar photo={s.photo} initial={profileInitial} size={46} radius="50%" fontSize={19} />
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontWeight: 800, fontSize: 15 }}>
-                {s.profile.name}
-                <Verified size={14} />
+                {s.profile.name || 'You'}
+                {s.profile.verification_status === 'verified' && <Verified size={14} />}
               </div>
-              <div style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 10, color: '#8A8578', marginTop: 2 }}>DORM-VERIFIED · ⭐ 4.9</div>
+              <div style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 10, color: '#8A8578', marginTop: 2 }}>
+                {s.profile.verification_status === 'verified' ? 'DORM-VERIFIED' : 'VERIFICATION PENDING'} · ⭐ {ratingLabel}
+              </div>
             </div>
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 2px', borderBottom: '1px solid #EEE7D8' }}>
             <div style={{ textAlign: 'center', flex: 1 }}>
-              <div style={{ fontWeight: 800, fontSize: 16, fontFamily: "'Bricolage Grotesque',sans-serif" }}>3</div>
+              <div style={{ fontWeight: 800, fontSize: 16, fontFamily: "'Bricolage Grotesque',sans-serif" }}>{stats?.selling ?? 0}</div>
               <div style={{ fontSize: 10, color: '#8A8578', fontWeight: 600 }}>Selling</div>
             </div>
             <div style={{ textAlign: 'center', flex: 1, borderLeft: '1px solid #EEE7D8', borderRight: '1px solid #EEE7D8' }}>
-              <div style={{ fontWeight: 800, fontSize: 16, fontFamily: "'Bricolage Grotesque',sans-serif" }}>3</div>
+              <div style={{ fontWeight: 800, fontSize: 16, fontFamily: "'Bricolage Grotesque',sans-serif" }}>{stats?.buying ?? 0}</div>
               <div style={{ fontSize: 10, color: '#8A8578', fontWeight: 600 }}>Buying</div>
             </div>
             <div style={{ textAlign: 'center', flex: 1 }}>
-              <div style={{ fontWeight: 800, fontSize: 16, fontFamily: "'Bricolage Grotesque',sans-serif" }}>4.9</div>
+              <div style={{ fontWeight: 800, fontSize: 16, fontFamily: "'Bricolage Grotesque',sans-serif" }}>{ratingLabel}</div>
               <div style={{ fontSize: 10, color: '#8A8578', fontWeight: 600 }}>Rating</div>
             </div>
           </div>

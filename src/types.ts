@@ -95,4 +95,7 @@ export interface Profile {
   batch: string
   standing: string
   since: string
+  // populated from the DB row (optional so the empty seed is valid)
+  verification_status?: string
+  profile_photo_url?: string | null
 }
