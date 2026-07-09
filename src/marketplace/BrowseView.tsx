@@ -22,16 +22,16 @@ export default function BrowseView() {
 
   // titles
   let browseTitle = 'Around you'
-  let browseSub = `Verified students at ${s.location} — pay in-app, collect at the Security Post.`
+  let browseSub = `Verified students at JIU Cikarang — pay in-app, collect at the Security Post.`
   if (s.savedOnly) {
     browseTitle = 'Saved items'
     browseSub = 'Everything you tapped the heart on. Grab them before a neighbour does.'
   } else if (q) {
     browseTitle = `"${s.query}"`
-    browseSub = `Matches near you in ${s.location}.`
+    browseSub = `Matches near you in your dorm.`
   } else if (s.cat !== 'All') {
     browseTitle = s.cat
-    browseSub = `${s.cat} from verified students at ${s.location}.`
+    browseSub = `${s.cat} from verified students at JIU Cikarang.`
   }
   const emptyCat = s.cat !== 'All' ? ` in ${s.cat}` : ''
 

@@ -560,6 +560,18 @@ export async function fetchMyOrders(): Promise<OrderRow[]> {
   })
 }
 
+// Realtime: refetch the feed on any listing change (new post, price change,
+// sold/removed). RLS scopes which rows a client actually receives.
+export function subscribeListings(onChange: () => void): () => void {
+  const channel = supabase
+    .channel('listings-feed')
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'listings' }, onChange)
+    .subscribe()
+  return () => {
+    supabase.removeChannel(channel)
+  }
+}
+
 // Realtime: refetch on any change to the current user's transactions.
 export function subscribeOrders(userId: string, onChange: () => void): () => void {
   const channel = supabase

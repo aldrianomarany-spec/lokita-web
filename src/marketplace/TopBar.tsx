@@ -59,8 +59,9 @@ const Avatar = ({ photo, initial, size, radius, fontSize }: { photo: string | nu
 )
 
 export default function TopBar() {
-  const { state, patch, goHome, toggleLocation, setQuery, clearQuery, openSell, toggleSavedView, openMessages, openNotifs, toggleMenu, openProfile, openOrders, logout } = useM()
+  const { state, patch, goHome, openEdit, setQuery, clearQuery, openSell, toggleSavedView, openMessages, openNotifs, toggleMenu, openProfile, openOrders, logout } = useM()
   const s = state
+  const myBuilding = s.profile.building || 'Set your dorm'
 
   const savedCount = Object.keys(s.saved).length
   const unreadCount = s.convs.reduce((sum, c) => sum + c.unread, 0)
@@ -105,16 +106,16 @@ export default function TopBar() {
         </div>
       </div>
 
-      {/* location toggle */}
+      {/* your dorm — reflects your real building; click to edit it */}
       <button
         className="lok-btn"
-        onClick={toggleLocation}
-        title="Switch your neighbourhood"
+        onClick={openEdit}
+        title="Your dorm — click to change"
         style={{ flex: 'none', cursor: 'pointer', border: '1px solid #E4DDCE', display: 'flex', alignItems: 'center', gap: 9, fontFamily: 'inherit', fontWeight: 700, fontSize: 13.5, color: '#201E18', background: '#F4EFE5', padding: '9px 13px', borderRadius: 12 }}
       >
         <span style={{ width: 7, height: 7, borderRadius: '50%', background: 'var(--accent,#2A5FA8)' }} />
-        {s.location}
-        <span style={{ fontFamily: "'Spline Sans Mono',monospace", fontWeight: 500, fontSize: 10, color: '#A29C8B' }}>JIU · CIKARANG ▾</span>
+        {myBuilding}
+        <span style={{ fontFamily: "'Spline Sans Mono',monospace", fontWeight: 500, fontSize: 10, color: '#A29C8B' }}>JIU · CIKARANG</span>
       </button>
 
       {/* search */}

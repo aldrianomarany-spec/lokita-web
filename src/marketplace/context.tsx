@@ -18,6 +18,7 @@ import {
   confirmPickup,
   cancelOrder,
   subscribeOrders,
+  subscribeListings,
   submitOrderReview,
   fetchWishlistIds,
   addToWishlist,
@@ -52,7 +53,6 @@ export type View = 'browse' | 'messages' | 'notifications' | 'profile' | 'orders
 export type Sort = 'Nearest' | 'Newest' | 'Price'
 export type CoStep = 'options' | 'qris' | 'done' | 'review' | 'reviewdone'
 export type ListState = 'idle' | 'saving' | 'done'
-export type Location = 'Thomas House' | 'Union Building'
 
 export interface SellForm {
   title: string
@@ -74,7 +74,6 @@ export interface State {
   sellOpen: boolean
   menuOpen: boolean
   savedOnly: boolean
-  location: Location
   saved: Record<string, boolean>
   feed: EnrichedItem[]
   feedLoading: boolean
@@ -126,7 +125,6 @@ const initialState: State = {
   sellOpen: false,
   menuOpen: false,
   savedOnly: false,
-  location: 'Thomas House',
   saved: {},
   feed: [],
   feedLoading: true,
@@ -176,7 +174,6 @@ export interface MarketplaceApi {
   goHome: () => void
   setQuery: (v: string) => void
   clearQuery: () => void
-  toggleLocation: () => void
   selectCat: (label: string) => void
   selectCond: (label: string) => void
   selectSort: (k: Sort) => void
@@ -268,6 +265,23 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
     const t = window.setTimeout(() => loadFeed({ cat, cond, sort, query }, floorCode), query ? 300 : 0)
     return () => window.clearTimeout(t)
   }, [cat, cond, sort, query, viewerFloor, loadFeed])
+
+  // Keep the latest feed params in a ref so the realtime callback can reload
+  // with the current filters without re-subscribing on every keystroke.
+  const feedParamsRef = useRef({ cat, cond, sort, query, viewerFloor })
+  useEffect(() => {
+    feedParamsRef.current = { cat, cond, sort, query, viewerFloor }
+  }, [cat, cond, sort, query, viewerFloor])
+
+  // Realtime feed: when any listing changes (new post, price drop, sold), reload
+  // so the browse grid updates live — no manual refresh.
+  useEffect(() => {
+    const unsub = subscribeListings(() => {
+      const p = feedParamsRef.current
+      loadFeed({ cat: p.cat, cond: p.cond, sort: p.sort, query: p.query }, p.viewerFloor ? p.viewerFloor.toLowerCase() : null)
+    })
+    return () => unsub()
+  }, [loadFeed])
 
   const enrichedItems = state.feed
 
@@ -418,8 +432,6 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
       patch({ cat: 'All', cond: 'All', query: '', sel: null, savedOnly: false, menuOpen: false, view: 'browse' }),
     setQuery: (v) => patch({ query: v, savedOnly: false, view: 'browse' }),
     clearQuery: () => patch({ query: '' }),
-    toggleLocation: () =>
-      patch((prev) => ({ location: prev.location === 'Thomas House' ? 'Union Building' : 'Thomas House' })),
     selectCat: (label) => patch({ cat: label, savedOnly: false, view: 'browse' }),
     selectCond: (label) => patch({ cond: label }),
     selectSort: (k) => patch({ sort: k }),

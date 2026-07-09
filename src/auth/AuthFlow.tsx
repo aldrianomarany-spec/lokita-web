@@ -333,7 +333,7 @@ export default function AuthFlow() {
                 <label style={labelStyle}>Email address</label>
                 <div className="lok-in" style={{ ...fieldWrap, marginBottom: 15 }}>
                   <svg width={17} height={17} viewBox="0 0 24 24" fill="none" stroke="#A29C8B" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="5" width="18" height="14" rx="2.5" /><path d="m3 7 9 6 9-6" /></svg>
-                  <input value={f.user} onChange={set('user')} type="email" placeholder="you@student.jiu.ac.id" style={inputStyle} onKeyDown={(e) => { if (e.key === 'Enter') doLogin() }} />
+                  <input value={f.user} onChange={set('user')} type="email" placeholder="you@jiu.ac" style={inputStyle} onKeyDown={(e) => { if (e.key === 'Enter') doLogin() }} />
                 </div>
 
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 7 }}>
@@ -378,7 +378,7 @@ export default function AuthFlow() {
                 <label style={labelStyle}>Email</label>
                 <div className="lok-in" style={{ ...fieldWrap, padding: '12px 15px', marginBottom: 13 }}>
                   <svg width={17} height={17} viewBox="0 0 24 24" fill="none" stroke="#A29C8B" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="5" width="18" height="14" rx="2.5" /><path d="m3 7 9 6 9-6" /></svg>
-                  <input value={f.email} onChange={set('email')} placeholder="you@student.jiu.ac.id" style={inputStyle} />
+                  <input value={f.email} onChange={set('email')} placeholder="you@jiu.ac" style={inputStyle} />
                 </div>
 
                 <div style={{ display: 'flex', gap: 11, marginBottom: 22 }}>
@@ -418,7 +418,7 @@ export default function AuthFlow() {
                 <label style={labelStyle}>Registered email</label>
                 <div className="lok-in" style={{ ...fieldWrap, marginBottom: 22 }}>
                   <svg width={17} height={17} viewBox="0 0 24 24" fill="none" stroke="#A29C8B" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="5" width="18" height="14" rx="2.5" /><path d="m3 7 9 6 9-6" /></svg>
-                  <input value={f.fEmail} onChange={set('fEmail')} placeholder="you@student.jiu.ac.id" style={inputStyle} />
+                  <input value={f.fEmail} onChange={set('fEmail')} placeholder="you@jiu.ac" style={inputStyle} />
                 </div>
                 <button className="lok-btn" onClick={doReset} style={primaryBtn}>{btn('reset', 'Send reset link')}</button>
               </div>
@@ -431,7 +431,7 @@ export default function AuthFlow() {
                 </div>
                 <h2 style={{ fontFamily: "'Bricolage Grotesque',sans-serif", fontWeight: 800, fontSize: 26, letterSpacing: '-.02em', margin: '0 0 10px' }}>Check your inbox</h2>
                 <p style={{ fontSize: 14, color: '#6F6A5C', lineHeight: 1.65, margin: '0 0 8px' }}>We sent a password reset link to</p>
-                <div style={{ fontWeight: 700, fontSize: 15, color: '#201E18', marginBottom: 22, wordBreak: 'break-all' }}>{f.fEmail || 'you@student.jiu.ac.id'}</div>
+                <div style={{ fontWeight: 700, fontSize: 15, color: '#201E18', marginBottom: 22, wordBreak: 'break-all' }}>{f.fEmail || 'you@jiu.ac'}</div>
                 <div style={{ background: '#FBF8F1', border: '1px solid #E4DDCE', borderRadius: 14, padding: '14px 16px', fontSize: 12.5, color: '#6F6A5C', lineHeight: 1.55, marginBottom: 24, textAlign: 'left' }}>The link expires in 30 minutes. Didn't get it? Check spam, or <span onClick={doReset} className="lok-link" style={linkStyle}>resend</span>.</div>
                 <button className="lok-btn" onClick={goView('login')} style={{ ...primaryBtn, boxShadow: '0 10px 24px -10px rgba(42,95,168,.8)' }}>Back to log in</button>
               </div>
