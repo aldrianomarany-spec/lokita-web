@@ -79,6 +79,18 @@ export async function signOut() {
   if (error) throw error
 }
 
+// Send a password-reset email. `redirectTo` is where the link lands.
+export async function resetPassword(email: string, redirectTo: string = window.location.origin) {
+  const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo })
+  if (error) throw error
+}
+
+// A profile counts as "complete" once the onboarding step has set the building
+// and floor — used to route new users to onboarding vs. straight to the app.
+export function isProfileComplete(p: Profile | null): boolean {
+  return !!p && !!p.building && !!p.floor
+}
+
 export async function getSession(): Promise<Session | null> {
   const { data } = await supabase.auth.getSession()
   return data.session

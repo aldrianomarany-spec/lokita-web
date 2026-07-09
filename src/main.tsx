@@ -3,11 +3,21 @@ import ReactDOM from 'react-dom/client'
 import { createBrowserRouter, RouterProvider, Navigate } from 'react-router-dom'
 import './index.css'
 import AuthFlow from './auth/AuthFlow'
+import CompleteProfile from './auth/CompleteProfile'
+import RequireSession from './auth/RequireSession'
 import Marketplace from './marketplace/Marketplace'
 
 const router = createBrowserRouter([
   { path: '/', element: <AuthFlow /> },
-  { path: '/app', element: <Marketplace /> },
+  { path: '/onboarding', element: <CompleteProfile /> },
+  {
+    path: '/app',
+    element: (
+      <RequireSession>
+        <Marketplace />
+      </RequireSession>
+    ),
+  },
   { path: '*', element: <Navigate to="/" replace /> },
 ])
 

@@ -1,6 +1,17 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ACCENT, ACCENT_DEEP } from '../theme'
+import {
+  signInWithEmail,
+  signUpWithEmail,
+  signInWithGoogle,
+  getSession,
+  getMyProfile,
+  resetPassword,
+  isProfileComplete,
+} from '../lib/auth'
+
+const errMsg = (e: unknown) => (e instanceof Error ? e.message : 'Something went wrong. Please try again.')
 
 type View = 'login' | 'signup' | 'forgot' | 'reset'
 
@@ -135,6 +146,7 @@ export default function AuthFlow() {
   const [view, setView] = useState<View>('login')
   const [showPw, setShowPw] = useState(false)
   const [loading, setLoading] = useState('')
+  const [error, setError] = useState('')
   const [f, setF] = useState({ user: '', pass: '', name: '', email: '', np: '', cp: '', fEmail: '' })
   const timers = useRef<number[]>([])
 
@@ -144,24 +156,104 @@ export default function AuthFlow() {
     return () => timers.current.forEach(clearTimeout)
   }, [])
 
+  // Already signed in (returning user, or back from Google OAuth)? Skip the
+  // auth UI and route by whether onboarding is done.
+  useEffect(() => {
+    getSession().then(async (session) => {
+      if (!session) return
+      try {
+        const p = await getMyProfile()
+        navigate(isProfileComplete(p) ? '/app' : '/onboarding', { replace: true })
+      } catch {
+        /* stay on login */
+      }
+    })
+  }, [navigate])
+
   const set = (k: keyof typeof f) => (e: React.ChangeEvent<HTMLInputElement>) =>
     setF((prev) => ({ ...prev, [k]: e.target.value }))
-
-  const go = () => navigate('/app')
-
-  const runThen = (key: string, fn: () => void, ms = 900) => () => {
-    if (loading) return
-    setLoading(key)
-    window.setTimeout(fn, ms)
-  }
 
   const goView = (v: View) => () => {
     setView(v)
     setLoading('')
+    setError('')
+  }
+
+  // ---- real auth handlers ----
+  const doLogin = async () => {
+    if (loading) return
+    setError('')
+    setLoading('login')
+    try {
+      await signInWithEmail({ email: f.user.trim(), password: f.pass })
+      const p = await getMyProfile()
+      navigate(isProfileComplete(p) ? '/app' : '/onboarding')
+    } catch (e) {
+      setError(errMsg(e))
+      setLoading('')
+    }
+  }
+
+  const doSignup = async () => {
+    if (loading) return
+    if (!f.name.trim()) return setError('Please enter your name.')
+    if (!f.email.trim()) return setError('Please enter your email.')
+    if (f.np.length < 6) return setError('Password must be at least 6 characters.')
+    if (f.np !== f.cp) return setError('Passwords do not match.')
+    setError('')
+    setLoading('signup')
+    try {
+      const res = await signUpWithEmail({ name: f.name.trim(), email: f.email.trim(), password: f.np })
+      if (!res.session) {
+        // email confirmation is on — no session yet
+        setLoading('')
+        setView('login')
+        setError('Account created. Check your email to confirm, then log in.')
+        return
+      }
+      navigate('/onboarding')
+    } catch (e) {
+      setError(errMsg(e))
+      setLoading('')
+    }
+  }
+
+  const doGoogle = async () => {
+    if (loading) return
+    setError('')
+    setLoading('login')
+    try {
+      // redirects away to Google; the session-bootstrap effect handles the return
+      await signInWithGoogle(window.location.origin)
+    } catch (e) {
+      setError(errMsg(e))
+      setLoading('')
+    }
+  }
+
+  const doReset = async () => {
+    if (loading) return
+    if (!f.fEmail.trim()) return setError('Please enter your email.')
+    setError('')
+    setLoading('reset')
+    try {
+      await resetPassword(f.fEmail.trim(), window.location.origin)
+      setView('reset')
+      setLoading('')
+    } catch (e) {
+      setError(errMsg(e))
+      setLoading('')
+    }
   }
 
   const cpMismatch = f.cp.length > 0 && f.np !== f.cp
   const btn = (key: string, idle: string) => (loading === key ? <Spinner /> : idle)
+
+  const errorBanner = error ? (
+    <div style={{ background: '#FBEEE9', border: '1px solid #E4C4B8', color: '#B23A1B', fontSize: 12.5, fontWeight: 600, borderRadius: 11, padding: '10px 13px', marginBottom: 16, lineHeight: 1.45 }}>
+      {error}
+    </div>
+  ) : null
 
   return (
     <div style={authRootStyle}>
@@ -235,12 +327,13 @@ export default function AuthFlow() {
             {view === 'login' && (
               <div style={{ animation: 'lok-rise-lg .4s ease both' }}>
                 <div style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 11, color: '#9A927F', letterSpacing: '.08em', marginBottom: 8 }}>WELCOME BACK</div>
-                <h2 style={{ fontFamily: "'Bricolage Grotesque',sans-serif", fontWeight: 800, fontSize: 28, letterSpacing: '-.02em', margin: '0 0 26px' }}>Log in to Lokita</h2>
+                <h2 style={{ fontFamily: "'Bricolage Grotesque',sans-serif", fontWeight: 800, fontSize: 28, letterSpacing: '-.02em', margin: '0 0 22px' }}>Log in to Lokita</h2>
 
-                <label style={labelStyle}>Username</label>
+                {errorBanner}
+                <label style={labelStyle}>Email address</label>
                 <div className="lok-in" style={{ ...fieldWrap, marginBottom: 15 }}>
-                  <svg width={17} height={17} viewBox="0 0 24 24" fill="none" stroke="#A29C8B" strokeWidth={2} strokeLinecap="round"><circle cx="12" cy="8" r="4" /><path d="M5 21c0-4 3.5-6 7-6s7 2 7 6" /></svg>
-                  <input value={f.user} onChange={set('user')} placeholder="aldriano" style={inputStyle} />
+                  <svg width={17} height={17} viewBox="0 0 24 24" fill="none" stroke="#A29C8B" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="5" width="18" height="14" rx="2.5" /><path d="m3 7 9 6 9-6" /></svg>
+                  <input value={f.user} onChange={set('user')} type="email" placeholder="you@student.jiu.ac.id" style={inputStyle} onKeyDown={(e) => { if (e.key === 'Enter') doLogin() }} />
                 </div>
 
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 7 }}>
@@ -249,11 +342,11 @@ export default function AuthFlow() {
                 </div>
                 <div className="lok-in" style={{ ...fieldWrap, marginBottom: 22 }}>
                   <svg width={17} height={17} viewBox="0 0 24 24" fill="none" stroke="#A29C8B" strokeWidth={2} strokeLinecap="round"><rect x="4" y="10" width="16" height="10" rx="2.5" /><path d="M8 10V7a4 4 0 0 1 8 0v3" /></svg>
-                  <input value={f.pass} onChange={set('pass')} type={showPw ? 'text' : 'password'} placeholder="••••••••" style={inputStyle} />
+                  <input value={f.pass} onChange={set('pass')} type={showPw ? 'text' : 'password'} placeholder="••••••••" style={inputStyle} onKeyDown={(e) => { if (e.key === 'Enter') doLogin() }} />
                   <span onClick={() => setShowPw(!showPw)} style={{ cursor: 'pointer', color: '#A29C8B', display: 'flex' }}>{showPw ? eyeOff : eyeOpen}</span>
                 </div>
 
-                <button className="lok-btn" onClick={runThen('login', go)} style={primaryBtn}>{btn('login', 'Log in')}</button>
+                <button className="lok-btn" onClick={doLogin} style={primaryBtn}>{btn('login', 'Log in')}</button>
 
                 <div style={{ display: 'flex', alignItems: 'center', gap: 14, margin: '22px 0' }}>
                   <div style={{ flex: 1, height: 1, background: '#E4DDCE' }} />
@@ -261,7 +354,7 @@ export default function AuthFlow() {
                   <div style={{ flex: 1, height: 1, background: '#E4DDCE' }} />
                 </div>
 
-                <button className="lok-btn" onClick={runThen('login', go, 1100)} style={{ width: '100%', border: '1.5px solid #E4DDCE', background: '#FBF8F1', color: '#201E18', fontFamily: 'inherit', fontWeight: 700, fontSize: 14, padding: 13, borderRadius: 13, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 11 }}>
+                <button className="lok-btn" onClick={doGoogle} style={{ width: '100%', border: '1.5px solid #E4DDCE', background: '#FBF8F1', color: '#201E18', fontFamily: 'inherit', fontWeight: 700, fontSize: 14, padding: 13, borderRadius: 13, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 11 }}>
                   <svg width={18} height={18} viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9 3.6l6.7-6.7C35.6 2.4 30.2 0 24 0 14.6 0 6.5 5.4 2.6 13.2l7.8 6.1C12.3 13.2 17.7 9.5 24 9.5z" /><path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.7c-.5 3-2.2 5.5-4.7 7.2l7.3 5.7C43.9 37.9 46.5 31.7 46.5 24.5z" /><path fill="#FBBC05" d="M10.4 28.3c-.5-1.4-.8-3-.8-4.3s.3-2.9.8-4.3l-7.8-6.1C.9 16.8 0 20.3 0 24s.9 7.2 2.6 10.4l7.8-6.1z" /><path fill="#34A853" d="M24 48c6.2 0 11.4-2 15.2-5.6l-7.3-5.7c-2 1.4-4.7 2.3-7.9 2.3-6.3 0-11.7-3.7-13.6-9.1l-7.8 6.1C6.5 42.6 14.6 48 24 48z" /></svg>
                   Continue with Google
                 </button>
@@ -275,6 +368,7 @@ export default function AuthFlow() {
                 <div style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 11, color: '#9A927F', letterSpacing: '.08em', marginBottom: 8 }}>JOIN YOUR DORM</div>
                 <h2 style={{ fontFamily: "'Bricolage Grotesque',sans-serif", fontWeight: 800, fontSize: 28, letterSpacing: '-.02em', margin: '0 0 22px' }}>Create your account</h2>
 
+                {errorBanner}
                 <label style={labelStyle}>Full name</label>
                 <div className="lok-in" style={{ ...fieldWrap, padding: '12px 15px', marginBottom: 13 }}>
                   <svg width={17} height={17} viewBox="0 0 24 24" fill="none" stroke="#A29C8B" strokeWidth={2} strokeLinecap="round"><circle cx="12" cy="8" r="4" /><path d="M5 21c0-4 3.5-6 7-6s7 2 7 6" /></svg>
@@ -302,7 +396,7 @@ export default function AuthFlow() {
                   </div>
                 </div>
 
-                <button className="lok-btn" onClick={runThen('signup', go)} style={primaryBtn}>{btn('signup', 'Create account')}</button>
+                <button className="lok-btn" onClick={doSignup} style={primaryBtn}>{btn('signup', 'Create account')}</button>
 
                 <div style={{ fontSize: 11.5, color: '#9A927F', textAlign: 'center', marginTop: 14, lineHeight: 1.5 }}>By creating an account you agree to Lokita's <a href="#">Community Rules</a> &amp; dorm verification.</div>
                 <div style={{ textAlign: 'center', marginTop: 20, fontSize: 13.5, color: '#6F6A5C', fontWeight: 500 }}>Already a member? <span onClick={goView('login')} className="lok-link" style={linkStyle}>Log in</span></div>
@@ -320,12 +414,13 @@ export default function AuthFlow() {
                 <h2 style={{ fontFamily: "'Bricolage Grotesque',sans-serif", fontWeight: 800, fontSize: 27, letterSpacing: '-.02em', margin: '0 0 8px' }}>Forgot password?</h2>
                 <p style={{ fontSize: 14, color: '#6F6A5C', lineHeight: 1.6, margin: '0 0 24px' }}>Enter the email tied to your Lokita account and we'll send you a secure reset link.</p>
 
+                {errorBanner}
                 <label style={labelStyle}>Registered email</label>
                 <div className="lok-in" style={{ ...fieldWrap, marginBottom: 22 }}>
                   <svg width={17} height={17} viewBox="0 0 24 24" fill="none" stroke="#A29C8B" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="5" width="18" height="14" rx="2.5" /><path d="m3 7 9 6 9-6" /></svg>
                   <input value={f.fEmail} onChange={set('fEmail')} placeholder="you@student.jiu.ac.id" style={inputStyle} />
                 </div>
-                <button className="lok-btn" onClick={runThen('reset', () => { setView('reset'); setLoading('') })} style={primaryBtn}>{btn('reset', 'Send reset link')}</button>
+                <button className="lok-btn" onClick={doReset} style={primaryBtn}>{btn('reset', 'Send reset link')}</button>
               </div>
             )}
 
@@ -337,7 +432,7 @@ export default function AuthFlow() {
                 <h2 style={{ fontFamily: "'Bricolage Grotesque',sans-serif", fontWeight: 800, fontSize: 26, letterSpacing: '-.02em', margin: '0 0 10px' }}>Check your inbox</h2>
                 <p style={{ fontSize: 14, color: '#6F6A5C', lineHeight: 1.65, margin: '0 0 8px' }}>We sent a password reset link to</p>
                 <div style={{ fontWeight: 700, fontSize: 15, color: '#201E18', marginBottom: 22, wordBreak: 'break-all' }}>{f.fEmail || 'you@student.jiu.ac.id'}</div>
-                <div style={{ background: '#FBF8F1', border: '1px solid #E4DDCE', borderRadius: 14, padding: '14px 16px', fontSize: 12.5, color: '#6F6A5C', lineHeight: 1.55, marginBottom: 24, textAlign: 'left' }}>The link expires in 30 minutes. Didn't get it? Check spam, or <span onClick={runThen('reset', () => setLoading(''))} className="lok-link" style={linkStyle}>resend</span>.</div>
+                <div style={{ background: '#FBF8F1', border: '1px solid #E4DDCE', borderRadius: 14, padding: '14px 16px', fontSize: 12.5, color: '#6F6A5C', lineHeight: 1.55, marginBottom: 24, textAlign: 'left' }}>The link expires in 30 minutes. Didn't get it? Check spam, or <span onClick={doReset} className="lok-link" style={linkStyle}>resend</span>.</div>
                 <button className="lok-btn" onClick={goView('login')} style={{ ...primaryBtn, boxShadow: '0 10px 24px -10px rgba(42,95,168,.8)' }}>Back to log in</button>
               </div>
             )}

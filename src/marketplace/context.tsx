@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { signOut } from '../lib/auth'
 import {
   ITEMS,
   CHATS,
@@ -340,7 +341,12 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
         )
     },
 
-    logout: () => navigate('/'),
+    logout: () => {
+      // sign out of Supabase, then return to the login flow
+      signOut()
+        .catch(() => {})
+        .finally(() => navigate('/', { replace: true }))
+    },
     resetFilters: () => patch({ cat: 'All', cond: 'All', query: '', savedOnly: false }),
   }
 
