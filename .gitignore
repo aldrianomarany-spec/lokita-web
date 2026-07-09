@@ -8,3 +8,8 @@ dist-ssr
 
 node_modules/.tmp
 *.tsbuildinfo
+
+# local env — never commit real keys; .env.example is the tracked template
+.env
+.env.*
+!.env.example
