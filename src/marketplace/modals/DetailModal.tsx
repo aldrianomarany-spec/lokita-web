@@ -67,7 +67,6 @@ export default function DetailModal() {
           <h2 style={{ fontFamily: "'Bricolage Grotesque',sans-serif", fontSize: 27, fontWeight: 800, letterSpacing: '-.02em', margin: '6px 0 8px', lineHeight: 1.12 }}>{sel.title}</h2>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 9, marginBottom: 16 }}>
             <span style={{ fontFamily: "'Bricolage Grotesque',sans-serif", fontSize: 28, fontWeight: 800, color: 'var(--accent,#2A5FA8)' }}>{sel.price}</span>
-            {sel.wasPrice && <span style={{ fontSize: 14, color: '#A29C8B', textDecoration: 'line-through', fontWeight: 600 }}>{sel.wasPrice}</span>}
           </div>
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 18 }}>
             <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12.5, fontWeight: 600, color: '#3A362C', background: '#F1ECE1', padding: '8px 12px', borderRadius: 10 }}>Condition · {sel.cond}</span>

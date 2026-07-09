@@ -219,7 +219,6 @@ export interface MarketplaceApi {
   submitReviewFor: (order: OrderRow, rating: number, comment: string) => Promise<void>
   openSellerProfile: (id: string | null, name: string | null) => void
   closeSellerProfile: () => void
-  openWa: (wa: string | undefined, title: string | undefined) => void
   logout: () => void
   resetFilters: () => void
 }
@@ -661,17 +660,6 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
 
     openSellerProfile: (id, name) => patch({ sellerOpen: true, sellerId: id, sellerName: name }),
     closeSellerProfile: () => patch({ sellerOpen: false }),
-
-    openWa: (wa, title) => {
-      if (wa)
-        window.open(
-          'https://wa.me/' +
-            wa +
-            '?text=' +
-            encodeURIComponent(`Hi! I saw your "${title || 'item'}" on Lokita — is it still available?`),
-          '_blank',
-        )
-    },
 
     logout: () => {
       // sign out of Supabase, then return to the login flow

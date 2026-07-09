@@ -55,7 +55,6 @@ export default function ListingCard({ it, index }: { it: EnrichedItem; index: nu
         <div style={{ fontWeight: 700, fontSize: 15, lineHeight: 1.3, marginBottom: 6, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{it.title}</div>
         <div style={{ display: 'flex', alignItems: 'baseline', gap: 7, marginBottom: 12 }}>
           <span style={{ fontFamily: "'Bricolage Grotesque',sans-serif", fontWeight: 800, fontSize: 19, color: '#201E18' }}>{it.price}</span>
-          {it.wasPrice && <span style={{ fontSize: 12, color: '#A29C8B', textDecoration: 'line-through', fontWeight: 600 }}>{it.wasPrice}</span>}
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, paddingTop: 11, borderTop: '1px solid #EEE7D8' }}>
           <div style={{ width: 24, height: 24, borderRadius: '50%', background: t.tint, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 11, color: '#3A362C', flex: 'none' }}>{it.sellerInitial}</div>
