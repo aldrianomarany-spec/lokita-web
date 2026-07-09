@@ -75,7 +75,7 @@ export default function BrowseView() {
       {/* hero header */}
       <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 20, marginBottom: 20 }}>
         <div>
-          <div style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 11, color: '#A29C8B', letterSpacing: '.08em', marginBottom: 6 }}>GOOD EVENING{s.profile.name ? ', ' + s.profile.name.split(' ')[0].toUpperCase() : ''}</div>
+          <div style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 11, color: '#A29C8B', letterSpacing: '.08em', marginBottom: 6 }}>{(() => { const h = new Date().getHours(); return h < 11 ? 'GOOD MORNING' : h < 15 ? 'GOOD AFTERNOON' : 'GOOD EVENING' })()}{s.profile.name ? ', ' + s.profile.name.split(' ')[0].toUpperCase() : ''}</div>
           <h1 style={{ fontFamily: "'Bricolage Grotesque',sans-serif", fontSize: 34, fontWeight: 800, letterSpacing: '-.025em', margin: 0, lineHeight: 1.02 }}>{browseTitle}</h1>
           <p style={{ fontSize: 14, color: '#6F6A5C', fontWeight: 500, margin: '8px 0 0' }}>{browseSub}</p>
         </div>
