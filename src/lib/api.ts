@@ -106,15 +106,17 @@ export async function uploadAvatar(file: File): Promise<string> {
 // profile stats + lists (all real; empty for a fresh account)
 // ---------------------------------------------------------------------------
 export interface ProfileStats {
-  selling: number // active listings
-  buying: number // completed purchases
+  selling: number // active listings for sale
+  sold: number // completed sales (as seller)
+  buying: number // completed purchases (as buyer)
   reviewCount: number
   avgRating: number | null
 }
 
 export async function fetchProfileStats(userId: string): Promise<ProfileStats> {
-  const [selling, buying, reviews] = await Promise.all([
+  const [selling, sold, buying, reviews] = await Promise.all([
     supabase.from('listings').select('id', { count: 'exact', head: true }).eq('seller_id', userId).eq('status', 'active'),
+    supabase.from('transactions').select('id', { count: 'exact', head: true }).eq('seller_id', userId).eq('status', 'completed'),
     supabase.from('transactions').select('id', { count: 'exact', head: true }).eq('buyer_id', userId).eq('status', 'completed'),
     supabase.from('reviews').select('rating').eq('reviewee_id', userId),
   ])
@@ -122,6 +124,7 @@ export async function fetchProfileStats(userId: string): Promise<ProfileStats> {
   const avg = ratings.length ? ratings.reduce((a, r) => a + r.rating, 0) / ratings.length : null
   return {
     selling: selling.count || 0,
+    sold: sold.count || 0,
     buying: buying.count || 0,
     reviewCount: ratings.length,
     avgRating: avg,

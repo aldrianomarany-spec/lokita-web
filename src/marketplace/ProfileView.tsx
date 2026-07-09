@@ -103,6 +103,7 @@ export default function ProfileView() {
   const ratingLabel = stats && stats.avgRating != null ? stats.avgRating.toFixed(1) : '—'
   const statTiles = [
     { value: String(stats?.selling ?? 0), label: 'Selling', color: 'var(--accent,#2A5FA8)' },
+    { value: String(stats?.sold ?? 0), label: 'Sold', color: '#1B7A4B' },
     { value: String(stats?.buying ?? 0), label: 'Buying', color: '#201E18' },
     { value: ratingLabel, label: `${stats?.reviewCount ?? 0} reviews`, color: '#201E18' },
   ]
@@ -174,7 +175,7 @@ export default function ProfileView() {
       </div>
 
       {/* stats */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 14, marginBottom: 28 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 14, marginBottom: 28 }}>
         {statTiles.map((st) => (
           <div key={st.label} style={{ background: '#FBF8F1', border: '1px solid #E4DDCE', borderRadius: 16, padding: '16px 18px', textAlign: 'center' }}>
             <div style={{ fontFamily: "'Bricolage Grotesque',sans-serif", fontSize: 26, fontWeight: 800, color: st.color, lineHeight: 1 }}>{st.value}</div>
