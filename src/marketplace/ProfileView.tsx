@@ -31,12 +31,16 @@ function VerifyBadge({ status }: { status?: string }) {
   return <span style={{ fontSize: 12, fontWeight: 800, color: '#9A6A12', background: '#FBF2DD', border: '1px solid #ECD8A6', padding: '6px 11px', borderRadius: 9 }}>Verification pending</span>
 }
 
-function SmallCard({ title, price, badge, badgeBg, badgeFg, dim, onClick }: { title: string; price: string; badge: string; badgeBg: string; badgeFg: string; dim?: boolean; onClick?: () => void }) {
+function SmallCard({ title, price, badge, badgeBg, badgeFg, dim, photoUrl, onClick }: { title: string; price: string; badge: string; badgeBg: string; badgeFg: string; dim?: boolean; photoUrl?: string | null; onClick?: () => void }) {
   return (
     <div onClick={onClick} className="lok-card" style={{ cursor: onClick ? 'pointer' : 'default', background: '#FBF8F1', border: '1px solid #E4DDCE', borderRadius: 18, overflow: 'hidden', opacity: dim ? 0.62 : 1 }}>
       <div style={{ position: 'relative', height: 100, background: '#EEE7D8', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        {photoUrl ? (
+          <img src={photoUrl} alt={title} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
+        ) : (
+          <svg width={26} height={26} viewBox="0 0 24 24" fill="none" stroke="#C9BFA8" strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="16" rx="3" /><circle cx="9" cy="10" r="2" /><path d="m21 16-4-4-9 8" /></svg>
+        )}
         <span style={{ position: 'absolute', top: 9, left: 9, fontFamily: "'Spline Sans Mono',monospace", fontSize: 9, fontWeight: 600, color: badgeFg, background: badgeBg, padding: '3px 7px', borderRadius: 6, letterSpacing: '.04em' }}>{badge}</span>
-        <svg width={26} height={26} viewBox="0 0 24 24" fill="none" stroke="#C9BFA8" strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="16" rx="3" /><circle cx="9" cy="10" r="2" /><path d="m21 16-4-4-9 8" /></svg>
       </div>
       <div style={{ padding: '11px 13px 13px' }}>
         <div style={{ fontWeight: 700, fontSize: 13.5, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{title}</div>
@@ -187,7 +191,7 @@ export default function ProfileView() {
       {wishlist && wishlist.length > 0 ? (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(200px,1fr))', gap: 16, marginBottom: 32 }}>
           {wishlist.map((it) => (
-            <SmallCard key={it.id} title={it.title} price={rupiah(it.price)} badge="SAVED" badgeBg="#EAF1EC" badgeFg="#12503A" onClick={() => openItem(dbListingToItem(it))} />
+            <SmallCard key={it.id} title={it.title} price={rupiah(it.price)} badge="SAVED" badgeBg="#EAF1EC" badgeFg="#12503A" photoUrl={it.photoUrl} onClick={() => openItem(dbListingToItem(it))} />
           ))}
         </div>
       ) : (
@@ -202,10 +206,10 @@ export default function ProfileView() {
       {listings && listings.length > 0 ? (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(200px,1fr))', gap: 16, marginBottom: 32 }}>
           {activeListings.map((it) => (
-            <SmallCard key={it.id} title={it.title} price={rupiah(it.price)} badge="ACTIVE" badgeBg="#E7F1EA" badgeFg="#1B7A4B" onClick={() => openItem(dbListingToItem(it))} />
+            <SmallCard key={it.id} title={it.title} price={rupiah(it.price)} badge="ACTIVE" badgeBg="#E7F1EA" badgeFg="#1B7A4B" photoUrl={it.photoUrl} onClick={() => openItem(dbListingToItem(it))} />
           ))}
           {soldListings.map((it) => (
-            <SmallCard key={it.id} title={it.title} price={rupiah(it.price)} badge="SOLD" badgeBg="#EFE7D9" badgeFg="#9A8A5E" dim />
+            <SmallCard key={it.id} title={it.title} price={rupiah(it.price)} badge="SOLD" badgeBg="#EFE7D9" badgeFg="#9A8A5E" photoUrl={it.photoUrl} dim />
           ))}
         </div>
       ) : (
@@ -274,5 +278,8 @@ function dbListingToItem(l: DbListing): Item {
     new: false,
     order: 0,
     desc: l.description || '',
+    photoUrl: l.photoUrl,
+    ownerId: l.seller_id,
+    mine: true,
   }
 }

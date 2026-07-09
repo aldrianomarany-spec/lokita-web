@@ -142,6 +142,13 @@ export interface DbListing {
   floor: string | null
   created_at: string
   updated_at: string
+  photoUrl?: string | null
+}
+
+// first photo url from an embedded listing_photos array
+function firstPhoto(photos: { photo_url: string; sort_order: number }[] | null | undefined): string | null {
+  if (!photos || !photos.length) return null
+  return photos.slice().sort((a, b) => a.sort_order - b.sort_order)[0].photo_url
 }
 
 export async function fetchMyListings(): Promise<DbListing[]> {
@@ -149,11 +156,14 @@ export async function fetchMyListings(): Promise<DbListing[]> {
   if (!user) return []
   const { data, error } = await supabase
     .from('listings')
-    .select('*')
+    .select('*, listing_photos(photo_url, sort_order)')
     .eq('seller_id', user.id)
     .order('created_at', { ascending: false })
   if (error) throw error
-  return (data as DbListing[]) || []
+  return ((data as (DbListing & { listing_photos: { photo_url: string; sort_order: number }[] })[]) || []).map((r) => ({
+    ...r,
+    photoUrl: firstPhoto(r.listing_photos),
+  }))
 }
 
 export interface ReviewRow {
@@ -194,11 +204,14 @@ export async function fetchMyWishlist(): Promise<DbListing[]> {
   if (!user) return []
   const { data, error } = await supabase
     .from('wishlist')
-    .select('listing:listing_id(*)')
+    .select('listing:listing_id(*, listing_photos(photo_url, sort_order))')
     .eq('user_id', user.id)
   if (error) throw error
-  const rows = (data as unknown as { listing: DbListing | null }[]) || []
-  return rows.map((r) => r.listing).filter((l): l is DbListing => !!l)
+  const rows = (data as unknown as { listing: (DbListing & { listing_photos: { photo_url: string; sort_order: number }[] }) | null }[]) || []
+  return rows
+    .map((r) => r.listing)
+    .filter((l): l is DbListing & { listing_photos: { photo_url: string; sort_order: number }[] } => !!l)
+    .map((l) => ({ ...l, photoUrl: firstPhoto(l.listing_photos) }))
 }
 
 // ===========================================================================
