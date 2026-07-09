@@ -2,8 +2,8 @@ import { supabase } from './supabase'
 import type { Session, User } from '@supabase/supabase-js'
 
 // ---- domain enums mirroring the DB CHECK constraints ----
-export type BuildingCode = 'thomas' | 'union'
-export type FloorCode = 'ground' | 't1' | 't2' | 't3' | 'u2' | 'u3'
+export type BuildingCode = 'thomas' | 'union' | 'elizabeth'
+export type FloorCode = 'ground' | 't1' | 't2' | 't3' | 'u2' | 'u3' | 'e1' | 'e2' | 'e3'
 export type ClassStanding = 'freshman' | 'sophomore' | 'junior' | 'senior'
 export type VerificationStatus = 'pending' | 'verified' | 'rejected'
 

@@ -15,9 +15,12 @@ export async function getUserId(): Promise<string | null> {
 // ---------------------------------------------------------------------------
 // display formatters (DB codes → UI labels used by the existing components)
 // ---------------------------------------------------------------------------
-const BUILDING_LABEL: Record<string, string> = { thomas: 'Thomas Building', union: 'Union Building' }
-const BUILDING_CODE: Record<string, 'thomas' | 'union'> = { 'Thomas Building': 'thomas', 'Union Building': 'union' }
-const FLOOR_LABEL: Record<string, string> = { ground: 'Ground', t1: 'T1', t2: 'T2', t3: 'T3', u2: 'U2', u3: 'U3' }
+const BUILDING_LABEL: Record<string, string> = { thomas: 'Thomas Building', union: 'Union Building', elizabeth: 'Elizabeth Building' }
+const BUILDING_CODE: Record<string, 'thomas' | 'union' | 'elizabeth'> = { 'Thomas Building': 'thomas', 'Union Building': 'union', 'Elizabeth Building': 'elizabeth' }
+const FLOOR_LABEL: Record<string, string> = { ground: 'Ground', t1: 'T1', t2: 'T2', t3: 'T3', u2: 'U2', u3: 'U3', e1: 'Floor 1', e2: 'Floor 2', e3: 'Floor 3' }
+// reverse map (label → code) so profile edits round-trip without relying on
+// lowercasing (which breaks for labels like "Floor 1").
+const FLOOR_CODE: Record<string, string> = Object.fromEntries(Object.entries(FLOOR_LABEL).map(([code, label]) => [label, code]))
 const STANDING_LABEL: Record<string, string> = { freshman: 'Freshman', sophomore: 'Sophomore', junior: 'Junior', senior: 'Senior' }
 
 function memberSince(iso: string | undefined): string {
@@ -55,7 +58,7 @@ export function uiEditsToDb(pf: UiProfile): Partial<DbProfile> {
     student_id_number: pf.studentId.trim() || null,
     whatsapp_number: pf.whatsapp.trim() || null,
     building: pf.building ? BUILDING_CODE[pf.building] ?? null : null,
-    floor: (pf.floor ? pf.floor.toLowerCase() : null) as DbProfile['floor'],
+    floor: (pf.floor ? FLOOR_CODE[pf.floor] ?? null : null) as DbProfile['floor'],
     room_number: pf.room.trim() || null,
     batch_year: digits ? Number(digits) : null,
     class_standing: (pf.standing ? pf.standing.toLowerCase() : null) as DbProfile['class_standing'],
@@ -265,10 +268,17 @@ const CAT_LABEL: Record<string, string> = {
 }
 const rupiah = (n: number) => 'Rp ' + Number(n).toLocaleString('id-ID')
 
-// proximity on DB floor codes (ground,t1,t2,t3,u2,u3)
-const bldgOfCode = (f: string | null) => (f && f.charAt(0) === 'u' ? 'Union' : 'Thomas')
-const floorOrder = (f: string | null) =>
-  (bldgOfCode(f) === 'Union' ? ['u2', 'u3'] : ['ground', 't1', 't2', 't3']).indexOf(f || '')
+// proximity on DB floor codes (ground,t1,t2,t3 / u2,u3 / e1,e2,e3)
+const FLOOR_SEQ: Record<string, string[]> = {
+  Thomas: ['ground', 't1', 't2', 't3'],
+  Union: ['u2', 'u3'],
+  Elizabeth: ['e1', 'e2', 'e3'],
+}
+const bldgOfCode = (f: string | null) => {
+  const c = f ? f.charAt(0) : ''
+  return c === 'u' ? 'Union' : c === 'e' ? 'Elizabeth' : 'Thomas'
+}
+const floorOrder = (f: string | null) => FLOOR_SEQ[bldgOfCode(f)].indexOf(f || '')
 function proximityCode(f: string | null, viewer: string | null): { rank: number; tag: string } {
   const label = f ? FLOOR_LABEL[f] || f.toUpperCase() : '—'
   const v = viewer || 't1'

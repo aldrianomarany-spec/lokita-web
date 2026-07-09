@@ -76,6 +76,36 @@ export const SELL_CATEGORIES = [
   'Others',
 ]
 
-export const BUILDINGS = ['Thomas Building', 'Union Building']
-export const FLOORS = ['Ground', 'T1', 'T2', 'T3', 'U2', 'U3']
+export const BUILDINGS = ['Thomas Building', 'Union Building', 'Elizabeth Building']
+
+// Floors are specific to each building — codes are what the DB stores, labels
+// are what the user sees. Security Post is a separate shared drop-off point and
+// is intentionally NOT part of any building's floor list.
+export interface FloorOption {
+  code: string
+  label: string
+}
+export const FLOORS_BY_BUILDING: Record<string, FloorOption[]> = {
+  'Thomas Building': [
+    { code: 'ground', label: 'Ground' },
+    { code: 't1', label: 'T1' },
+    { code: 't2', label: 'T2' },
+    { code: 't3', label: 'T3' },
+  ],
+  'Union Building': [
+    { code: 'u2', label: 'U2' },
+    { code: 'u3', label: 'U3' },
+  ],
+  'Elizabeth Building': [
+    { code: 'e1', label: 'Floor 1' },
+    { code: 'e2', label: 'Floor 2' },
+    { code: 'e3', label: 'Floor 3' },
+  ],
+}
+// every floor option across all buildings (for lookups)
+export const ALL_FLOORS: FloorOption[] = Object.values(FLOORS_BY_BUILDING).flat()
+export function floorsForBuilding(building: string): FloorOption[] {
+  return FLOORS_BY_BUILDING[building] || []
+}
+
 export const STANDINGS = ['Freshman', 'Sophomore', 'Junior', 'Senior']

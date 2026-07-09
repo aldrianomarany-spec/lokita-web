@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react'
 import { useM } from '../context'
-import { SELL_CATEGORIES, BUILDINGS, FLOORS } from '../../theme'
+import { SELL_CATEGORIES, BUILDINGS, floorsForBuilding } from '../../theme'
 import Overlay, { stop } from './Overlay'
 
 const fieldBase: React.CSSProperties = {
@@ -80,12 +80,21 @@ export default function SellModal() {
             <span style={cap}>FLOOR</span>
           </div>
           <div style={{ display: 'flex', gap: 10 }}>
-            <select className="lok-field" value={f.loc} onChange={(e) => setF('loc', e.target.value)} title="Where the item is now" style={{ ...fieldBase, flex: 1, fontWeight: 600 }}>
+            <select
+              className="lok-field"
+              value={f.loc}
+              onChange={(e) => {
+                setF('loc', e.target.value)
+                setF('floor', '') // reset floor — options differ per building
+              }}
+              title="Where the item is now"
+              style={{ ...fieldBase, flex: 1, fontWeight: 600 }}
+            >
               {BUILDINGS.map((b) => <option key={b}>{b}</option>)}
             </select>
             <select className="lok-field" value={f.floor} onChange={(e) => setF('floor', e.target.value)} title="Floor" style={{ ...fieldBase, flex: 1, fontWeight: 600 }}>
               <option value="">Floor…</option>
-              {FLOORS.map((fl) => <option key={fl} value={fl.toLowerCase()}>{fl}</option>)}
+              {floorsForBuilding(f.loc).map((fl) => <option key={fl.code} value={fl.code}>{fl.label}</option>)}
             </select>
           </div>
           <div style={{ fontSize: 11, color: '#8A8578', fontWeight: 500, lineHeight: 1.5, margin: '-2px 2px 0', display: 'flex', gap: 6 }}>

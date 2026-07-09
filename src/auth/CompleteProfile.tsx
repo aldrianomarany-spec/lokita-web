@@ -46,15 +46,26 @@ const field: React.CSSProperties = {
 const BUILDINGS: { v: BuildingCode; label: string }[] = [
   { v: 'thomas', label: 'Thomas Building' },
   { v: 'union', label: 'Union Building' },
+  { v: 'elizabeth', label: 'Elizabeth Building' },
 ]
-const FLOORS: { v: FloorCode; label: string }[] = [
-  { v: 'ground', label: 'Ground' },
-  { v: 't1', label: 'T1' },
-  { v: 't2', label: 'T2' },
-  { v: 't3', label: 'T3' },
-  { v: 'u2', label: 'U2' },
-  { v: 'u3', label: 'U3' },
-]
+// floors are specific to each building; Security Post is a separate shared point
+const FLOORS_BY_BUILDING: Record<BuildingCode, { v: FloorCode; label: string }[]> = {
+  thomas: [
+    { v: 'ground', label: 'Ground' },
+    { v: 't1', label: 'T1' },
+    { v: 't2', label: 'T2' },
+    { v: 't3', label: 'T3' },
+  ],
+  union: [
+    { v: 'u2', label: 'U2' },
+    { v: 'u3', label: 'U3' },
+  ],
+  elizabeth: [
+    { v: 'e1', label: 'Floor 1' },
+    { v: 'e2', label: 'Floor 2' },
+    { v: 'e3', label: 'Floor 3' },
+  ],
+}
 const STANDINGS: { v: ClassStanding; label: string }[] = [
   { v: 'freshman', label: 'Freshman' },
   { v: 'sophomore', label: 'Sophomore' },
@@ -140,16 +151,24 @@ export default function CompleteProfile() {
           <div style={{ display: 'flex', gap: 11 }}>
             <div style={{ flex: 1 }}>
               <div style={cap}>DORM BUILDING *</div>
-              <select value={building} onChange={(e) => setBuilding(e.target.value as BuildingCode)} className="lok-field" style={{ ...field, fontWeight: 600 }}>
+              <select
+                value={building}
+                onChange={(e) => {
+                  setBuilding(e.target.value as BuildingCode)
+                  setFloor('') // reset floor — options differ per building
+                }}
+                className="lok-field"
+                style={{ ...field, fontWeight: 600 }}
+              >
                 <option value="" disabled>Select…</option>
                 {BUILDINGS.map((b) => <option key={b.v} value={b.v}>{b.label}</option>)}
               </select>
             </div>
             <div style={{ flex: 1 }}>
               <div style={cap}>FLOOR *</div>
-              <select value={floor} onChange={(e) => setFloor(e.target.value as FloorCode)} className="lok-field" style={{ ...field, fontWeight: 600 }}>
-                <option value="" disabled>Select…</option>
-                {FLOORS.map((fl) => <option key={fl.v} value={fl.v}>{fl.label}</option>)}
+              <select value={floor} onChange={(e) => setFloor(e.target.value as FloorCode)} disabled={!building} className="lok-field" style={{ ...field, fontWeight: 600, opacity: building ? 1 : 0.55 }}>
+                <option value="" disabled>{building ? 'Select…' : 'Pick building first'}</option>
+                {(building ? FLOORS_BY_BUILDING[building] : []).map((fl) => <option key={fl.v} value={fl.v}>{fl.label}</option>)}
               </select>
             </div>
           </div>

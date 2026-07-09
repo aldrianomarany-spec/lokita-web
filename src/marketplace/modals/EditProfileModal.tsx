@@ -1,5 +1,5 @@
 import { useM } from '../context'
-import { BUILDINGS, FLOORS, STANDINGS } from '../../theme'
+import { BUILDINGS, floorsForBuilding, STANDINGS } from '../../theme'
 import Overlay, { stop } from './Overlay'
 
 const fieldBase: React.CSSProperties = {
@@ -67,7 +67,16 @@ export default function EditProfileModal() {
           <div style={{ display: 'flex', gap: 11 }}>
             <div style={{ flex: 1 }}>
               <div style={cap}>DORM BUILDING</div>
-              <select className="lok-field" value={pf.building} onChange={(e) => setPf('building', e.target.value)} style={{ ...fieldBase, fontWeight: 600 }}>
+              <select
+                className="lok-field"
+                value={pf.building}
+                onChange={(e) => {
+                  setPf('building', e.target.value)
+                  setPf('floor', '') // reset floor — options differ per building
+                }}
+                style={{ ...fieldBase, fontWeight: 600 }}
+              >
+                <option value="">Select…</option>
                 {BUILDINGS.map((b) => (
                   <option key={b}>{b}</option>
                 ))}
@@ -82,8 +91,9 @@ export default function EditProfileModal() {
             <div style={{ flex: 1 }}>
               <div style={cap}>FLOOR</div>
               <select className="lok-field" value={pf.floor} onChange={(e) => setPf('floor', e.target.value)} style={{ ...fieldBase, fontWeight: 600 }}>
-                {FLOORS.map((fl) => (
-                  <option key={fl}>{fl}</option>
+                <option value="">Select…</option>
+                {floorsForBuilding(pf.building).map((fl) => (
+                  <option key={fl.code}>{fl.label}</option>
                 ))}
               </select>
             </div>
