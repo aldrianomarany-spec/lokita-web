@@ -60,9 +60,10 @@ const Avatar = ({ photo, initial, size, radius, fontSize }: { photo: string | nu
 )
 
 export default function TopBar() {
-  const { state, patch, goHome, openEdit, setQuery, clearQuery, openSell, toggleSavedView, openMessages, openNotifs, toggleMenu, openProfile, openOrders, logout } = useM()
+  const { state, patch, goHome, goSignup, goLogin, openEdit, setQuery, clearQuery, openSell, toggleSavedView, openMessages, openNotifs, toggleMenu, openProfile, openOrders, logout } = useM()
   const s = state
   const isPhone = useIsPhone()
+  const guest = s.guest
   const myBuilding = s.profile.building || 'Set your dorm'
 
   const savedCount = Object.keys(s.saved).length
@@ -110,8 +111,8 @@ export default function TopBar() {
         )}
       </div>
 
-      {/* your dorm — hidden on phone (edit it from your profile) */}
-      {!isPhone && (
+      {/* your dorm — hidden on phone and for guests */}
+      {!isPhone && !guest && (
         <button
           className="lok-btn"
           onClick={openEdit}
@@ -142,7 +143,16 @@ export default function TopBar() {
         )}
       </div>
 
-      {/* actions */}
+      {/* actions — guests get a different, minimal interface */}
+      {guest ? (
+        <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 9, flex: 'none' }}>
+          {!isPhone && (
+            <span style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 10, color: '#A29C8B', letterSpacing: '.08em', marginRight: 4 }}>BROWSING AS GUEST</span>
+          )}
+          <button className="lok-btn" onClick={goLogin} style={{ border: '1px solid #D8CFBB', background: '#F4EFE5', color: '#201E18', fontFamily: 'inherit', fontWeight: 700, fontSize: 13.5, padding: '10px 15px', borderRadius: 12, cursor: 'pointer' }}>Log in</button>
+          <button className="lok-btn" onClick={goSignup} style={{ border: 'none', background: 'var(--accent,#2A5FA8)', color: '#F7F3EA', fontFamily: 'inherit', fontWeight: 700, fontSize: 13.5, padding: '10px 16px', borderRadius: 12, cursor: 'pointer', boxShadow: '0 6px 16px -6px rgba(42,95,168,.6)' }}>Sign up — it's free</button>
+        </div>
+      ) : (
       <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: isPhone ? 8 : 12, flex: 'none' }}>
         {/* Post: full button on desktop; on phone it's a floating button (see Shell) */}
         {!isPhone && (
@@ -180,9 +190,10 @@ export default function TopBar() {
           <span style={{ position: 'absolute', bottom: 0, right: 0, width: 11, height: 11, borderRadius: '50%', background: '#3DBB6E', border: '2px solid #FBF8F1' }} />
         </div>
       </div>
+      )}
 
       {/* profile dropdown */}
-      {s.menuOpen && (
+      {!guest && s.menuOpen && (
         <div
           style={{ position: 'absolute', top: 64, right: 22, width: 264, background: '#FBF8F1', border: '1px solid #E4DDCE', borderRadius: 18, boxShadow: '0 24px 50px -18px rgba(32,30,24,.4)', padding: 16, zIndex: 60, animation: 'lok-pop .18s ease both' }}
         >

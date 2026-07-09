@@ -77,6 +77,8 @@ export interface SellForm {
 }
 
 export interface State {
+  // read-only guest (no session): browsing allowed, all actions prompt signup
+  guest: boolean
   view: View
   cat: string
   cond: string
@@ -133,6 +135,7 @@ export interface State {
 }
 
 const initialState: State = {
+  guest: false,
   view: 'browse',
   cat: 'All',
   cond: 'All',
@@ -190,6 +193,8 @@ export interface MarketplaceApi {
   patch: (p: Partial<State> | ((prev: State) => Partial<State>)) => void
   enrichedItems: EnrichedItem[]
   // actions
+  goSignup: () => void
+  goLogin: () => void
   goHome: () => void
   setQuery: (v: string) => void
   clearQuery: () => void
@@ -305,17 +310,18 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
   const enrichedItems = state.feed
 
   // Load the signed-in user's real profile + stats (fresh-install: blank until set).
+  // No session → guest mode: browsing works, all actions prompt signup.
   const loadProfile = useCallback(async () => {
     patch({ profileLoading: true, profileError: null })
     try {
       const db = await fetchMyProfile()
       if (!db) {
-        patch({ profileLoading: false, profileError: 'Not signed in' })
+        patch({ guest: true, profileLoading: false, profileError: null })
         return
       }
       const ui = dbToUiProfile(db)
       const stats = await fetchProfileStats(db.id)
-      patch({ profile: ui, pf: ui, photo: ui.profile_photo_url || null, stats, profileLoading: false })
+      patch({ guest: false, profile: ui, pf: ui, photo: ui.profile_photo_url || null, stats, profileLoading: false })
     } catch (e) {
       patch({ profileLoading: false, profileError: e instanceof Error ? e.message : 'Failed to load profile' })
     }
@@ -443,10 +449,22 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
     loadWishlist()
   }, [loadProfile, loadWishlist])
 
+  // Guest → send to the auth flow (signup form directly, or plain login).
+  const goSignup = () => {
+    sessionStorage.removeItem('lokita-guest')
+    navigate('/?signup=1')
+  }
+  const goLogin = () => {
+    sessionStorage.removeItem('lokita-guest')
+    navigate('/')
+  }
+
   const api: MarketplaceApi = {
     state,
     patch,
     enrichedItems,
+    goSignup,
+    goLogin,
 
     goHome: () =>
       patch({ cat: 'All', cond: 'All', query: '', sel: null, savedOnly: false, menuOpen: false, view: 'browse' }),
@@ -458,6 +476,7 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
     toggleSavedView: () =>
       patch((prev) => ({ savedOnly: !prev.savedOnly, cat: 'All', query: '', menuOpen: false, view: 'browse' })),
     toggleSaveItem: async (id: string) => {
+      if (state.guest) return goSignup()
       const wasSaved = !!state.saved[id]
       // optimistic UI: flip the heart immediately
       patch((prev) => {
@@ -484,6 +503,7 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
     openItem: (it) => patch({ sel: it, menuOpen: false }),
     closeDetail: () => patch({ sel: null }),
     chatSeller: async () => {
+      if (state.guest) return goSignup()
       const sel = state.sel
       if (!sel || !sel.ownerId) return
       try {
@@ -495,7 +515,10 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
       }
     },
 
-    openSell: () => patch({ sellOpen: true, menuOpen: false, sel: null }),
+    openSell: () => {
+      if (state.guest) return goSignup()
+      patch({ sellOpen: true, menuOpen: false, sel: null })
+    },
     closeSell: () =>
       patch({
         sellOpen: false,
@@ -557,6 +580,7 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
     toggleMenu: () => patch((prev) => ({ menuOpen: !prev.menuOpen })),
 
     openMessages: () => {
+      if (state.guest) return goSignup()
       patch({ view: 'messages', menuOpen: false, sel: null })
       loadConversations()
     },
@@ -582,6 +606,7 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
     },
 
     openNotifs: () => {
+      if (state.guest) return goSignup()
       patch({ view: 'notifications', menuOpen: false, sel: null })
       loadNotifications()
     },
@@ -606,8 +631,14 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
       loadNotifications()
     },
 
-    openProfile: () => patch({ view: 'profile', menuOpen: false, sel: null }),
-    openEdit: () => patch((prev) => ({ editOpen: true, pf: { ...prev.profile }, pfError: null })),
+    openProfile: () => {
+      if (state.guest) return goSignup()
+      patch({ view: 'profile', menuOpen: false, sel: null })
+    },
+    openEdit: () => {
+      if (state.guest) return goSignup()
+      patch((prev) => ({ editOpen: true, pf: { ...prev.profile }, pfError: null }))
+    },
     closeEdit: () => patch({ editOpen: false, pfError: null }),
     setPf: (k, v) => patch((prev) => ({ pf: { ...prev.pf, [k]: v } })),
     savePf: async () => {
@@ -646,7 +677,10 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
       }
     },
 
-    openCheckout: () => patch({ checkoutOpen: true, coStep: 'options', pay: 'cod', pickup: 'security', qris: null, qrisLoading: false }),
+    openCheckout: () => {
+      if (state.guest) return goSignup()
+      patch({ checkoutOpen: true, coStep: 'options', pay: 'cod', pickup: 'security', qris: null, qrisLoading: false })
+    },
     closeCheckout: () => patch({ checkoutOpen: false, coStep: 'options', sel: null, qris: null, qrisLoading: false }),
     setPay: (v) => patch({ pay: v }),
     setPickup: (v) => patch({ pickup: v }),
@@ -721,7 +755,10 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
       const floorCode = state.profile.floor ? state.profile.floor.toLowerCase() : null
       await Promise.all([loadOrders(), loadFeed({ cat: state.cat, cond: state.cond, sort: state.sort, query: state.query }, floorCode)])
     },
-    openOrders: () => patch({ view: 'orders', menuOpen: false, sel: null, checkoutOpen: false }),
+    openOrders: () => {
+      if (state.guest) return goSignup()
+      patch({ view: 'orders', menuOpen: false, sel: null, checkoutOpen: false })
+    },
     markOrderDropped: async (id) => {
       await markDroppedOff(id)
       await loadOrders()
@@ -744,7 +781,8 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
     closeSellerProfile: () => patch({ sellerOpen: false }),
 
     logout: () => {
-      // sign out of Supabase, then return to the login flow
+      // sign out of Supabase (and leave guest mode), then return to login
+      sessionStorage.removeItem('lokita-guest')
       signOut()
         .catch(() => {})
         .finally(() => navigate('/', { replace: true }))

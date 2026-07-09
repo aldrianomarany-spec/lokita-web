@@ -7,9 +7,10 @@ import Overlay, { stop } from './Overlay'
 import { ChevronRight, Heart, MapPin, MessageBubble, ShieldCheck, Verified } from '../../components/Icons'
 
 export default function DetailModal() {
-  const { state, closeDetail, chatSeller, openCheckout, openSellerProfile, deleteMyListing, toggleSaveItem } = useM()
+  const { state, closeDetail, chatSeller, openCheckout, openSellerProfile, deleteMyListing, toggleSaveItem, goSignup } = useM()
   const [deleting, setDeleting] = useState(false)
   const isPhone = useIsPhone()
+  const guest = state.guest
   const sel = state.sel
   if (!sel) return null
 
@@ -48,7 +49,7 @@ export default function DetailModal() {
             </div>
           )}
           {ts.tag && <span style={{ position: 'absolute', top: 16, left: 16, fontFamily: "'Spline Sans Mono',monospace", fontSize: 10, fontWeight: 600, color: ts.tagFg, background: ts.tagBg, padding: '5px 10px', borderRadius: 8, letterSpacing: '.04em' }}>{ts.tag}</span>}
-          {!isOwner && (
+          {!isOwner && !guest && (
             <button
               onClick={() => toggleSaveItem(sel.id)}
               className="lok-heart"
@@ -105,7 +106,12 @@ export default function DetailModal() {
 
           {/* actions */}
           <div style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column', gap: 11 }}>
-            {isOwner ? (
+            {guest ? (
+              <>
+                <button className="lok-btn" onClick={goSignup} style={{ border: 'none', background: 'var(--accent,#2A5FA8)', color: '#F7F3EA', fontFamily: 'inherit', fontWeight: 700, fontSize: 14.5, padding: 14, borderRadius: 14, cursor: 'pointer', boxShadow: '0 8px 20px -8px rgba(42,95,168,.6)' }}>Sign up to buy & message — it's free</button>
+                <div style={{ textAlign: 'center', fontSize: 12, color: '#8A8578', fontWeight: 500 }}>You're browsing as a guest. Create an account to trade with {sel.seller}.</div>
+              </>
+            ) : isOwner ? (
               <button className="lok-btn" onClick={onDelete} disabled={deleting} style={{ border: '1px solid #E4C4B8', background: '#FBEEE9', color: '#C0492A', fontFamily: 'inherit', fontWeight: 700, fontSize: 14.5, padding: 14, borderRadius: 14, cursor: 'pointer' }}>
                 {deleting ? 'Removing…' : 'Remove listing'}
               </button>

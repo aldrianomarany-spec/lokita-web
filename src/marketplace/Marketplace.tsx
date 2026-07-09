@@ -50,7 +50,7 @@ function Shell() {
       </div>
 
       {/* floating Post button on phones (top-bar button is hidden there) */}
-      {isPhone && s.view === 'browse' && (
+      {isPhone && !s.guest && s.view === 'browse' && (
         <button
           onClick={openSell}
           aria-label="Post an item"

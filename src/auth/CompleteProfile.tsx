@@ -1,11 +1,10 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ACCENT, ACCENT_DEEP } from '../theme'
 import {
   getSession,
   getMyProfile,
   completeProfile,
-  uploadVerificationDoc,
   type BuildingCode,
   type ClassStanding,
   type FloorCode,
@@ -82,11 +81,8 @@ export default function CompleteProfile() {
   const [batch, setBatch] = useState('')
   const [standing, setStanding] = useState<ClassStanding | ''>('')
   const [whatsapp, setWhatsapp] = useState('')
-  const [docName, setDocName] = useState('')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
-  const fileRef = useRef<HTMLInputElement>(null)
-  const fileRef2 = useRef<File | null>(null)
 
   // must be signed in; prefill the name from the profile the trigger created
   useEffect(() => {
@@ -104,12 +100,6 @@ export default function CompleteProfile() {
     })
   }, [navigate])
 
-  const onFile = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0] || null
-    fileRef2.current = file
-    setDocName(file ? file.name : '')
-  }
-
   const submit = async () => {
     if (saving) return
     if (!building || !floor) return setError('Please choose your building and floor.')
@@ -124,7 +114,6 @@ export default function CompleteProfile() {
         class_standing: standing || undefined,
         whatsapp_number: whatsapp.trim() || undefined,
       })
-      if (fileRef2.current) await uploadVerificationDoc(fileRef2.current)
       navigate('/app', { replace: true })
     } catch (e) {
       setError(errMsg(e))
@@ -140,7 +129,7 @@ export default function CompleteProfile() {
         </div>
         <h1 style={{ fontFamily: "'Bricolage Grotesque',sans-serif", fontWeight: 800, fontSize: 27, letterSpacing: '-.02em', margin: '0 0 6px' }}>Complete your profile</h1>
         <p style={{ fontSize: 13.5, color: '#6F6A5C', lineHeight: 1.55, margin: '0 0 22px' }}>
-          Tell neighbours where to find you and upload your student ID so we can verify you're a real JIU dorm resident.
+          Tell neighbours where to find you. You can get your Dorm-Verified badge later from your profile.
         </p>
 
         {error && (
@@ -198,19 +187,6 @@ export default function CompleteProfile() {
             </div>
           </div>
 
-          <div>
-            <div style={cap}>STUDENT ID PHOTO (for verification)</div>
-            <input ref={fileRef} type="file" accept="image/*" onChange={onFile} style={{ display: 'none' }} />
-            <button
-              onClick={() => fileRef.current?.click()}
-              className="lok-btn"
-              style={{ width: '100%', border: '1.5px dashed #C9BFA8', background: '#F4EFE5', color: docName ? '#201E18' : '#8A8578', fontFamily: 'inherit', fontWeight: 600, fontSize: 13, padding: '13px 14px', borderRadius: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 9 }}
-            >
-              <svg width={17} height={17} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="16" rx="3" /><circle cx="9" cy="10" r="2" /><path d="m21 16-4-4-9 8" /></svg>
-              {docName || 'Upload a photo of your student ID'}
-            </button>
-            <div style={{ fontSize: 11, color: '#A29C8B', fontWeight: 500, marginTop: 6 }}>Private — only you and admins can see this. Reviewed for your Dorm-Verified badge.</div>
-          </div>
         </div>
 
         <button

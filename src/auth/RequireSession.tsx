@@ -2,8 +2,11 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { getSession, onAuthStateChange } from '../lib/auth'
 
-// Gate for authenticated routes: redirects to the login flow if there's no
-// session, and reacts to sign-out (e.g. from another tab) by kicking back to /.
+// Gate for authenticated routes: lets a session OR explicit guest mode through
+// (guest = read-only browsing, chosen on the login screen); otherwise redirects
+// to the login flow. Reacts to sign-out from another tab too.
+const isGuest = () => sessionStorage.getItem('lokita-guest') === '1'
+
 export default function RequireSession({ children }: { children: React.ReactNode }) {
   const navigate = useNavigate()
   const [status, setStatus] = useState<'checking' | 'ok'>('checking')
@@ -12,11 +15,11 @@ export default function RequireSession({ children }: { children: React.ReactNode
     let active = true
     getSession().then((session) => {
       if (!active) return
-      if (session) setStatus('ok')
+      if (session || isGuest()) setStatus('ok')
       else navigate('/', { replace: true })
     })
     const unsub = onAuthStateChange((session) => {
-      if (!session) navigate('/', { replace: true })
+      if (!session && !isGuest()) navigate('/', { replace: true })
     })
     return () => {
       active = false

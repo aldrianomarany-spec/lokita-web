@@ -142,9 +142,12 @@ const authRootStyle = {
 
 export default function AuthFlow() {
   const navigate = useNavigate()
-  const [screen, setScreen] = useState<'splash' | 'login'>('splash')
+  // "?signup=1" (from guest mode's sign-up prompts) skips the splash and opens
+  // the signup form directly.
+  const wantSignup = useRef(new URLSearchParams(window.location.search).has('signup')).current
+  const [screen, setScreen] = useState<'splash' | 'login'>(wantSignup ? 'login' : 'splash')
   const [splashLeaving, setSplashLeaving] = useState(false)
-  const [view, setView] = useState<View>('login')
+  const [view, setView] = useState<View>(wantSignup ? 'signup' : 'login')
   const [showPw, setShowPw] = useState(false)
   const [loading, setLoading] = useState('')
   const [error, setError] = useState('')
@@ -152,10 +155,17 @@ export default function AuthFlow() {
   const timers = useRef<number[]>([])
 
   useEffect(() => {
+    if (wantSignup) return // no splash when jumping straight to signup
     timers.current.push(window.setTimeout(() => setSplashLeaving(true), 1900))
     timers.current.push(window.setTimeout(() => setScreen('login'), 2350))
     return () => timers.current.forEach(clearTimeout)
-  }, [])
+  }, [wantSignup])
+
+  // Guest mode: browse the marketplace without an account (read-only).
+  const browseAsGuest = () => {
+    sessionStorage.setItem('lokita-guest', '1')
+    navigate('/app')
+  }
 
   // Already signed in (returning user, or back from Google OAuth)? Skip the
   // auth UI and route by whether onboarding is done. The OAuth return stores
@@ -168,6 +178,7 @@ export default function AuthFlow() {
     const route = async () => {
       if (routed) return
       routed = true
+      sessionStorage.removeItem('lokita-guest') // a real session replaces guest mode
       try {
         const p = await getMyProfile()
         if (active) navigate(isProfileComplete(p) ? '/app' : '/onboarding', { replace: true })
@@ -379,6 +390,7 @@ export default function AuthFlow() {
                 </button>
 
                 <div style={{ textAlign: 'center', marginTop: 26, fontSize: 13.5, color: '#6F6A5C', fontWeight: 500 }}>New to Lokita? <span onClick={goView('signup')} className="lok-link" style={linkStyle}>Create an account</span></div>
+                <div style={{ textAlign: 'center', marginTop: 12, fontSize: 13, color: '#8A8578', fontWeight: 500 }}>Just looking? <span onClick={browseAsGuest} className="lok-link" style={{ ...linkStyle, color: '#6F6A5C' }}>Browse as guest →</span></div>
               </div>
             )}
 
@@ -419,6 +431,7 @@ export default function AuthFlow() {
 
                 <div style={{ fontSize: 11.5, color: '#9A927F', textAlign: 'center', marginTop: 14, lineHeight: 1.5 }}>By creating an account you agree to Lokita's <a href="#">Community Rules</a> &amp; dorm verification.</div>
                 <div style={{ textAlign: 'center', marginTop: 20, fontSize: 13.5, color: '#6F6A5C', fontWeight: 500 }}>Already a member? <span onClick={goView('login')} className="lok-link" style={linkStyle}>Log in</span></div>
+                <div style={{ textAlign: 'center', marginTop: 12, fontSize: 13, color: '#8A8578', fontWeight: 500 }}>Just looking? <span onClick={browseAsGuest} className="lok-link" style={{ ...linkStyle, color: '#6F6A5C' }}>Browse as guest →</span></div>
               </div>
             )}
 

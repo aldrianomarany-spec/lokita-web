@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useM } from './context'
 import { fetchMyListings, fetchReviewsAboutMe, fetchMyWishlist, type DbListing, type ReviewRow } from '../lib/api'
+import { uploadVerificationDoc } from '../lib/auth'
 import { Camera, Edit, Logout, ShieldCheck, Verified } from '../components/Icons'
 
 const rupiah = (n: number) => 'Rp ' + Number(n).toLocaleString('id-ID')
@@ -54,7 +55,24 @@ const sectionH2: React.CSSProperties = { fontFamily: "'Bricolage Grotesque',sans
 const emptyBox: React.CSSProperties = { background: '#FBF8F1', border: '1px dashed #D8CFBB', borderRadius: 18, padding: 28, textAlign: 'center', marginBottom: 32, color: '#8A8578', fontSize: 13.5 }
 
 export default function ProfileView() {
-  const { state, openEdit, pickPhoto, logout, openSell, openItem } = useM()
+  const { state, openEdit, pickPhoto, logout, openSell, openItem, refetchProfile } = useM()
+  // "Get verified": upload a student ID from the profile (was in onboarding)
+  const idFileRef = useRef<HTMLInputElement>(null)
+  const [idUploading, setIdUploading] = useState(false)
+  const onIdFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    e.target.value = ''
+    if (!file || idUploading) return
+    setIdUploading(true)
+    try {
+      await uploadVerificationDoc(file)
+      refetchProfile() // auto-verify trigger grants the badge
+    } catch (err) {
+      alert('Upload failed: ' + (err instanceof Error ? err.message : 'unknown error'))
+    } finally {
+      setIdUploading(false)
+    }
+  }
   const s = state
   const p = s.profile
   const profileInitial = (p.name || '?').trim().charAt(0).toUpperCase()
@@ -150,14 +168,31 @@ export default function ProfileView() {
         </div>
         <div style={{ flex: 1, color: '#EAF3EE', position: 'relative' }}>
           <div style={{ fontWeight: 800, fontSize: 14.5, color: '#fff' }}>
-            {p.verification_status === 'verified' ? 'Identity confirmed by campus records' : 'Verification in review'}
+            {p.verification_status === 'verified' ? 'Identity confirmed by campus records' : 'Get your Dorm-Verified badge'}
           </div>
           <div style={{ fontSize: 12.5, lineHeight: 1.5, marginTop: 2, color: '#C6DDD2' }}>
             {p.verification_status === 'verified'
               ? `Verified student${p.building ? ' · ' + p.building + ' resident' : ''} · trades protected by in-app escrow.`
-              : 'We’re checking your student ID. You can still browse and post while it’s reviewed.'}
+              : 'Upload a photo of your student ID to earn the ✔ badge neighbours trust.'}
           </div>
         </div>
+        {p.verification_status !== 'verified' && (
+          <>
+            <input ref={idFileRef} type="file" accept="image/*" onChange={onIdFile} style={{ display: 'none' }} />
+            <button
+              onClick={() => idFileRef.current?.click()}
+              disabled={idUploading}
+              className="lok-btn"
+              style={{ flex: 'none', position: 'relative', border: 'none', background: '#FBF8F1', color: 'var(--accent,#2A5FA8)', fontFamily: 'inherit', fontWeight: 800, fontSize: 13, padding: '11px 16px', borderRadius: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}
+            >
+              {idUploading ? (
+                <span className="lok-spin" style={{ width: 14, height: 14, border: '2px solid #C9D6E8', borderTopColor: 'var(--accent,#2A5FA8)', borderRadius: '50%', display: 'inline-block' }} />
+              ) : (
+                'Upload student ID'
+              )}
+            </button>
+          </>
+        )}
       </div>
 
       {/* rating summary */}
