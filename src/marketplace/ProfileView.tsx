@@ -254,7 +254,7 @@ export default function ProfileView() {
 import type { Item } from '../types'
 function dbListingToItem(l: DbListing): Item {
   return {
-    id: 0,
+    id: l.id,
     title: l.title,
     price: rupiah(l.price),
     priceNum: l.price,

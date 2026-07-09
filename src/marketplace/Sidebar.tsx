@@ -1,10 +1,11 @@
 import { useM } from './context'
-import { ITEMS } from '../data'
 import { CATEGORIES, CAT_META, CAT_DOT, type Category } from '../theme'
 
 export default function Sidebar() {
   const { state, selectCat } = useM()
   const s = state
+  const counts = s.categoryCounts
+  const totalCount = Object.values(counts).reduce((a, n) => a + n, 0)
 
   return (
     <aside
@@ -15,7 +16,7 @@ export default function Sidebar() {
         <div style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 10, color: '#A29C8B', padding: '0 11px 9px', letterSpacing: '.1em' }}>CATEGORIES</div>
         {CATEGORIES.map((label: Category) => {
           const active = s.cat === label && !s.savedOnly
-          const count = label === 'All' ? ITEMS.length : ITEMS.filter((i) => i.cat === label).length
+          const count = label === 'All' ? totalCount : counts[label] || 0
           return (
             <button
               key={label}

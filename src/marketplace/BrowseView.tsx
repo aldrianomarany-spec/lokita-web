@@ -15,14 +15,10 @@ export default function BrowseView() {
   const s = state
 
   const q = s.query.trim().toLowerCase()
-  let list = enrichedItems.slice()
-  if (s.cat !== 'All') list = list.filter((i) => i.cat === s.cat)
-  if (s.cond !== 'All') list = list.filter((i) => i.cond === s.cond)
-  if (s.savedOnly) list = list.filter((i) => s.saved[i.id])
-  if (q) list = list.filter((i) => (i.title + ' ' + i.cat + ' ' + i.seller).toLowerCase().includes(q))
-  if (s.sort === 'Price') list.sort((a, b) => a.priceNum - b.priceNum)
-  else if (s.sort === 'Newest') list.sort((a, b) => (b.new ? 1 : 0) - (a.new ? 1 : 0) || a.order - b.order)
-  else list.sort((a, b) => a.proxRank - b.proxRank || a.order - b.order)
+  // feed is already filtered/sorted/capped server-side; only the local "Saved"
+  // view is applied client-side here.
+  const list: EnrichedItem[] = s.savedOnly ? enrichedItems.filter((i) => s.saved[i.id]) : enrichedItems
+  const filtersActive = q !== '' || s.cat !== 'All' || s.cond !== 'All' || s.savedOnly
 
   // titles
   let browseTitle = 'Around you'
@@ -88,26 +84,42 @@ export default function BrowseView() {
         </div>
       </div>
 
-      {/* grid / empty */}
-      {list.length > 0 ? (
+      {/* grid / loading / empty */}
+      {s.feedLoading ? (
+        <div style={{ height: '40vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <span className="lok-spin" style={{ width: 28, height: 28, border: '3px solid #DAD1BF', borderTopColor: 'var(--accent,#2A5FA8)', borderRadius: '50%', display: 'inline-block' }} />
+        </div>
+      ) : s.feedError ? (
+        <div style={{ maxWidth: 520, margin: '44px auto 0', textAlign: 'center', background: '#FBEEE9', border: '1px solid #E4C4B8', borderRadius: 20, padding: 28, color: '#B23A1B', fontWeight: 600 }}>
+          Couldn't load listings: {s.feedError}
+        </div>
+      ) : list.length > 0 ? (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(248px,1fr))', gap: 20 }}>
           {list.map((it: EnrichedItem, i) => (
             <ListingCard key={it.id} it={it} index={i} />
           ))}
         </div>
-      ) : (
+      ) : filtersActive ? (
+        // there are listings, just none matching the current filters/search
         <div style={{ animation: 'lok-fade .3s ease both', maxWidth: 520, margin: '44px auto 0', textAlign: 'center', background: '#FBF8F1', border: '1px solid #E4DDCE', borderRadius: 24, padding: '44px 36px' }}>
           <div style={{ width: 76, height: 76, borderRadius: 22, background: '#F1ECE1', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px', color: '#B7AF9C' }}>
             <Search size={34} />
           </div>
-          <div style={{ fontFamily: "'Bricolage Grotesque',sans-serif", fontWeight: 800, fontSize: 20, marginBottom: 8 }}>No matches in {s.location} yet</div>
+          <div style={{ fontFamily: "'Bricolage Grotesque',sans-serif", fontWeight: 800, fontSize: 20, marginBottom: 8 }}>No matches{s.query ? '' : emptyCat}</div>
           <div style={{ fontSize: 14, color: '#6F6A5C', lineHeight: 1.6, marginBottom: 24 }}>
-            We couldn't find anything for <b style={{ color: '#201E18' }}>"{s.query}"{emptyCat}</b>. Post a Wanted request and verified neighbours will bring it to you — or widen your filters.
+            {s.query ? <>We couldn't find anything for <b style={{ color: '#201E18' }}>"{s.query}"{emptyCat}</b>.</> : 'Nothing here yet with these filters.'} Try widening your filters.
           </div>
-          <div style={{ display: 'flex', gap: 11, justifyContent: 'center' }}>
-            <button className="lok-btn" onClick={resetFilters} style={{ border: '1px solid #D8CFBB', background: '#F4EFE5', color: '#201E18', fontFamily: 'inherit', fontWeight: 700, fontSize: 13.5, padding: '12px 18px', borderRadius: 12, cursor: 'pointer' }}>Clear filters</button>
-            <button className="lok-btn" onClick={openSell} style={{ border: 'none', background: 'var(--accent,#2A5FA8)', color: '#F7F3EA', fontFamily: 'inherit', fontWeight: 700, fontSize: 13.5, padding: '12px 18px', borderRadius: 12, cursor: 'pointer', boxShadow: '0 6px 16px -6px rgba(27,94,67,.7)' }}>Post a Wanted request</button>
+          <button className="lok-btn" onClick={resetFilters} style={{ border: '1px solid #D8CFBB', background: '#F4EFE5', color: '#201E18', fontFamily: 'inherit', fontWeight: 700, fontSize: 13.5, padding: '12px 18px', borderRadius: 12, cursor: 'pointer' }}>Clear filters</button>
+        </div>
+      ) : (
+        // truly empty marketplace (fresh install / no listings anywhere)
+        <div style={{ animation: 'lok-fade .3s ease both', maxWidth: 520, margin: '44px auto 0', textAlign: 'center', background: '#FBF8F1', border: '1px solid #E4DDCE', borderRadius: 24, padding: '44px 36px' }}>
+          <div style={{ width: 76, height: 76, borderRadius: 22, background: '#EAF1EC', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px', color: 'var(--accent,#2A5FA8)', fontSize: 34 }}>🧺</div>
+          <div style={{ fontFamily: "'Bricolage Grotesque',sans-serif", fontWeight: 800, fontSize: 20, marginBottom: 8 }}>No listings yet</div>
+          <div style={{ fontSize: 14, color: '#6F6A5C', lineHeight: 1.6, marginBottom: 24 }}>
+            The marketplace is brand new. Be the first to post something — your neighbours will see it right away.
           </div>
+          <button className="lok-btn" onClick={openSell} style={{ border: 'none', background: 'var(--accent,#2A5FA8)', color: '#F7F3EA', fontFamily: 'inherit', fontWeight: 700, fontSize: 13.5, padding: '12px 18px', borderRadius: 12, cursor: 'pointer', boxShadow: '0 6px 16px -6px rgba(42,95,168,.6)' }}>Post the first item</button>
         </div>
       )}
     </div>

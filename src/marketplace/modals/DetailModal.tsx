@@ -1,29 +1,49 @@
+import { useState } from 'react'
 import { useM } from '../context'
 import { T } from '../../theme'
 import { tagStyle } from '../tagStyle'
 import Overlay, { stop } from './Overlay'
-import { ChevronRight, MapPin, MessageBubble, ShieldCheck, Verified, WhatsApp } from '../../components/Icons'
+import { ChevronRight, MapPin, MessageBubble, ShieldCheck, Verified } from '../../components/Icons'
 
 export default function DetailModal() {
-  const { state, closeDetail, chatSeller, openWa, openCheckout, openSellerProfile } = useM()
+  const { state, closeDetail, chatSeller, openCheckout, openSellerProfile, deleteMyListing } = useM()
+  const [deleting, setDeleting] = useState(false)
   const sel = state.sel
   if (!sel) return null
 
-  // sel is a raw item; derive the tinted placeholder + tag from its tone/flags
-  // so the modal matches the card aesthetic.
+  // derive the tinted placeholder + tag from tone/flags so the modal matches
+  // the card aesthetic.
   const t = T[sel.tone]
   const ts = tagStyle(sel)
-  const wa = (sel as { wa?: string }).wa
   const proxTag = (sel as { proxTag?: string }).proxTag || ''
+  const hasPhoto = !!sel.photoUrl
+  const isOwner = !!sel.mine
+
+  const onDelete = async () => {
+    if (deleting) return
+    if (!window.confirm('Remove this listing? This cannot be undone.')) return
+    setDeleting(true)
+    try {
+      await deleteMyListing(sel.id)
+      closeDetail()
+    } catch (e) {
+      setDeleting(false)
+      alert('Could not remove listing: ' + (e instanceof Error ? e.message : 'unknown error'))
+    }
+  }
 
   return (
     <Overlay onClose={closeDetail}>
       <div onClick={stop} style={{ background: '#FBF8F1', borderRadius: 26, overflow: 'hidden', width: '100%', maxWidth: 900, maxHeight: '88vh', display: 'flex', animation: 'lok-pop .26s cubic-bezier(.2,.8,.3,1) both', boxShadow: '0 40px 90px -20px rgba(32,30,24,.5)' }}>
-        {/* left striped panel */}
+        {/* left panel — real photo or tinted placeholder */}
         <div style={{ width: '47%', flex: 'none', background: t.tint, position: 'relative', minHeight: 480, overflow: 'hidden' }}>
-          <div style={{ position: 'absolute', inset: 0, backgroundImage: `repeating-linear-gradient(135deg,${t.stripe} 0 14px,transparent 14px 28px)`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <span style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 12, color: t.label, textAlign: 'center', padding: '0 24px' }}>{sel.photo}</span>
-          </div>
+          {hasPhoto ? (
+            <img src={sel.photoUrl!} alt={sel.title} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
+          ) : (
+            <div style={{ position: 'absolute', inset: 0, backgroundImage: `repeating-linear-gradient(135deg,${t.stripe} 0 14px,transparent 14px 28px)`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <span style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 12, color: t.label, textAlign: 'center', padding: '0 24px' }}>{sel.photo}</span>
+            </div>
+          )}
           {ts.tag && <span style={{ position: 'absolute', top: 16, left: 16, fontFamily: "'Spline Sans Mono',monospace", fontSize: 10, fontWeight: 600, color: ts.tagFg, background: ts.tagBg, padding: '5px 10px', borderRadius: 8, letterSpacing: '.04em' }}>{ts.tag}</span>}
         </div>
 
@@ -53,9 +73,9 @@ export default function DetailModal() {
             <div style={{ flex: 1 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 7, fontWeight: 700, fontSize: 15 }}>
                 {sel.seller}
-                <Verified size={14} />
+                {sel.sellerVerified && <Verified size={14} />}
               </div>
-              <div style={{ fontSize: 12, color: '#8A8578', fontWeight: 600, marginTop: 2, fontFamily: "'Spline Sans Mono',monospace" }}>★ {sel.rating} · {sel.trades} trades · replies fast</div>
+              <div style={{ fontSize: 12, color: '#8A8578', fontWeight: 600, marginTop: 2, fontFamily: "'Spline Sans Mono',monospace" }}>{sel.sellerVerified ? 'Dorm-Verified' : 'Student'} · {sel.building || 'JIU'} · chat in-app</div>
             </div>
             <ChevronRight size={18} style={{ color: '#A29C8B' }} />
           </div>
@@ -73,17 +93,19 @@ export default function DetailModal() {
 
           {/* actions */}
           <div style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column', gap: 11 }}>
-            <div style={{ display: 'flex', gap: 10 }}>
-              <button className="lok-btn" onClick={chatSeller} style={{ flex: 1, border: '1px solid #D8CFBB', background: '#F4EFE5', color: '#201E18', fontFamily: 'inherit', fontWeight: 700, fontSize: 14, padding: 13, borderRadius: 14, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
-                <MessageBubble size={17} />
-                In-app chat
+            {isOwner ? (
+              <button className="lok-btn" onClick={onDelete} disabled={deleting} style={{ border: '1px solid #E4C4B8', background: '#FBEEE9', color: '#C0492A', fontFamily: 'inherit', fontWeight: 700, fontSize: 14.5, padding: 14, borderRadius: 14, cursor: 'pointer' }}>
+                {deleting ? 'Removing…' : 'Remove listing'}
               </button>
-              <button className="lok-btn" onClick={() => openWa(wa, sel.title)} style={{ flex: 1, border: '1px solid #BFE3CB', background: '#E4F3E8', color: '#128C3E', fontFamily: 'inherit', fontWeight: 700, fontSize: 14, padding: 13, borderRadius: 14, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
-                <WhatsApp size={17} />
-                WhatsApp
-              </button>
-            </div>
-            <button className="lok-btn" onClick={openCheckout} style={{ border: 'none', background: 'var(--accent,#2A5FA8)', color: '#F7F3EA', fontFamily: 'inherit', fontWeight: 700, fontSize: 14.5, padding: 14, borderRadius: 14, cursor: 'pointer', boxShadow: '0 8px 20px -8px rgba(27,94,67,.8)' }}>Buy now · {sel.price}</button>
+            ) : (
+              <>
+                <button className="lok-btn" onClick={chatSeller} style={{ border: '1px solid #D8CFBB', background: '#F4EFE5', color: '#201E18', fontFamily: 'inherit', fontWeight: 700, fontSize: 14, padding: 13, borderRadius: 14, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+                  <MessageBubble size={17} />
+                  Message seller
+                </button>
+                <button className="lok-btn" onClick={openCheckout} style={{ border: 'none', background: 'var(--accent,#2A5FA8)', color: '#F7F3EA', fontFamily: 'inherit', fontWeight: 700, fontSize: 14.5, padding: 14, borderRadius: 14, cursor: 'pointer', boxShadow: '0 8px 20px -8px rgba(42,95,168,.6)' }}>Buy now · {sel.price}</button>
+              </>
+            )}
           </div>
         </div>
       </div>

@@ -1,7 +1,7 @@
 import type { Tone } from './theme'
 
 export interface Item {
-  id: number
+  id: string
   title: string
   price: string
   priceNum: number
@@ -23,6 +23,11 @@ export interface Item {
   new: boolean
   order: number
   desc: string
+  // real-listing extras (mock feed left these undefined)
+  photoUrl?: string | null
+  isFeatured?: boolean
+  sellerVerified?: boolean
+  ownerId?: string
 }
 
 // item enriched with proximity + WhatsApp fields at render time

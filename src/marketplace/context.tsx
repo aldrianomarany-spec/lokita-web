@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
+import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { signOut } from '../lib/auth'
 import {
@@ -8,14 +8,13 @@ import {
   fetchProfileStats,
   dbToUiProfile,
   uiEditsToDb,
+  fetchFeed,
+  fetchCategoryCounts,
+  createListing,
+  deleteListing,
   type ProfileStats,
 } from '../lib/api'
-import {
-  ITEMS,
-  CHATS,
-  FLOOR_BY_ID,
-  WA_BY_SELLER,
-} from '../data'
+import { CHATS } from '../data'
 import type { EnrichedItem, Item, Profile, SellerReview, ThreadMsg } from '../types'
 
 // blank profile until the real one loads (fresh-install: nothing populated)
@@ -35,7 +34,9 @@ export interface SellForm {
   title: string
   price: string
   cat: string
+  cond: string
   loc: string
+  floor: string
   desc: string
 }
 
@@ -50,7 +51,11 @@ export interface State {
   menuOpen: boolean
   savedOnly: boolean
   location: Location
-  saved: Record<number, boolean>
+  saved: Record<string, boolean>
+  feed: EnrichedItem[]
+  feedLoading: boolean
+  feedError: string | null
+  categoryCounts: Record<string, number>
   chatId: number | null
   msgDraft: string
   extra: Record<number, ThreadMsg[]>
@@ -93,6 +98,10 @@ const initialState: State = {
   savedOnly: false,
   location: 'Thomas House',
   saved: {},
+  feed: [],
+  feedLoading: true,
+  feedError: null,
+  categoryCounts: {},
   chatId: null,
   msgDraft: '',
   extra: {},
@@ -120,24 +129,10 @@ const initialState: State = {
   photoUploading: false,
   listState: 'idle',
   bundleOn: false,
-  f: { title: '', price: '', cat: 'Furniture', loc: 'Thomas Building', desc: '' },
+  f: { title: '', price: '', cat: 'Furniture', cond: 'Good', loc: 'Thomas Building', floor: '', desc: '' },
 }
 
-// ---------- proximity model (viewer's floor first, then building, then across) ----------
-const bldgOf = (fl: string) => (fl && fl.charAt(0) === 'U' ? 'Union' : 'Thomas')
-const idxIn = (fl: string) =>
-  (bldgOf(fl) === 'Union' ? ['U2', 'U3'] : ['Ground', 'T1', 'T2', 'T3']).indexOf(fl)
-
-function proximity(fl: string, vFloor: string): { rank: number; tag: string } {
-  if (bldgOf(fl) === bldgOf(vFloor)) {
-    const d = Math.abs(idxIn(fl) - idxIn(vFloor))
-    return {
-      rank: d,
-      tag: d === 0 ? `${fl} · Your floor` : `${fl} · ${d} floor${d > 1 ? 's' : ''} away`,
-    }
-  }
-  return { rank: 100 + idxIn(fl), tag: `${fl} · ${bldgOf(fl)} Building` }
-}
+// (proximity now lives in src/lib/api.ts, computed on real DB floor codes)
 
 export interface MarketplaceApi {
   state: State
@@ -152,7 +147,7 @@ export interface MarketplaceApi {
   selectCond: (label: string) => void
   selectSort: (k: Sort) => void
   toggleSavedView: () => void
-  toggleSaveItem: (id: number) => void
+  toggleSaveItem: (id: string) => void
   openItem: (it: Item) => void
   closeDetail: () => void
   chatSeller: () => void
@@ -160,7 +155,9 @@ export interface MarketplaceApi {
   closeSell: () => void
   setF: (k: keyof SellForm, v: string) => void
   toggleBundle: () => void
-  submitListing: () => void
+  submitListing: (photos: File[]) => void
+  reloadFeed: () => void
+  deleteMyListing: (id: string) => Promise<void>
   toggleMenu: () => void
   openMessages: () => void
   openChat: (id: number) => void
@@ -214,15 +211,30 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
     [],
   )
 
-  // enriched items (proximity + wa), recomputed when viewer floor changes
-  const enrichedItems = useMemo<EnrichedItem[]>(() => {
-    const vFloor = state.profile.floor || 'T1'
-    return ITEMS.map((it) => {
-      const floor = FLOOR_BY_ID[it.id]
-      const pr = proximity(floor, vFloor)
-      return { ...it, floor, wa: WA_BY_SELLER[it.seller], proxTag: pr.tag, proxRank: pr.rank }
-    })
-  }, [state.profile.floor])
+  // live feed from Supabase (filters/sort/cap applied server-side)
+  const loadFeed = useCallback(
+    async (opts: { cat: string; cond: string; sort: Sort; query: string }, viewerFloor: string | null) => {
+      patch({ feedLoading: true, feedError: null })
+      try {
+        const [feed, counts] = await Promise.all([fetchFeed(opts, viewerFloor), fetchCategoryCounts()])
+        patch({ feed, categoryCounts: counts, feedLoading: false })
+      } catch (e) {
+        patch({ feedLoading: false, feedError: e instanceof Error ? e.message : 'Failed to load listings' })
+      }
+    },
+    [patch],
+  )
+
+  // re-fetch whenever the filters or the viewer's floor change (query debounced)
+  const { cat, cond, sort, query } = state
+  const viewerFloor = state.profile.floor
+  useEffect(() => {
+    const floorCode = viewerFloor ? viewerFloor.toLowerCase() : null
+    const t = window.setTimeout(() => loadFeed({ cat, cond, sort, query }, floorCode), query ? 300 : 0)
+    return () => window.clearTimeout(t)
+  }, [cat, cond, sort, query, viewerFloor, loadFeed])
+
+  const enrichedItems = state.feed
 
   // Load the signed-in user's real profile + stats (fresh-install: blank until set).
   const loadProfile = useCallback(async () => {
@@ -261,7 +273,7 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
     selectSort: (k) => patch({ sort: k }),
     toggleSavedView: () =>
       patch((prev) => ({ savedOnly: !prev.savedOnly, cat: 'All', query: '', menuOpen: false, view: 'browse' })),
-    toggleSaveItem: (id) =>
+    toggleSaveItem: (id: string) =>
       patch((prev) => {
         const nx = { ...prev.saved }
         if (nx[id]) delete nx[id]
@@ -284,19 +296,57 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
         sellOpen: false,
         listState: 'idle',
         bundleOn: false,
-        f: { title: '', price: '', cat: 'Furniture', loc: 'Thomas Building', desc: '' },
+        f: { title: '', price: '', cat: 'Furniture', cond: 'Good', loc: 'Thomas Building', floor: '', desc: '' },
       }),
+    reloadFeed: () => {
+      const floorCode = state.profile.floor ? state.profile.floor.toLowerCase() : null
+      loadFeed({ cat: state.cat, cond: state.cond, sort: state.sort, query: state.query }, floorCode)
+    },
+    deleteMyListing: async (id) => {
+      await deleteListing(id)
+      const floorCode = state.profile.floor ? state.profile.floor.toLowerCase() : null
+      await loadFeed({ cat: state.cat, cond: state.cond, sort: state.sort, query: state.query }, floorCode)
+    },
     setF: (k, v) => patch((prev) => ({ f: { ...prev.f, [k]: v } })),
     toggleBundle: () => patch((prev) => ({ bundleOn: !prev.bundleOn })),
-    submitListing: () => {
+    submitListing: async (photos: File[]) => {
       if (state.listState !== 'idle') return
+      const f = state.f
+      const priceNum = Number((f.price || '').replace(/[^0-9]/g, ''))
+      if (!f.title.trim()) {
+        patch({ feedError: null })
+        alert('Please enter an item title.')
+        return
+      }
+      if (!priceNum || priceNum <= 0) {
+        alert('Please enter a valid price greater than 0.')
+        return
+      }
       patch({ listState: 'saving' })
-      listTimers.current.push(
-        window.setTimeout(() => {
-          patch({ listState: 'done' })
-          listTimers.current.push(window.setTimeout(() => api.closeSell(), 1000))
-        }, 600),
-      )
+      try {
+        await createListing(
+          {
+            title: f.title.trim(),
+            priceNum,
+            category: f.cat,
+            condition: f.cond,
+            building: f.loc,
+            floor: f.floor,
+            description: f.desc.trim(),
+            isBundle: state.bundleOn,
+          },
+          photos,
+        )
+        patch({ listState: 'done' })
+        // refresh feed + profile stats so the new listing shows immediately
+        const floorCode = state.profile.floor ? state.profile.floor.toLowerCase() : null
+        await loadFeed({ cat: state.cat, cond: state.cond, sort: state.sort, query: state.query }, floorCode)
+        loadProfile()
+        listTimers.current.push(window.setTimeout(() => api.closeSell(), 900))
+      } catch (e) {
+        patch({ listState: 'idle' })
+        alert('Could not post your listing: ' + (e instanceof Error ? e.message : 'unknown error'))
+      }
     },
 
     toggleMenu: () => patch((prev) => ({ menuOpen: !prev.menuOpen })),
@@ -330,7 +380,7 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
           return { notifRead: nr, view: 'messages', chatId: n.chatId, read: { ...prev.read, [n.chatId]: true } }
         }
         if (n.itemId != null) {
-          const it = enrichedItems.find((x) => x.id === n.itemId) || null
+          const it = enrichedItems.find((x) => x.id === String(n.itemId)) || null
           return { notifRead: nr, sel: it }
         }
         return { notifRead: nr }
