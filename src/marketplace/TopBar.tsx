@@ -60,7 +60,7 @@ const Avatar = ({ photo, initial, size, radius, fontSize }: { photo: string | nu
 )
 
 export default function TopBar() {
-  const { state, patch, goHome, toggleLocation, setQuery, clearQuery, openSell, toggleSavedView, openMessages, openNotifs, toggleMenu, openProfile, logout } = useM()
+  const { state, patch, goHome, toggleLocation, setQuery, clearQuery, openSell, toggleSavedView, openMessages, openNotifs, toggleMenu, openProfile, openOrders, logout } = useM()
   const s = state
 
   const savedCount = Object.keys(s.saved).length
@@ -76,6 +76,7 @@ export default function TopBar() {
 
   const menuItems = [
     { icon: '🧑', label: 'My profile', act: openProfile },
+    { icon: '🧾', label: 'My orders', act: openOrders },
     { icon: '🔔', label: 'Notifications', act: openNotifs },
     { icon: '🚪', label: 'Log out', act: logout },
   ]

@@ -7,6 +7,11 @@ import type { Tone } from '../theme'
 
 export type { DbProfile }
 
+export async function getUserId(): Promise<string | null> {
+  const u = await getUser()
+  return u?.id ?? null
+}
+
 // ---------------------------------------------------------------------------
 // display formatters (DB codes → UI labels used by the existing components)
 // ---------------------------------------------------------------------------
@@ -371,5 +376,154 @@ export async function createListing(input: NewListing, photos: File[]): Promise<
 // Owner-only (enforced by RLS too).
 export async function deleteListing(id: string): Promise<void> {
   const { error } = await supabase.from('listings').delete().eq('id', id)
+  if (error) throw error
+}
+
+// ===========================================================================
+// ORDERS / TRANSACTIONS (Section 3) — real lifecycle: paid → dropped_off →
+// completed (+ cancelled). Deadlines generated here; a DB trigger reserves the
+// listing on order and frees it on cancel.
+// ===========================================================================
+export type OrderStatus = 'paid' | 'dropped_off' | 'completed' | 'cancelled'
+export type PaymentMethod = 'cod' | 'qris'
+export type PickupMethod = 'meet_in_person' | 'trusted_handoff' | 'security_post'
+
+const DAY = 86_400_000
+
+export interface NewOrder {
+  listingId: string
+  sellerId: string
+  payment_method: PaymentMethod
+  pickup_method: PickupMethod
+}
+
+export async function createOrder(o: NewOrder): Promise<string> {
+  const user = await getUser()
+  if (!user) throw new Error('Not signed in')
+  if (o.sellerId === user.id) throw new Error("You can't buy your own listing.")
+  const now = Date.now()
+  const { data, error } = await supabase
+    .from('transactions')
+    .insert({
+      listing_id: o.listingId,
+      buyer_id: user.id,
+      seller_id: o.sellerId,
+      payment_method: o.payment_method,
+      payment_status: o.payment_method === 'qris' ? 'paid' : 'pending',
+      pickup_method: o.pickup_method,
+      status: 'paid',
+      paid_at: o.payment_method === 'qris' ? new Date(now).toISOString() : null,
+      dropoff_deadline: new Date(now + 2 * DAY).toISOString(),
+    })
+    .select('id')
+    .single()
+  if (error) throw error
+  return (data as { id: string }).id
+}
+
+export async function markDroppedOff(id: string): Promise<void> {
+  const now = Date.now()
+  const { error } = await supabase
+    .from('transactions')
+    .update({ status: 'dropped_off', dropped_off_at: new Date(now).toISOString(), pickup_deadline: new Date(now + 2 * DAY).toISOString() })
+    .eq('id', id)
+  if (error) throw error
+}
+
+export async function confirmPickup(id: string): Promise<void> {
+  const { error } = await supabase
+    .from('transactions')
+    .update({ status: 'completed', completed_at: new Date().toISOString(), payment_status: 'paid' })
+    .eq('id', id)
+  if (error) throw error
+}
+
+export async function cancelOrder(id: string): Promise<void> {
+  const { error } = await supabase.from('transactions').update({ status: 'cancelled' }).eq('id', id)
+  if (error) throw error
+}
+
+export interface OrderRow {
+  id: string
+  status: OrderStatus
+  payment_method: PaymentMethod | null
+  payment_status: string
+  pickup_method: PickupMethod | null
+  created_at: string
+  paid_at: string | null
+  dropped_off_at: string | null
+  dropoff_deadline: string | null
+  pickup_deadline: string | null
+  completed_at: string | null
+  listing_id: string | null
+  listing_title: string
+  listing_price: number
+  buyer_id: string
+  seller_id: string
+  role: 'buyer' | 'seller'
+  counterparty_id: string
+  counterparty_name: string
+  counterparty_verified: boolean
+  reviewed: boolean
+}
+
+export async function fetchMyOrders(): Promise<OrderRow[]> {
+  const user = await getUser()
+  if (!user) return []
+  const { data, error } = await supabase
+    .from('transactions')
+    .select('*, listing:listing_id(title, price)')
+    .or(`buyer_id.eq.${user.id},seller_id.eq.${user.id}`)
+    .order('created_at', { ascending: false })
+  if (error) throw error
+  const rows = (data as (Record<string, unknown> & { listing: { title: string; price: number } | null; buyer_id: string; seller_id: string; id: string })[]) || []
+  const otherIds = [...new Set(rows.map((r) => (r.buyer_id === user.id ? r.seller_id : r.buyer_id)).filter(Boolean))]
+  const { data: people } = otherIds.length
+    ? await supabase.from('public_profiles').select('id, name, verification_status').in('id', otherIds)
+    : { data: [] as { id: string; name: string; verification_status: string }[] }
+  const byId = new Map(((people as { id: string; name: string; verification_status: string }[] | null) || []).map((p) => [p.id, p]))
+  const { data: myReviews } = await supabase.from('reviews').select('transaction_id').eq('reviewer_id', user.id)
+  const reviewed = new Set(((myReviews as { transaction_id: string }[] | null) || []).map((r) => r.transaction_id))
+  return rows.map((r) => {
+    const role: 'buyer' | 'seller' = r.buyer_id === user.id ? 'buyer' : 'seller'
+    const counterparty_id = role === 'buyer' ? r.seller_id : r.buyer_id
+    const other = byId.get(counterparty_id)
+    const listing = r.listing
+    return {
+      ...(r as unknown as OrderRow),
+      listing_title: listing?.title || '(listing removed)',
+      listing_price: listing?.price ?? 0,
+      role,
+      counterparty_id,
+      counterparty_name: other?.name || 'Student',
+      counterparty_verified: other?.verification_status === 'verified',
+      reviewed: reviewed.has(r.id),
+    }
+  })
+}
+
+// Realtime: refetch on any change to the current user's transactions.
+export function subscribeOrders(userId: string, onChange: () => void): () => void {
+  const channel = supabase
+    .channel('orders-' + userId)
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'transactions' }, onChange)
+    .subscribe()
+  return () => {
+    supabase.removeChannel(channel)
+  }
+}
+
+// Post a review for a completed order (buyer↔seller). RLS enforces "completed +
+// counterparty only".
+export async function submitOrderReview(order: OrderRow, rating: number, comment: string): Promise<void> {
+  const user = await getUser()
+  if (!user) throw new Error('Not signed in')
+  const { error } = await supabase.from('reviews').insert({
+    transaction_id: order.id,
+    reviewer_id: user.id,
+    reviewee_id: order.counterparty_id,
+    rating,
+    comment: comment.trim() || null,
+  })
   if (error) throw error
 }

@@ -19,7 +19,7 @@ const PAY_OPTS = [
 ]
 
 export default function CheckoutModal() {
-  const { state, closeCheckout, setPay, setPickup, coContinue, coPaid, coReview, setRvStars, setRvText, submitReview } = useM()
+  const { state, closeCheckout, setPay, setPickup, coContinue, coPaid, openOrders } = useM()
   const s = state
   const sel = s.sel
   if (!sel) return null
@@ -106,33 +106,8 @@ export default function CheckoutModal() {
               <span style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 10, color: '#3A362C', background: '#F1ECE1', padding: '5px 10px', borderRadius: 8 }}>{payLabel}</span>
               <span style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 10, color: '#3A362C', background: '#F1ECE1', padding: '5px 10px', borderRadius: 8 }}>{pickupLabel}</span>
             </div>
-            <button onClick={coReview} className="lok-btn" style={{ width: '100%', border: 'none', background: 'var(--accent,#2A5FA8)', color: '#F7F3EA', fontFamily: 'inherit', fontWeight: 700, fontSize: 14.5, padding: 14, borderRadius: 14, cursor: 'pointer', marginBottom: 10 }}>Leave a review for {sel.seller}</button>
-            <button onClick={closeCheckout} className="lok-btn" style={{ width: '100%', border: '1px solid #D8CFBB', background: '#F4EFE5', color: '#201E18', fontFamily: 'inherit', fontWeight: 700, fontSize: 14, padding: 12, borderRadius: 13, cursor: 'pointer' }}>Done</button>
-          </div>
-        )}
-
-        {s.coStep === 'review' && (
-          <div>
-            <h2 style={{ fontFamily: "'Bricolage Grotesque',sans-serif", fontSize: 20, fontWeight: 800, margin: '0 0 4px' }}>Rate your trade</h2>
-            <p style={{ fontSize: 13, color: '#6F6A5C', margin: '0 0 18px' }}>How was buying <b style={{ color: '#201E18' }}>{sel.title}</b> from {sel.seller}?</p>
-            <div style={{ display: 'flex', gap: 10, justifyContent: 'center', marginBottom: 18 }}>
-              {[1, 2, 3, 4, 5].map((n) => (
-                <span key={n} onClick={() => setRvStars(n)} style={{ cursor: 'pointer', fontSize: 38, lineHeight: 1, color: n <= s.rvStars ? '#E7A81E' : '#C9BFA8' }}>
-                  {n <= s.rvStars ? '★' : '☆'}
-                </span>
-              ))}
-            </div>
-            <textarea className="lok-field" value={s.rvText} onChange={(e) => setRvText(e.target.value)} placeholder="Share a few words about the item and the seller…" style={{ width: '100%', background: '#F4EFE5', border: '1.5px solid #E4DDCE', borderRadius: 12, padding: '13px 15px', fontSize: 13.5, fontFamily: 'inherit', fontWeight: 500, color: '#201E18', minHeight: 88, resize: 'none' }} />
-            <button onClick={submitReview} className="lok-btn" style={{ width: '100%', border: 'none', background: 'var(--accent,#2A5FA8)', color: '#F7F3EA', fontFamily: 'inherit', fontWeight: 700, fontSize: 14.5, padding: 14, borderRadius: 14, cursor: 'pointer', marginTop: 16 }}>Post review</button>
-          </div>
-        )}
-
-        {s.coStep === 'reviewdone' && (
-          <div style={{ textAlign: 'center' }}>
-            <div style={{ width: 66, height: 66, borderRadius: '50%', background: '#FBF0DD', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 18px', color: '#E7A81E', fontSize: 30 }}>★</div>
-            <div style={{ fontFamily: "'Bricolage Grotesque',sans-serif", fontWeight: 800, fontSize: 20, marginBottom: 9 }}>Thanks for the review</div>
-            <div style={{ fontSize: 13.5, color: '#5A5648', lineHeight: 1.6, marginBottom: 22 }}>Your feedback is now public on {sel.seller}'s profile — it helps the whole dorm trade with confidence.</div>
-            <button onClick={closeCheckout} className="lok-btn" style={{ width: '100%', border: 'none', background: 'var(--accent,#2A5FA8)', color: '#F7F3EA', fontFamily: 'inherit', fontWeight: 700, fontSize: 14.5, padding: 14, borderRadius: 14, cursor: 'pointer' }}>Done</button>
+            <button onClick={openOrders} className="lok-btn" style={{ width: '100%', border: 'none', background: 'var(--accent,#2A5FA8)', color: '#F7F3EA', fontFamily: 'inherit', fontWeight: 700, fontSize: 14.5, padding: 14, borderRadius: 14, cursor: 'pointer', marginBottom: 10 }}>View my orders</button>
+            <button onClick={closeCheckout} className="lok-btn" style={{ width: '100%', border: '1px solid #D8CFBB', background: '#F4EFE5', color: '#201E18', fontFamily: 'inherit', fontWeight: 700, fontSize: 14, padding: 12, borderRadius: 13, cursor: 'pointer' }}>Keep browsing</button>
           </div>
         )}
       </div>

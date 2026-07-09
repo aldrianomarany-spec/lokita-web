@@ -6,6 +6,7 @@ import BrowseView from './BrowseView'
 import MessagesView from './MessagesView'
 import NotificationsView from './NotificationsView'
 import ProfileView from './ProfileView'
+import OrdersView from './OrdersView'
 import DetailModal from './modals/DetailModal'
 import SellModal from './modals/SellModal'
 import EditProfileModal from './modals/EditProfileModal'
@@ -40,6 +41,7 @@ function Shell() {
           {s.view === 'browse' && <BrowseView />}
           {s.view === 'messages' && <MessagesView />}
           {s.view === 'notifications' && <NotificationsView />}
+          {s.view === 'orders' && <OrdersView />}
           {s.view === 'profile' && <ProfileView />}
         </main>
       </div>

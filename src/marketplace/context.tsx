@@ -12,7 +12,16 @@ import {
   fetchCategoryCounts,
   createListing,
   deleteListing,
+  createOrder,
+  fetchMyOrders,
+  markDroppedOff,
+  confirmPickup,
+  cancelOrder,
+  subscribeOrders,
+  submitOrderReview,
+  getUserId,
   type ProfileStats,
+  type OrderRow,
 } from '../lib/api'
 import { CHATS } from '../data'
 import type { EnrichedItem, Item, Profile, SellerReview, ThreadMsg } from '../types'
@@ -24,7 +33,7 @@ const EMPTY_PROFILE: Profile = {
   verification_status: 'pending', profile_photo_url: null,
 }
 
-export type View = 'browse' | 'messages' | 'notifications' | 'profile'
+export type View = 'browse' | 'messages' | 'notifications' | 'profile' | 'orders'
 export type Sort = 'Nearest' | 'Newest' | 'Price'
 export type CoStep = 'options' | 'qris' | 'done' | 'review' | 'reviewdone'
 export type ListState = 'idle' | 'saving' | 'done'
@@ -56,6 +65,9 @@ export interface State {
   feedLoading: boolean
   feedError: string | null
   categoryCounts: Record<string, number>
+  orders: OrderRow[]
+  ordersLoading: boolean
+  ordersError: string | null
   chatId: number | null
   msgDraft: string
   extra: Record<number, ThreadMsg[]>
@@ -102,6 +114,9 @@ const initialState: State = {
   feedLoading: true,
   feedError: null,
   categoryCounts: {},
+  orders: [],
+  ordersLoading: false,
+  ordersError: null,
   chatId: null,
   msgDraft: '',
   extra: {},
@@ -181,6 +196,11 @@ export interface MarketplaceApi {
   setPickup: (v: 'meet' | 'leave' | 'security') => void
   coContinue: () => void
   coPaid: () => void
+  openOrders: () => void
+  markOrderDropped: (id: string) => Promise<void>
+  confirmOrderPickup: (id: string) => Promise<void>
+  cancelMyOrder: (id: string) => Promise<void>
+  submitReviewFor: (order: OrderRow, rating: number, comment: string) => Promise<void>
   coReview: () => void
   setRvStars: (n: number) => void
   setRvText: (v: string) => void
@@ -235,6 +255,52 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
   }, [cat, cond, sort, query, viewerFloor, loadFeed])
 
   const enrichedItems = state.feed
+
+  // orders (transactions) — my purchases & sales, with realtime updates
+  const loadOrders = useCallback(async () => {
+    patch({ ordersLoading: true, ordersError: null })
+    try {
+      const orders = await fetchMyOrders()
+      patch({ orders, ordersLoading: false })
+    } catch (e) {
+      patch({ ordersLoading: false, ordersError: e instanceof Error ? e.message : 'Failed to load orders' })
+    }
+  }, [patch])
+
+  useEffect(() => {
+    let unsub: (() => void) | undefined
+    getUserId().then((uid) => {
+      if (!uid) return
+      loadOrders()
+      unsub = subscribeOrders(uid, () => loadOrders())
+    })
+    return () => unsub?.()
+  }, [loadOrders])
+
+  const pickupCode = (p: State['pickup']) =>
+    p === 'meet' ? 'meet_in_person' : p === 'leave' ? 'trusted_handoff' : 'security_post'
+
+  // place a real order from the checkout; refresh feed/orders/stats
+  const placeOrder = async (): Promise<boolean> => {
+    const sel = state.sel
+    if (!sel || !sel.ownerId) {
+      alert('This listing is no longer available.')
+      return false
+    }
+    try {
+      await createOrder({ listingId: sel.id, sellerId: sel.ownerId, payment_method: state.pay, pickup_method: pickupCode(state.pickup) })
+      const floorCode = state.profile.floor ? state.profile.floor.toLowerCase() : null
+      await Promise.all([
+        loadFeed({ cat: state.cat, cond: state.cond, sort: state.sort, query: state.query }, floorCode),
+        loadOrders(),
+      ])
+      loadProfile()
+      return true
+    } catch (e) {
+      alert('Could not place order: ' + (e instanceof Error ? e.message : 'unknown error'))
+      return false
+    }
+  }
 
   // Load the signed-in user's real profile + stats (fresh-install: blank until set).
   const loadProfile = useCallback(async () => {
@@ -430,8 +496,34 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
     closeCheckout: () => patch({ checkoutOpen: false, coStep: 'options', sel: null }),
     setPay: (v) => patch({ pay: v }),
     setPickup: (v) => patch({ pickup: v }),
-    coContinue: () => patch((prev) => ({ coStep: prev.pay === 'qris' ? 'qris' : 'done' })),
-    coPaid: () => patch({ coStep: 'done' }),
+    coContinue: async () => {
+      if (state.pay === 'qris') {
+        patch({ coStep: 'qris' })
+        return
+      }
+      if (await placeOrder()) patch({ coStep: 'done' })
+    },
+    coPaid: async () => {
+      if (await placeOrder()) patch({ coStep: 'done' })
+    },
+    openOrders: () => patch({ view: 'orders', menuOpen: false, sel: null, checkoutOpen: false }),
+    markOrderDropped: async (id) => {
+      await markDroppedOff(id)
+      await loadOrders()
+    },
+    confirmOrderPickup: async (id) => {
+      await confirmPickup(id)
+      await Promise.all([loadOrders(), loadProfile()])
+    },
+    cancelMyOrder: async (id) => {
+      await cancelOrder(id)
+      const floorCode = state.profile.floor ? state.profile.floor.toLowerCase() : null
+      await Promise.all([loadOrders(), loadFeed({ cat: state.cat, cond: state.cond, sort: state.sort, query: state.query }, floorCode)])
+    },
+    submitReviewFor: async (order, rating, comment) => {
+      await submitOrderReview(order, rating, comment)
+      await Promise.all([loadOrders(), loadProfile()])
+    },
     coReview: () => patch({ coStep: 'review', rvStars: 0, rvText: '' }),
     setRvStars: (n) => patch({ rvStars: n }),
     setRvText: (v) => patch({ rvText: v }),
