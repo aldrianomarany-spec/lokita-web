@@ -328,13 +328,15 @@ export default function AuthFlow() {
         >
           <div style={{ position: 'absolute', top: -90, right: -70, width: 300, height: 300, borderRadius: '50%', background: 'rgba(255,255,255,.06)' }} />
           {MASCOT_URL && (
-            <img
-              src={MASCOT_URL}
-              alt="Kapi, the LOKITA capybara"
-              title="Kapi — LOKITA's capybara. Always ready to help you move stuff."
-              className="lok-mascot"
-              style={{ position: 'absolute', top: 84, right: 30, width: 'clamp(120px, 16vw, 210px)', zIndex: 1 }}
-            />
+            <div style={{ position: 'absolute', top: 'clamp(60px, 10vh, 110px)', left: 0, right: 0, display: 'flex', justifyContent: 'center', zIndex: 1, pointerEvents: 'none' }}>
+              <img
+                src={MASCOT_URL}
+                alt="Kapi, the LOKITA capybara"
+                title="Kapi — LOKITA's capybara. Always ready to help you move stuff."
+                className="lok-mascot"
+                style={{ width: 'clamp(300px, 34vw, 520px)', maxHeight: '46vh', objectFit: 'contain', pointerEvents: 'auto' }}
+              />
+            </div>
           )}
           <div style={{ position: 'absolute', bottom: -140, left: -60, width: 360, height: 360, borderRadius: '50%', background: 'rgba(255,255,255,.05)' }} />
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, position: 'relative' }}>
