@@ -22,6 +22,7 @@ export interface Item {
   photoUrl?: string | null
   photoUrls?: string[]
   bundleItems?: string[]
+  platformFee?: number // LOKITA's cut already inside priceNum; seller gets priceNum − platformFee
   isFeatured?: boolean
   sellerVerified?: boolean
   ownerId?: string

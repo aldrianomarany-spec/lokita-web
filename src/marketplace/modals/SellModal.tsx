@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react'
 import { useM } from '../context'
-import { SELL_CATEGORIES, BUILDINGS, floorsForBuilding } from '../../theme'
+import { SELL_CATEGORIES, BUILDINGS, floorsForBuilding, platformFee, publishedPrice } from '../../theme'
 import Overlay, { stop } from './Overlay'
 
 const fieldBase: React.CSSProperties = {
@@ -31,6 +31,13 @@ export default function SellModal() {
     setPhotos(Array.from(e.target.files || []).slice(0, 6))
   }
 
+  // live revenue preview — LOKITA adds its platform fee on top of the ask,
+  // so the seller sees exactly what buyers will pay before posting.
+  const ask = Number((f.price || '').replace(/[^0-9]/g, '')) || 0
+  const fee = platformFee(ask)
+  const listed = publishedPrice(ask)
+  const rp = (n: number) => 'Rp ' + n.toLocaleString('id-ID')
+
   return (
     <Overlay onClose={closeSell}>
       <div onClick={stop} style={{ background: '#FBF8F1', borderRadius: 26, padding: '30px 32px', width: '100%', maxWidth: 500, animation: 'lok-pop .26s cubic-bezier(.2,.8,.3,1) both', boxShadow: '0 40px 90px -20px rgba(32,30,24,.5)', maxHeight: '90vh', overflowY: 'auto' }}>
@@ -60,7 +67,26 @@ export default function SellModal() {
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           <input className="lok-field" value={f.title} onChange={(e) => setF('title', e.target.value)} placeholder="Item title" style={fieldBase} />
-          <input className="lok-field" value={f.price} onChange={(e) => setF('price', e.target.value.replace(/[^0-9]/g, ''))} placeholder="Price in Rp (e.g. 150000)" inputMode="numeric" style={fieldBase} />
+          <input className="lok-field" value={f.price} onChange={(e) => setF('price', e.target.value.replace(/[^0-9]/g, ''))} placeholder="Your price in Rp (e.g. 150000)" inputMode="numeric" style={fieldBase} />
+
+          {/* platform-fee breakdown — appears as soon as a price is typed */}
+          {ask > 0 && (
+            <div style={{ background: '#F4EFE5', border: '1px solid #E4DDCE', borderRadius: 12, padding: '11px 14px', animation: 'lok-fade .25s ease both' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12.5, fontWeight: 600, color: '#3A362C' }}>
+                <span>Your price</span>
+                <span>{rp(ask)}</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, fontWeight: 600, color: '#8A8578', marginTop: 5 }}>
+                <span>LOKITA platform fee <span title="5% of your price — min Rp 1.000, max Rp 4.000. Covers escrow, Security Post & support." style={{ cursor: 'help' }}>ⓘ</span></span>
+                <span>+ {rp(fee)}</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 8, paddingTop: 8, borderTop: '1px dashed #D8CFBB' }}>
+                <span style={{ fontSize: 12.5, fontWeight: 800 }}>Listed at (buyers pay)</span>
+                <span style={{ fontFamily: "'Bricolage Grotesque',sans-serif", fontWeight: 800, fontSize: 16, color: 'var(--accent,#2A5FA8)' }}>{rp(listed)}</span>
+              </div>
+              <div style={{ fontSize: 11, color: '#3D7A54', fontWeight: 600, marginTop: 6 }}>✓ You still receive your full {rp(ask)} when it sells.</div>
+            </div>
+          )}
 
           <div style={{ display: 'flex', gap: 10, margin: '2px 2px -2px' }}>
             <span style={cap}>CATEGORY</span>
