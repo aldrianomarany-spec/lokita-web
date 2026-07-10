@@ -324,7 +324,7 @@ export default function AuthFlow() {
         {/* LEFT BRAND PANEL */}
         <div
           className="lok-authbrand"
-          style={{ width: '44%', flex: 'none', background: 'var(--accent,#2A5FA8)', color: '#EAF0F8', padding: '48px 46px', display: 'flex', flexDirection: 'column', position: 'relative', overflow: 'hidden' }}
+          style={{ width: '44%', flex: 'none', background: 'var(--accent,#2A5FA8)', color: '#EAF0F8', padding: '34px 46px 30px', display: 'flex', flexDirection: 'column', position: 'relative', overflow: 'hidden' }}
         >
           <div style={{ position: 'absolute', top: -90, right: -70, width: 300, height: 300, borderRadius: '50%', background: 'rgba(255,255,255,.06)' }} />
           <div style={{ position: 'absolute', bottom: -140, left: -60, width: 360, height: 360, borderRadius: '50%', background: 'rgba(255,255,255,.05)' }} />
@@ -338,22 +338,22 @@ export default function AuthFlow() {
             </div>
           </div>
           {MASCOT_URL && (
-            <div style={{ flex: 1, minHeight: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '14px 0', position: 'relative' }}>
+            <div style={{ flex: 1, minHeight: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '6px 0', position: 'relative' }}>
               <img
                 src={MASCOT_URL}
                 alt="Kapi, the LOKITA capybara"
                 title="Kapi — LOKITA's capybara. Always ready to help you move stuff."
                 className="lok-mascot"
-                style={{ maxHeight: '100%', maxWidth: 'min(440px, 82%)', objectFit: 'contain' }}
+                style={{ height: 'min(320px, 100%)', maxWidth: '100%', objectFit: 'contain' }}
               />
             </div>
           )}
           <div style={{ marginTop: 'auto', position: 'relative' }}>
-            <div style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 11, color: 'rgba(245,241,232,.7)', letterSpacing: '.1em', marginBottom: 16 }}>THE DORM MARKETPLACE · JIU CIKARANG</div>
-            <h1 style={{ fontFamily: "'Bricolage Grotesque',sans-serif", fontWeight: 800, fontSize: 40, lineHeight: 1.08, letterSpacing: '-.025em', margin: 0, color: '#F8F5EE' }}>Buy &amp; sell with the students next door.</h1>
-            <p style={{ fontSize: 15, lineHeight: 1.6, color: 'rgba(234,240,248,.82)', margin: '18px 0 0', maxWidth: 400 }}>Trade furniture, gadgets and textbooks with verified neighbours in your building. Pay in-app, pick up at the Security Post.</p>
+            <div style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 11, color: 'rgba(245,241,232,.7)', letterSpacing: '.1em', marginBottom: 12 }}>THE DORM MARKETPLACE · JIU CIKARANG</div>
+            <h1 style={{ fontFamily: "'Bricolage Grotesque',sans-serif", fontWeight: 800, fontSize: 35, lineHeight: 1.08, letterSpacing: '-.025em', margin: 0, color: '#F8F5EE' }}>Buy &amp; sell with the students next door.</h1>
+            <p style={{ fontSize: 14.5, lineHeight: 1.55, color: 'rgba(234,240,248,.82)', margin: '12px 0 0', maxWidth: 400 }}>Trade furniture, gadgets and textbooks with verified neighbours in your building. Pay in-app, pick up at the Security Post.</p>
           </div>
-          <div style={{ marginTop: 36, display: 'flex', flexDirection: 'column', gap: 14, position: 'relative' }}>
+          <div style={{ marginTop: 20, display: 'flex', flexDirection: 'column', gap: 11, position: 'relative' }}>
             {perks.map((p, i) => (
               <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 13 }}>
                 <div style={{ width: 34, height: 34, borderRadius: '50%', background: 'rgba(255,255,255,.13)', display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 'none', color: '#F5F1E8' }}>{p.icon}</div>
