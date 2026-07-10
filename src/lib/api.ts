@@ -1050,3 +1050,16 @@ export function subscribeRequests(onChange: () => void): () => void {
     supabase.removeChannel(ch)
   }
 }
+
+
+// Realtime: the signed-in user's own profile row (details edited elsewhere,
+// verification badge granted, admin changes) — refresh the UI live.
+export function subscribeMyProfile(userId: string, onChange: () => void): () => void {
+  const ch = supabase
+    .channel('me-' + userId)
+    .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'profiles', filter: `id=eq.${userId}` }, onChange)
+    .subscribe()
+  return () => {
+    supabase.removeChannel(ch)
+  }
+}

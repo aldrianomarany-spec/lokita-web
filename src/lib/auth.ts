@@ -150,9 +150,12 @@ export async function completeProfile(details: ProfileDetails): Promise<Profile>
     .update(details)
     .eq('id', user.id)
     .select()
-    .single()
   if (error) throw error
-  return data as Profile
+  const rows = (data as Profile[]) || []
+  // an RLS/trigger rejection can surface as "0 rows updated" instead of an
+  // error — treat that as a hard failure so the user is never silently lost
+  if (!rows.length) throw new Error('Your profile could not be saved. Please try again (or re-log in).')
+  return rows[0]
 }
 
 // ============================================================

@@ -23,6 +23,7 @@ import {
   subscribeOrders,
   subscribeListings,
   subscribePresence,
+  subscribeMyProfile,
   submitOrderReview,
   fetchWishlistIds,
   addToWishlist,
@@ -378,6 +379,16 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
     })
     return () => unsub?.()
   }, [loadOrders, loadProfile])
+
+  // ---- own profile realtime: details/badge changes reflect instantly ----
+  useEffect(() => {
+    let unsub: (() => void) | undefined
+    getUserId().then((uid) => {
+      if (!uid) return
+      unsub = subscribeMyProfile(uid, () => loadProfile())
+    })
+    return () => unsub?.()
+  }, [loadProfile])
 
   // ---- online presence (members only; guests neither track nor see it) ----
   useEffect(() => {

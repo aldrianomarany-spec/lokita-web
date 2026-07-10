@@ -87,10 +87,12 @@ export default function CompleteProfile() {
   const [batch, setBatch] = useState('')
   const [standing, setStanding] = useState<ClassStanding | ''>('')
   const [whatsapp, setWhatsapp] = useState('')
+  const [studentId, setStudentId] = useState('')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
 
-  // must be signed in; prefill the name from the profile the trigger created
+  // must be signed in; prefill EVERYTHING already on the profile so landing
+  // here again never means retyping from scratch
   useEffect(() => {
     getSession().then(async (session) => {
       if (!session) {
@@ -99,7 +101,15 @@ export default function CompleteProfile() {
       }
       try {
         const p = await getMyProfile()
-        if (p?.name) setName(p.name)
+        if (!p) return
+        if (p.name) setName(p.name)
+        if (p.building) setBuilding(p.building)
+        if (p.floor) setFloor(p.floor)
+        if (p.room_number) setRoom(p.room_number)
+        if (p.batch_year) setBatch(String(p.batch_year))
+        if (p.class_standing) setStanding(p.class_standing)
+        if (p.whatsapp_number) setWhatsapp(p.whatsapp_number)
+        if (p.student_id_number) setStudentId(p.student_id_number)
       } catch {
         /* ignore */
       }
@@ -119,7 +129,14 @@ export default function CompleteProfile() {
         batch_year: batch ? Number(batch) : undefined,
         class_standing: standing || undefined,
         whatsapp_number: whatsapp.trim() || undefined,
+        student_id_number: studentId.trim() || undefined,
       })
+      // belt-and-braces: re-read the profile and confirm the save actually
+      // stuck before letting the user in — no more silent losses
+      const check = await getMyProfile()
+      if (!check || check.building !== building || check.floor !== floor) {
+        throw new Error('The save did not persist — please try again. If it keeps happening, log out and back in.')
+      }
       navigate('/app', { replace: true })
     } catch (e) {
       setError(errMsg(e))
@@ -191,6 +208,11 @@ export default function CompleteProfile() {
               <div style={cap}>WHATSAPP</div>
               <input value={whatsapp} onChange={(e) => setWhatsapp(e.target.value)} placeholder="+62 812-…" className="lok-field" style={field} />
             </div>
+          </div>
+
+          <div>
+            <div style={cap}>STUDENT ID NUMBER (optional)</div>
+            <input value={studentId} onChange={(e) => setStudentId(e.target.value)} placeholder="e.g. 2027-01-1234" className="lok-field" style={field} />
           </div>
 
         </div>
