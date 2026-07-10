@@ -149,7 +149,8 @@ export interface DbListing {
   seller_id: string
   title: string
   description: string | null
-  price: number
+  price: number // PUBLISHED price — seller's ask + platform_fee (trigger-computed)
+  platform_fee: number
   category: string | null
   condition: string | null
   is_graduation_bundle: boolean
@@ -340,6 +341,7 @@ function mapRow(r: FeedRow, seller: SellerLite | undefined, uid: string | undefi
     photoUrl: photos.length ? photos[0].photo_url : null,
     photoUrls: photos.map((p) => p.photo_url),
     bundleItems: r.bundle_items || undefined,
+    platformFee: r.platform_fee || 0,
     isFeatured: r.is_featured,
     sellerVerified: seller?.verification_status === 'verified',
     ownerId: r.seller_id,
@@ -401,7 +403,8 @@ export async function fetchCategoryCounts(): Promise<Record<string, number>> {
 
 export interface NewListing {
   title: string
-  priceNum: number
+  priceNum: number // the seller's ASK — the DB adds the platform fee on top
+
   category: string // display label e.g. "Furniture"
   condition: string // "Like new" | "Good" | "Fair"
   building: string // display label e.g. "Thomas Building" (or '')
@@ -412,6 +415,9 @@ export interface NewListing {
 }
 
 // Insert a listing owned by the current user, then upload its photos.
+// `priceNum` is the seller's asking price — the apply_platform_fee trigger
+// (migration 0017) sets platform_fee and publishes at ask + fee, so the fee
+// can't be dodged by a modified client.
 export async function createListing(input: NewListing, photos: File[]): Promise<string> {
   const user = await getUser()
   if (!user) throw new Error('Not signed in')

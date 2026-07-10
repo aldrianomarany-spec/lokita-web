@@ -117,12 +117,23 @@ export function floorsForBuilding(building: string): FloorOption[] {
 export const STANDINGS = ['Freshman', 'Sophomore', 'Junior', 'Senior']
 
 
-// ---- LOKITA revenue: buyer-side service fee (like "biaya layanan") ----
-// 5% of the item price with a Rp 1.000 minimum — sellers receive their full
-// listed price; the buyer pays price + fee, shown transparently at checkout.
-export const SERVICE_FEE_RATE = 0.05
-export const SERVICE_FEE_MIN = 1000
-export function serviceFee(price: number): number {
-  if (!price || price <= 0) return 0
-  return Math.max(SERVICE_FEE_MIN, Math.round(price * SERVICE_FEE_RATE))
+// ---- LOKITA revenue: seller-side platform fee, baked into the price ----
+// When a seller publishes a listing, LOKITA adds a platform fee on top of
+// their asking price: 5% of the ask, floored at Rp 1.000 and capped at
+// Rp 4.000 (the "upload fee Rp 1.000–4.000" from the business model).
+// The PUBLISHED price (what buyers see and pay everywhere) = ask + fee;
+// the seller still receives their full asking price when the item sells.
+// The DB recomputes this in a trigger (migration 0017) so the client
+// preview here MUST use the exact same formula — buyers pay no extra fee
+// at checkout, the platform cut is already inside the listed price.
+export const PLATFORM_FEE_RATE = 0.05
+export const PLATFORM_FEE_MIN = 1000
+export const PLATFORM_FEE_MAX = 4000
+export function platformFee(askPrice: number): number {
+  if (!askPrice || askPrice <= 0) return 0
+  return Math.min(PLATFORM_FEE_MAX, Math.max(PLATFORM_FEE_MIN, Math.round(askPrice * PLATFORM_FEE_RATE)))
+}
+export function publishedPrice(askPrice: number): number {
+  if (!askPrice || askPrice <= 0) return 0
+  return askPrice + platformFee(askPrice)
 }

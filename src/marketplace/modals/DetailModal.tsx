@@ -87,9 +87,15 @@ export default function DetailModal() {
             <button onClick={closeDetail} className="lok-navi" style={{ border: '1px solid #E4DDCE', background: '#F4EFE5', width: 36, height: 36, borderRadius: 11, fontSize: 16, cursor: 'pointer', color: '#5A5648', flex: 'none' }}>✕</button>
           </div>
           <h2 style={{ fontFamily: "'Bricolage Grotesque',sans-serif", fontSize: 27, fontWeight: 800, letterSpacing: '-.02em', margin: '6px 0 8px', lineHeight: 1.12 }}>{sel.title}</h2>
-          <div style={{ display: 'flex', alignItems: 'baseline', gap: 9, marginBottom: 16 }}>
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: 9, marginBottom: isOwner && (sel.platformFee || 0) > 0 ? 6 : 16 }}>
             <span style={{ fontFamily: "'Bricolage Grotesque',sans-serif", fontSize: 28, fontWeight: 800, color: 'var(--accent,#2A5FA8)' }}>{sel.price}</span>
           </div>
+          {/* only the owner sees the fee split — buyers just see the listed price */}
+          {isOwner && (sel.platformFee || 0) > 0 && (
+            <div style={{ fontSize: 12, color: '#8A8578', fontWeight: 600, marginBottom: 14 }}>
+              You receive <b style={{ color: '#3D7A54' }}>Rp {(sel.priceNum - (sel.platformFee || 0)).toLocaleString('id-ID')}</b> when it sells · Rp {(sel.platformFee || 0).toLocaleString('id-ID')} LOKITA fee included
+            </div>
+          )}
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 18 }}>
             <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12.5, fontWeight: 600, color: '#3A362C', background: '#F1ECE1', padding: '8px 12px', borderRadius: 10 }}>Condition · {sel.cond}</span>
             <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12.5, fontWeight: 600, color: '#3A362C', background: '#F1ECE1', padding: '8px 12px', borderRadius: 10 }}>

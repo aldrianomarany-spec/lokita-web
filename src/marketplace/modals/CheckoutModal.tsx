@@ -2,7 +2,6 @@ import { useEffect } from 'react'
 import { useM } from '../context'
 import Overlay, { stop } from './Overlay'
 import { Check } from '../../components/Icons'
-import { serviceFee } from '../../theme'
 
 const s2 = (children: React.ReactNode) => (
   <svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
@@ -36,8 +35,9 @@ export default function CheckoutModal() {
 
   if (!sel) return null
 
-  const fee = serviceFee(sel.priceNum)
-  const total = sel.priceNum + fee
+  // the listed price already contains LOKITA's platform fee (added when the
+  // seller published) — buyers pay exactly what's on the tag, nothing extra.
+  const total = sel.priceNum
   const rp = (n: number) => 'Rp ' + n.toLocaleString('id-ID')
 
   const payLabel = s.pay === 'qris' ? 'QRIS' : 'Cash on Delivery'
@@ -65,11 +65,11 @@ export default function CheckoutModal() {
                 <div style={{ fontWeight: 600, fontSize: 13.5, color: '#3A362C' }}>{rp(sel.priceNum)}</div>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 7 }}>
-                <div style={{ fontSize: 12, color: '#8A8578', fontWeight: 600 }}>Service fee <span title="Keeps LOKITA running — escrow, Security Post & support" style={{ cursor: 'help' }}>ⓘ</span></div>
-                <div style={{ fontSize: 12.5, color: '#8A8578', fontWeight: 600 }}>{rp(fee)}</div>
+                <div style={{ fontSize: 12, color: '#8A8578', fontWeight: 600 }}>LOKITA platform fee <span title="Keeps LOKITA running — escrow, Security Post & support" style={{ cursor: 'help' }}>ⓘ</span></div>
+                <div style={{ fontSize: 12.5, color: '#3D7A54', fontWeight: 700 }}>Included ✓</div>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 9, paddingTop: 9, borderTop: '1px dashed #D8CFBB' }}>
-                <div style={{ fontWeight: 800, fontSize: 13.5 }}>Total</div>
+                <div style={{ fontWeight: 800, fontSize: 13.5 }}>Total — no extra charges</div>
                 <div style={{ fontFamily: "'Bricolage Grotesque',sans-serif", fontWeight: 800, fontSize: 17, color: 'var(--accent,#2A5FA8)' }}>{rp(total)}</div>
               </div>
             </div>
@@ -122,7 +122,7 @@ export default function CheckoutModal() {
               )}
             </div>
             <div style={{ fontFamily: "'Bricolage Grotesque',sans-serif", fontWeight: 800, fontSize: 22, color: 'var(--accent,#2A5FA8)' }}>{rp(total)}</div>
-            <div style={{ fontSize: 11, color: '#A29C8B', fontWeight: 600, marginTop: 2 }}>incl. {rp(fee)} service fee</div>
+            <div style={{ fontSize: 11, color: '#A29C8B', fontWeight: 600, marginTop: 2 }}>platform fee included — no extra charges</div>
             <div style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 11, color: '#A29C8B', marginBottom: 18 }}>LOKITA · QRIS{manualQr ? ' · PROTOTYPE' : ''}</div>
             {s.qris && manualQr && (
               <>
