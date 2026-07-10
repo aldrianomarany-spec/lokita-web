@@ -6,7 +6,7 @@ import { Verified, MessageBubble } from '../components/Icons'
 // Every member of the marketplace with live presence: green dot = online right
 // now, grey = offline. Members-only (guests are routed to signup before here).
 export default function PeopleView() {
-  const { state, openSellerProfile, openRequestChat } = useM()
+  const { state, openMember, openRequestChat } = useM()
   const s = state
   const [members, setMembers] = useState<MemberRow[] | null>(null)
   const [uid, setUid] = useState<string | null>(null)
@@ -77,7 +77,7 @@ export default function PeopleView() {
                 </div>
                 <div style={{ flex: 'none', display: 'flex', gap: 8 }}>
                   <button
-                    onClick={() => openSellerProfile(m.id, m.name)}
+                    onClick={() => openMember(m.id, m.name)}
                     className="lok-btn"
                     style={{ border: '1px solid #D8CFBB', background: '#F4EFE5', color: '#201E18', fontFamily: 'inherit', fontWeight: 700, fontSize: 12.5, padding: '9px 13px', borderRadius: 10, cursor: 'pointer' }}
                   >

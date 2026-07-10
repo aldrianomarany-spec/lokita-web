@@ -7,6 +7,7 @@ import Sidebar from './Sidebar'
 import BrowseView from './BrowseView'
 import RequestsView from './RequestsView'
 import PeopleView from './PeopleView'
+import MemberProfileView from './MemberProfileView'
 import MessagesView from './MessagesView'
 import NotificationsView from './NotificationsView'
 import ProfileView from './ProfileView'
@@ -15,7 +16,6 @@ import DetailModal from './modals/DetailModal'
 import SellModal from './modals/SellModal'
 import EditProfileModal from './modals/EditProfileModal'
 import CheckoutModal from './modals/CheckoutModal'
-import SellerProfileModal from './modals/SellerProfileModal'
 
 // brand accent (tweakable). Blue is the shipped default. CSS custom properties
 // aren't in React.CSSProperties, so the object is cast.
@@ -46,6 +46,7 @@ function Shell() {
           {s.view === 'browse' && <BrowseView />}
           {s.view === 'requests' && <RequestsView />}
           {s.view === 'people' && <PeopleView />}
+          {s.view === 'member' && <MemberProfileView />}
           {s.view === 'messages' && <MessagesView />}
           {s.view === 'notifications' && <NotificationsView />}
           {s.view === 'orders' && <OrdersView />}
@@ -69,7 +70,6 @@ function Shell() {
       {s.sellOpen && <SellModal />}
       {s.editOpen && <EditProfileModal />}
       {s.checkoutOpen && <CheckoutModal />}
-      {s.sellerOpen && <SellerProfileModal />}
     </div>
   )
 }

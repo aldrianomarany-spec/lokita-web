@@ -973,3 +973,78 @@ export function subscribePresence(uid: string, onChange: (onlineIds: string[]) =
     supabase.removeChannel(ch)
   }
 }
+
+// ===========================================================================
+// MEMBER PROFILE PAGE — full public profile of another member.
+// ===========================================================================
+export interface MemberProfileInfo {
+  id: string
+  name: string
+  photo: string | null
+  building: string
+  floor: string
+  batch: string
+  standing: string
+  verified: boolean
+  since: string
+}
+
+export async function fetchMemberProfile(id: string): Promise<MemberProfileInfo | null> {
+  const { data, error } = await supabase
+    .from('public_profiles')
+    .select('id, name, profile_photo_url, building, floor, batch_year, class_standing, verification_status, created_at')
+    .eq('id', id)
+    .maybeSingle()
+  if (error) throw error
+  if (!data) return null
+  const r = data as { id: string; name: string; profile_photo_url: string | null; building: string | null; floor: string | null; batch_year: number | null; class_standing: string | null; verification_status: string; created_at: string }
+  return {
+    id: r.id,
+    name: r.name || 'Student',
+    photo: r.profile_photo_url,
+    building: r.building ? BUILDING_LABEL[r.building] || '' : '',
+    floor: r.floor ? FLOOR_LABEL[r.floor] || '' : '',
+    batch: r.batch_year ? `Class of ${r.batch_year}` : '',
+    standing: r.class_standing ? STANDING_LABEL[r.class_standing] || '' : '',
+    verified: r.verification_status === 'verified',
+    since: memberSince(r.created_at),
+  }
+}
+
+// Selling/sold counts via the SECURITY DEFINER member_stats function (0014) —
+// transactions themselves stay party-only; only the two counts are exposed.
+export async function fetchMemberStats(id: string): Promise<{ selling: number; sold: number }> {
+  const { data, error } = await supabase.rpc('member_stats', { uid: id })
+  if (error) throw error
+  const row = (Array.isArray(data) ? data[0] : data) as { selling: number; sold: number } | undefined
+  return { selling: Number(row?.selling || 0), sold: Number(row?.sold || 0) }
+}
+
+// A member's active listings, mapped to the card shape (clicking opens the
+// normal item detail).
+export async function fetchMemberListings(id: string, viewerFloor: string | null): Promise<EnrichedItem[]> {
+  const user = await getUser()
+  const [{ data, error }, { data: person }] = await Promise.all([
+    supabase
+      .from('listings')
+      .select('*, listing_photos(photo_url, sort_order)')
+      .eq('seller_id', id)
+      .eq('status', 'active')
+      .order('created_at', { ascending: false }),
+    supabase.from('public_profiles').select('id, name, profile_photo_url, verification_status').eq('id', id).maybeSingle(),
+  ])
+  if (error) throw error
+  const seller = (person as SellerLite | null) || undefined
+  return ((data as FeedRow[]) || []).map((r, i) => mapRow(r, seller, user?.id, viewerFloor, i))
+}
+
+// Realtime: refetch the requests board on any change (new/fulfilled/removed).
+export function subscribeRequests(onChange: () => void): () => void {
+  const ch = supabase
+    .channel('requests-board')
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'requests' }, onChange)
+    .subscribe()
+  return () => {
+    supabase.removeChannel(ch)
+  }
+}

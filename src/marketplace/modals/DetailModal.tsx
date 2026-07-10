@@ -7,7 +7,7 @@ import Overlay, { stop } from './Overlay'
 import { ChevronRight, MapPin, MessageBubble, ShieldCheck, Star, Verified } from '../../components/Icons'
 
 export default function DetailModal() {
-  const { state, closeDetail, chatSeller, openCheckout, openSellerProfile, deleteMyListing, toggleSaveItem, goSignup } = useM()
+  const { state, closeDetail, chatSeller, openCheckout, openMember, deleteMyListing, toggleSaveItem, goSignup } = useM()
   const [deleting, setDeleting] = useState(false)
   const [photoIdx, setPhotoIdx] = useState(0)
   const isPhone = useIsPhone()
@@ -114,7 +114,7 @@ export default function DetailModal() {
           )}
 
           {/* seller card */}
-          <div onClick={() => openSellerProfile(sel.ownerId ?? null, sel.seller)} className="lok-btn" style={{ cursor: 'pointer', background: '#F4EFE5', border: '1px solid #E4DDCE', borderRadius: 16, padding: 15, display: 'flex', alignItems: 'center', gap: 13, marginBottom: 13 }}>
+          <div onClick={() => openMember(sel.ownerId ?? null, sel.seller)} className="lok-btn" style={{ cursor: 'pointer', background: '#F4EFE5', border: '1px solid #E4DDCE', borderRadius: 16, padding: 15, display: 'flex', alignItems: 'center', gap: 13, marginBottom: 13 }}>
             <div style={{ width: 46, height: 46, borderRadius: '50%', background: t.tint, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, color: '#3A362C', flex: 'none', fontFamily: "'Bricolage Grotesque',sans-serif" }}>{sel.sellerInitial}</div>
             <div style={{ flex: 1 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 7, fontWeight: 700, fontSize: 15 }}>

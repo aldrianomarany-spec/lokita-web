@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useM } from './context'
-import { fetchRequests, createRequest, setRequestStatus, type RequestRow } from '../lib/api'
+import { fetchRequests, createRequest, setRequestStatus, subscribeRequests, type RequestRow } from '../lib/api'
 import { SELL_CATEGORIES } from '../theme'
 import { Verified } from '../components/Icons'
 
@@ -46,6 +46,9 @@ export default function RequestsView() {
   }, [])
   useEffect(() => {
     load()
+    // realtime: a new/updated request appears for everyone instantly
+    const unsub = subscribeRequests(load)
+    return () => unsub()
   }, [load])
 
   const post = async () => {

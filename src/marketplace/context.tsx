@@ -63,7 +63,7 @@ const EMPTY_PROFILE: Profile = {
   verification_status: 'pending', profile_photo_url: null,
 }
 
-export type View = 'browse' | 'requests' | 'people' | 'messages' | 'notifications' | 'profile' | 'orders'
+export type View = 'browse' | 'requests' | 'people' | 'member' | 'messages' | 'notifications' | 'profile' | 'orders'
 export type Sort = 'Nearest' | 'Newest' | 'Price'
 export type CoStep = 'options' | 'qris' | 'done' | 'review' | 'reviewdone'
 export type ListState = 'idle' | 'saving' | 'done'
@@ -124,9 +124,10 @@ export interface State {
   // manual=false → Midtrans webhook confirms automatically.
   qris: { orderId: string; qrUrl: string; amount: number; manual: boolean } | null
   qrisLoading: boolean
-  sellerOpen: boolean
-  sellerId: string | null
-  sellerName: string | null
+  // full member-profile page (view 'member')
+  memberId: string | null
+  memberName: string | null
+  memberReturn: View // where "back" goes
   profile: Profile
   pf: Profile
   profileLoading: boolean
@@ -178,9 +179,9 @@ const initialState: State = {
   pickup: 'security',
   qris: null,
   qrisLoading: false,
-  sellerOpen: false,
-  sellerId: null,
-  sellerName: null,
+  memberId: null,
+  memberName: null,
+  memberReturn: 'browse',
   profile: { ...EMPTY_PROFILE },
   pf: { ...EMPTY_PROFILE },
   profileLoading: true,
@@ -254,8 +255,8 @@ export interface MarketplaceApi {
   confirmOrderPickup: (id: string) => Promise<void>
   cancelMyOrder: (id: string) => Promise<void>
   submitReviewFor: (order: OrderRow, rating: number, comment: string) => Promise<void>
-  openSellerProfile: (id: string | null, name: string | null) => void
-  closeSellerProfile: () => void
+  openMember: (id: string | null, name: string | null) => void
+  closeMember: () => void
   logout: () => void
   resetFilters: () => void
 }
@@ -818,8 +819,12 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
       await Promise.all([loadOrders(), loadProfile()])
     },
 
-    openSellerProfile: (id, name) => patch({ sellerOpen: true, sellerId: id, sellerName: name }),
-    closeSellerProfile: () => patch({ sellerOpen: false }),
+    openMember: (id, name) => {
+      if (state.guest) return goSignup()
+      if (!id) return
+      patch((prev) => ({ view: 'member', memberId: id, memberName: name, memberReturn: prev.view === 'member' ? prev.memberReturn : prev.view, sel: null, menuOpen: false }))
+    },
+    closeMember: () => patch((prev) => ({ view: prev.memberReturn, memberId: null, memberName: null })),
 
     logout: () => {
       // sign out of Supabase (and leave guest mode), then return to login
