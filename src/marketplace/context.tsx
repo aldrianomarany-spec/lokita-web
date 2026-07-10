@@ -47,6 +47,7 @@ import {
   type MessageRow,
   type NotifRow,
 } from '../lib/api'
+import { serviceFee } from '../theme'
 import type { EnrichedItem, Item, Profile } from '../types'
 
 // Payment modes, picked by env — no code changes needed to upgrade:
@@ -774,7 +775,8 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
         // Midtrans charge; the webhook + realtime flip it to paid.
         const id = await placeOrder()
         if (!id) return
-        const amount = state.sel?.priceNum ?? 0
+        const price = state.sel?.priceNum ?? 0
+        const amount = price + serviceFee(price) // buyer pays item + service fee
         // mode 1: the owner's fixed QRIS image
         if (STATIC_QR_URL) {
           patch({ coStep: 'qris', qrisLoading: false, qris: { orderId: id, qrUrl: STATIC_QR_URL, amount, manual: true } })

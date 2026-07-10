@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { useM } from '../context'
 import Overlay, { stop } from './Overlay'
 import { Check } from '../../components/Icons'
+import { serviceFee } from '../../theme'
 
 const s2 = (children: React.ReactNode) => (
   <svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
@@ -35,6 +36,10 @@ export default function CheckoutModal() {
 
   if (!sel) return null
 
+  const fee = serviceFee(sel.priceNum)
+  const total = sel.priceNum + fee
+  const rp = (n: number) => 'Rp ' + n.toLocaleString('id-ID')
+
   const payLabel = s.pay === 'qris' ? 'QRIS' : 'Cash on Delivery'
   const pickupLabel = s.pickup === 'meet' ? 'Meet in person' : s.pickup === 'leave' ? 'Leave with someone' : 'Security Post'
   const doneMsg =
@@ -54,9 +59,19 @@ export default function CheckoutModal() {
               <h2 style={{ fontFamily: "'Bricolage Grotesque',sans-serif", fontSize: 21, fontWeight: 800, margin: 0 }}>Complete purchase</h2>
               <button onClick={closeCheckout} className="lok-navi" style={{ border: '1px solid #E4DDCE', background: '#F4EFE5', width: 34, height: 34, borderRadius: 10, fontSize: 15, cursor: 'pointer', color: '#5A5648' }}>✕</button>
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#F4EFE5', border: '1px solid #E4DDCE', borderRadius: 14, padding: '12px 15px', margin: '14px 0 18px' }}>
-              <div style={{ fontWeight: 700, fontSize: 14 }}>{sel.title}</div>
-              <div style={{ fontFamily: "'Bricolage Grotesque',sans-serif", fontWeight: 800, fontSize: 16, color: 'var(--accent,#2A5FA8)' }}>{sel.price}</div>
+            <div style={{ background: '#F4EFE5', border: '1px solid #E4DDCE', borderRadius: 14, padding: '12px 15px', margin: '14px 0 18px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div style={{ fontWeight: 700, fontSize: 14 }}>{sel.title}</div>
+                <div style={{ fontWeight: 600, fontSize: 13.5, color: '#3A362C' }}>{rp(sel.priceNum)}</div>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 7 }}>
+                <div style={{ fontSize: 12, color: '#8A8578', fontWeight: 600 }}>Service fee <span title="Keeps LOKITA running — escrow, Security Post & support" style={{ cursor: 'help' }}>ⓘ</span></div>
+                <div style={{ fontSize: 12.5, color: '#8A8578', fontWeight: 600 }}>{rp(fee)}</div>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 9, paddingTop: 9, borderTop: '1px dashed #D8CFBB' }}>
+                <div style={{ fontWeight: 800, fontSize: 13.5 }}>Total</div>
+                <div style={{ fontFamily: "'Bricolage Grotesque',sans-serif", fontWeight: 800, fontSize: 17, color: 'var(--accent,#2A5FA8)' }}>{rp(total)}</div>
+              </div>
             </div>
             <div style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 10, color: '#A29C8B', letterSpacing: '.06em', marginBottom: 10 }}>HOW TO EXCHANGE</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 9, marginBottom: 20 }}>
@@ -89,7 +104,7 @@ export default function CheckoutModal() {
                 )
               })}
             </div>
-            <button onClick={coContinue} className="lok-btn" style={{ width: '100%', border: 'none', background: 'var(--accent,#2A5FA8)', color: '#F7F3EA', fontFamily: 'inherit', fontWeight: 700, fontSize: 14.5, padding: 14, borderRadius: 14, cursor: 'pointer', boxShadow: '0 8px 20px -8px rgba(27,94,67,.7)' }}>Continue · {sel.price}</button>
+            <button onClick={coContinue} className="lok-btn" style={{ width: '100%', border: 'none', background: 'var(--accent,#2A5FA8)', color: '#F7F3EA', fontFamily: 'inherit', fontWeight: 700, fontSize: 14.5, padding: 14, borderRadius: 14, cursor: 'pointer', boxShadow: '0 8px 20px -8px rgba(27,94,67,.7)' }}>Continue · {rp(total)}</button>
           </>
         )}
 
@@ -106,7 +121,8 @@ export default function CheckoutModal() {
                 <span style={{ fontSize: 12.5, color: '#B23A1B', fontWeight: 600, padding: '0 10px' }}>Couldn't load the QR code.</span>
               )}
             </div>
-            <div style={{ fontFamily: "'Bricolage Grotesque',sans-serif", fontWeight: 800, fontSize: 22, color: 'var(--accent,#2A5FA8)' }}>{sel.price}</div>
+            <div style={{ fontFamily: "'Bricolage Grotesque',sans-serif", fontWeight: 800, fontSize: 22, color: 'var(--accent,#2A5FA8)' }}>{rp(total)}</div>
+            <div style={{ fontSize: 11, color: '#A29C8B', fontWeight: 600, marginTop: 2 }}>incl. {rp(fee)} service fee</div>
             <div style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 11, color: '#A29C8B', marginBottom: 18 }}>LOKITA · QRIS{manualQr ? ' · PROTOTYPE' : ''}</div>
             {s.qris && manualQr && (
               <>

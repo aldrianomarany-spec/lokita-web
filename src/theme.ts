@@ -115,3 +115,14 @@ export function floorsForBuilding(building: string): FloorOption[] {
 }
 
 export const STANDINGS = ['Freshman', 'Sophomore', 'Junior', 'Senior']
+
+
+// ---- LOKITA revenue: buyer-side service fee (like "biaya layanan") ----
+// 5% of the item price with a Rp 1.000 minimum — sellers receive their full
+// listed price; the buyer pays price + fee, shown transparently at checkout.
+export const SERVICE_FEE_RATE = 0.05
+export const SERVICE_FEE_MIN = 1000
+export function serviceFee(price: number): number {
+  if (!price || price <= 0) return 0
+  return Math.max(SERVICE_FEE_MIN, Math.round(price * SERVICE_FEE_RATE))
+}
