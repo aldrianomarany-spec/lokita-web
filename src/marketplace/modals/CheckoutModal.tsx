@@ -38,7 +38,7 @@ export default function CheckoutModal() {
   const payLabel = s.pay === 'qris' ? 'QRIS' : 'Cash on Delivery'
   const pickupLabel = s.pickup === 'meet' ? 'Meet in person' : s.pickup === 'leave' ? 'Leave with someone' : 'Security Post'
   const doneMsg =
-    (s.pay === 'qris' ? 'Payment confirmed via QRIS. ' : 'You’ll pay cash on pickup. ') +
+    (s.pay === 'qris' ? 'Payment sent — the seller will verify it and accept your order. ' : 'You’ll pay cash on pickup — the seller will confirm your order first. ') +
     (s.pickup === 'security'
       ? `Collect it at the ${sel.building || 'campus'} Security Post.`
       : s.pickup === 'leave'
@@ -111,7 +111,7 @@ export default function CheckoutModal() {
             {s.qris && manualQr && (
               <>
                 <button onClick={confirmQrisPaid} className="lok-btn" style={{ width: '100%', border: 'none', background: 'var(--accent,#2A5FA8)', color: '#F7F3EA', fontFamily: 'inherit', fontWeight: 700, fontSize: 14.5, padding: 14, borderRadius: 14, cursor: 'pointer', marginBottom: 10 }}>I've completed payment</button>
-                <div style={{ fontSize: 11.5, color: '#8A8578', fontWeight: 500, lineHeight: 1.5, marginBottom: 12 }}>The seller will verify the payment arrived before dropping the item off.</div>
+                <div style={{ fontSize: 11.5, color: '#8A8578', fontWeight: 500, lineHeight: 1.5, marginBottom: 12 }}>The seller checks the money arrived, then accepts your order — you'll get a notification.</div>
               </>
             )}
             {s.qris && !manualQr && (
@@ -129,7 +129,7 @@ export default function CheckoutModal() {
             <div style={{ width: 66, height: 66, borderRadius: '50%', background: '#EAF1EC', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 18px', color: 'var(--accent,#2A5FA8)' }}>
               <Check size={32} />
             </div>
-            <div style={{ fontFamily: "'Bricolage Grotesque',sans-serif", fontWeight: 800, fontSize: 20, marginBottom: 9 }}>Order confirmed</div>
+            <div style={{ fontFamily: "'Bricolage Grotesque',sans-serif", fontWeight: 800, fontSize: 20, marginBottom: 9 }}>Order placed</div>
             <div style={{ fontSize: 13.5, color: '#5A5648', lineHeight: 1.6, marginBottom: 12 }}>{doneMsg}</div>
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'center', marginBottom: 22 }}>
               <span style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 10, color: '#3A362C', background: '#F1ECE1', padding: '5px 10px', borderRadius: 8 }}>{payLabel}</span>

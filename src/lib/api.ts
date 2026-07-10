@@ -467,7 +467,7 @@ export async function deleteListing(id: string): Promise<void> {
 // completed (+ cancelled). Deadlines generated here; a DB trigger reserves the
 // listing on order and frees it on cancel.
 // ===========================================================================
-export type OrderStatus = 'paid' | 'dropped_off' | 'completed' | 'cancelled'
+export type OrderStatus = 'pending' | 'paid' | 'dropped_off' | 'completed' | 'cancelled'
 export type PaymentMethod = 'cod' | 'qris'
 export type PickupMethod = 'meet_in_person' | 'trusted_handoff' | 'security_post'
 
@@ -484,7 +484,6 @@ export async function createOrder(o: NewOrder): Promise<string> {
   const user = await getUser()
   if (!user) throw new Error('Not signed in')
   if (o.sellerId === user.id) throw new Error("You can't buy your own listing.")
-  const now = Date.now()
   const { data, error } = await supabase
     .from('transactions')
     .insert({
@@ -496,24 +495,16 @@ export async function createOrder(o: NewOrder): Promise<string> {
       // cash changes hands at pickup (COD)
       payment_status: 'pending',
       pickup_method: o.pickup_method,
-      status: 'paid',
+      // the SELLER must confirm the payment arrived and accept before the
+      // order proceeds; the drop-off deadline starts at acceptance
+      status: 'pending',
       paid_at: null,
-      dropoff_deadline: new Date(now + 2 * DAY).toISOString(),
+      dropoff_deadline: null,
     })
     .select('id')
     .single()
   if (error) throw error
   return (data as { id: string }).id
-}
-
-// Static-QR prototype mode: the buyer scans the owner's fixed QRIS image and
-// then confirms manually. No webhook — the seller must verify money arrived.
-export async function markOrderPaidManually(id: string): Promise<void> {
-  const { error } = await supabase
-    .from('transactions')
-    .update({ payment_status: 'paid', paid_at: new Date().toISOString() })
-    .eq('id', id)
-  if (error) throw error
 }
 
 // ---- real QRIS payment (Midtrans via our Vercel serverless functions) ----
@@ -537,6 +528,17 @@ export async function createQrisCharge(transactionId: string): Promise<QrisCharg
   const j = (await r.json().catch(() => ({}))) as Partial<QrisCharge> & { error?: string }
   if (!r.ok) throw new Error(j.error || 'Could not start QRIS payment')
   return j as QrisCharge
+}
+
+// Seller confirms the payment arrived and accepts the order; the 2-day
+// drop-off window starts now. (DB trigger enforces seller-only.)
+export async function acceptOrder(id: string): Promise<void> {
+  const now = Date.now()
+  const { error } = await supabase
+    .from('transactions')
+    .update({ status: 'paid', payment_status: 'paid', paid_at: new Date(now).toISOString(), dropoff_deadline: new Date(now + 2 * DAY).toISOString() })
+    .eq('id', id)
+  if (error) throw error
 }
 
 export async function markDroppedOff(id: string): Promise<void> {

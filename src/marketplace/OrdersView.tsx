@@ -7,7 +7,8 @@ const rupiah = (n: number) => 'Rp ' + Number(n).toLocaleString('id-ID')
 const when = (iso: string | null) => (iso && !isNaN(new Date(iso).getTime()) ? new Date(iso).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '')
 
 const STATUS_META: Record<OrderStatus, { label: string; bg: string; fg: string }> = {
-  paid: { label: 'Awaiting drop-off', bg: '#FBF2DD', fg: '#9A6A12' },
+  pending: { label: 'Awaiting seller confirmation', bg: '#FBF2DD', fg: '#9A6A12' },
+  paid: { label: 'Accepted · awaiting drop-off', bg: '#EFEFDD', fg: '#7E8154' },
   dropped_off: { label: 'Ready for pickup', bg: '#E7EEF7', fg: '#2A5FA8' },
   completed: { label: 'Completed', bg: '#E7F1EA', fg: '#1B7A4B' },
   cancelled: { label: 'Cancelled', bg: '#EFE7D9', fg: '#8A8578' },
@@ -15,7 +16,7 @@ const STATUS_META: Record<OrderStatus, { label: string; bg: string; fg: string }
 const PICKUP_LABEL: Record<string, string> = { meet_in_person: 'Meet in person', trusted_handoff: 'Leave with someone', security_post: 'Security Post' }
 
 function OrderCard({ o }: { o: OrderRow }) {
-  const { markOrderDropped, confirmOrderPickup, cancelMyOrder, submitReviewFor } = useM()
+  const { acceptMyOrder, markOrderDropped, confirmOrderPickup, cancelMyOrder, submitReviewFor } = useM()
   const [busy, setBusy] = useState(false)
   const [reviewing, setReviewing] = useState(false)
   const [stars, setStars] = useState(0)
@@ -69,7 +70,13 @@ function OrderCard({ o }: { o: OrderRow }) {
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', margin: '12px 0' }}>
         <span style={chip}>
           {o.payment_method === 'qris'
-            ? o.payment_status === 'paid' ? 'QRIS · Paid ✓' : o.payment_status === 'failed' ? 'QRIS · Payment failed' : 'QRIS · Unpaid'
+            ? o.payment_status === 'paid'
+              ? 'QRIS · Paid ✓'
+              : o.payment_status === 'failed'
+                ? 'QRIS · Payment failed'
+                : o.status === 'pending'
+                  ? 'QRIS · Sent, to be confirmed'
+                  : 'QRIS · Unpaid'
             : 'Cash · Pay at pickup'}
         </span>
         <span style={chip}>{o.pickup_method ? PICKUP_LABEL[o.pickup_method] : 'Pickup'}</span>
@@ -80,6 +87,15 @@ function OrderCard({ o }: { o: OrderRow }) {
 
       {/* actions by role + status */}
       <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+        {o.status === 'pending' && o.role === 'seller' && (
+          <>
+            <button disabled={busy} onClick={run(() => acceptMyOrder(o.id))} className="lok-btn" style={primaryBtn}>Confirm payment & accept ✓</button>
+            <button disabled={busy} onClick={run(() => cancelMyOrder(o.id))} className="lok-btn" style={ghostBtn}>Decline</button>
+          </>
+        )}
+        {o.status === 'pending' && o.role === 'buyer' && (
+          <span style={{ fontSize: 12.5, color: '#9A6A12', fontWeight: 700, alignSelf: 'center' }}>⏳ Waiting for the seller to confirm your order…</span>
+        )}
         {o.status === 'paid' && o.role === 'seller' && (
           <button disabled={busy} onClick={run(() => markOrderDropped(o.id))} className="lok-btn" style={primaryBtn}>Mark as dropped off</button>
         )}
@@ -92,7 +108,7 @@ function OrderCard({ o }: { o: OrderRow }) {
         {o.status === 'dropped_off' && o.role === 'seller' && (
           <span style={{ fontSize: 12.5, color: '#8A8578', fontWeight: 600, alignSelf: 'center' }}>Waiting for the buyer to collect…</span>
         )}
-        {(o.status === 'paid' || o.status === 'dropped_off') && (
+        {(o.status === 'paid' || o.status === 'dropped_off' || (o.status === 'pending' && o.role === 'buyer')) && (
           <button disabled={busy} onClick={run(() => cancelMyOrder(o.id))} className="lok-btn" style={ghostBtn}>Cancel</button>
         )}
         {o.status === 'completed' && !o.reviewed && !reviewing && (

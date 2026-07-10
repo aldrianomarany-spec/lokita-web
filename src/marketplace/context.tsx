@@ -15,7 +15,7 @@ import {
   deleteListing,
   createOrder,
   createQrisCharge,
-  markOrderPaidManually,
+  acceptOrder,
   fetchMyOrders,
   markDroppedOff,
   confirmPickup,
@@ -251,6 +251,7 @@ export interface MarketplaceApi {
   confirmQrisPaid: () => void
   cancelQrisPayment: () => void
   openOrders: () => void
+  acceptMyOrder: (id: string) => Promise<void>
   markOrderDropped: (id: string) => Promise<void>
   confirmOrderPickup: (id: string) => Promise<void>
   cancelMyOrder: (id: string) => Promise<void>
@@ -772,18 +773,11 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
       }
       if (await placeOrder()) patch({ coStep: 'done' })
     },
-    confirmQrisPaid: async () => {
-      // static-QR prototype: the buyer says they've paid; the seller must still
-      // verify the money actually arrived before dropping the item off.
-      const id = state.qris?.orderId
-      if (!id) return
-      try {
-        await markOrderPaidManually(id)
-        patch({ coStep: 'done' })
-        loadOrders()
-      } catch (e) {
-        alert('Could not record the payment: ' + (e instanceof Error ? e.message : 'unknown error'))
-      }
+    confirmQrisPaid: () => {
+      // buyer says they've sent the payment; the ORDER stays "awaiting seller
+      // confirmation" until the seller verifies the money and accepts.
+      patch({ coStep: 'done' })
+      loadOrders()
     },
     cancelQrisPayment: async () => {
       const id = state.qris?.orderId
@@ -800,6 +794,10 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
     openOrders: () => {
       if (state.guest) return goSignup()
       patch({ view: 'orders', menuOpen: false, sel: null, checkoutOpen: false })
+    },
+    acceptMyOrder: async (id) => {
+      await acceptOrder(id)
+      await loadOrders()
     },
     markOrderDropped: async (id) => {
       await markDroppedOff(id)
