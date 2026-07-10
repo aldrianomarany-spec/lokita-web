@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ACCENT, ACCENT_DEEP } from '../theme'
+import { BRAND_LOGO_URL, MASCOT_URL } from '../brand'
 import {
   signInWithEmail,
   signUpWithEmail,
@@ -305,8 +306,8 @@ export default function AuthFlow() {
           <div style={{ position: 'absolute', top: -80, left: -80, width: 280, height: 280, borderRadius: '50%', background: 'rgba(255,255,255,.05)' }} />
           <div style={{ position: 'absolute', bottom: -120, right: -60, width: 340, height: 340, borderRadius: '50%', background: 'rgba(255,255,255,.05)' }} />
           <div style={{ animation: 'lok-pop-lg .6s cubic-bezier(.2,.9,.3,1.2) both', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-            <div style={{ width: 96, height: 96, borderRadius: 28, background: '#F5F1E8', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 20px 50px -18px rgba(0,0,0,.5)', position: 'relative' }}>
-              <LocMark size={46} />
+            <div style={{ width: 96, height: 96, borderRadius: 28, background: '#F5F1E8', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 20px 50px -18px rgba(0,0,0,.5)', position: 'relative', overflow: 'hidden' }}>
+              {BRAND_LOGO_URL ? <img src={BRAND_LOGO_URL} alt="LOKITA" style={{ width: 78, height: 78, objectFit: 'contain' }} /> : <LocMark size={46} />}
             </div>
             <div style={{ fontFamily: "'Bricolage Grotesque',sans-serif", fontWeight: 800, fontSize: 38, letterSpacing: '.02em', color: '#F5F1E8', marginTop: 22 }}>LOKITA</div>
             <div style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 11, color: 'rgba(245,241,232,.7)', letterSpacing: '.34em', marginTop: 6 }}>LOKAL · KITA</div>
@@ -326,10 +327,19 @@ export default function AuthFlow() {
           style={{ width: '44%', flex: 'none', background: 'var(--accent,#2A5FA8)', color: '#EAF0F8', padding: '48px 46px', display: 'flex', flexDirection: 'column', position: 'relative', overflow: 'hidden' }}
         >
           <div style={{ position: 'absolute', top: -90, right: -70, width: 300, height: 300, borderRadius: '50%', background: 'rgba(255,255,255,.06)' }} />
+          {MASCOT_URL && (
+            <img
+              src={MASCOT_URL}
+              alt="Kapi, the LOKITA capybara"
+              title="Kapi — LOKITA's capybara. Always ready to help you move stuff."
+              className="lok-mascot"
+              style={{ position: 'absolute', top: 84, right: 30, width: 'clamp(120px, 16vw, 210px)', zIndex: 1 }}
+            />
+          )}
           <div style={{ position: 'absolute', bottom: -140, left: -60, width: 360, height: 360, borderRadius: '50%', background: 'rgba(255,255,255,.05)' }} />
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, position: 'relative' }}>
-            <div style={{ width: 44, height: 44, borderRadius: 13, background: '#F5F1E8', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <LocMark size={22} />
+            <div style={{ width: 44, height: 44, borderRadius: 13, background: '#F5F1E8', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+              {BRAND_LOGO_URL ? <img src={BRAND_LOGO_URL} alt="LOKITA" style={{ width: 34, height: 34, objectFit: 'contain' }} /> : <LocMark size={22} />}
             </div>
             <div>
               <div style={{ fontFamily: "'Bricolage Grotesque',sans-serif", fontWeight: 800, fontSize: 21, letterSpacing: '-.01em', color: '#F5F1E8', lineHeight: 1 }}>LOKITA</div>

@@ -3,6 +3,7 @@ import { useM } from './context'
 import { useIsPhone } from './useIsMobile'
 import { Search, Plus, Star, MessageBubble, Bell, Verified } from '../components/Icons'
 import { BUILDINGS } from '../theme'
+import { BRAND_LOGO_URL } from '../brand'
 
 const navBtn: React.CSSProperties = {
   position: 'relative',
@@ -102,8 +103,8 @@ export default function TopBar() {
     >
       {/* brand — logo only on phone */}
       <div onClick={goHome} style={{ display: 'flex', alignItems: 'center', gap: 11, cursor: 'pointer', flex: 'none' }}>
-        <div className="lok-locpin" style={{ width: 38, height: 38, borderRadius: 12, background: 'var(--accent,#2A5FA8)', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
-          <div style={{ width: 14, height: 14, borderRadius: '50%', background: '#F1ECE1' }} />
+        <div className="lok-locpin" style={{ width: 38, height: 38, borderRadius: 12, background: BRAND_LOGO_URL ? '#FBF8F1' : 'var(--accent,#2A5FA8)', border: BRAND_LOGO_URL ? '1px solid #E4DDCE' : 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', overflow: 'hidden' }}>
+          {BRAND_LOGO_URL ? <img src={BRAND_LOGO_URL} alt="LOKITA" style={{ width: 30, height: 30, objectFit: 'contain' }} /> : <div style={{ width: 14, height: 14, borderRadius: '50%', background: '#F1ECE1' }} />}
         </div>
         {!isPhone && (
           <div>

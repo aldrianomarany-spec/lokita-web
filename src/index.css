@@ -222,6 +222,21 @@ a:hover {
   animation: lok-float-lg 3.4s ease-in-out infinite;
 }
 
+/* mascot: gentle bob, playful hover, soft shadow */
+.lok-mascot {
+  animation: lok-float-lg 3.8s ease-in-out infinite;
+  transition: transform 0.28s cubic-bezier(0.2, 0.8, 0.3, 1);
+  filter: drop-shadow(0 16px 26px rgba(20, 25, 60, 0.28));
+  cursor: pointer;
+  user-select: none;
+}
+.lok-mascot:hover {
+  transform: scale(1.07) rotate(-3deg);
+}
+.lok-mascot:active {
+  transform: scale(0.98) rotate(2deg);
+}
+
 /* inputs/selects: focus treatment matching prototype's style-focus */
 .lok-field {
   outline: none;

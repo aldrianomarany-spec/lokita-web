@@ -1,5 +1,6 @@
 import { useM } from './context'
 import { CATEGORIES, CAT_META, CAT_DOT, type Category } from '../theme'
+import { MASCOT_URL } from '../brand'
 
 export default function Sidebar() {
   const { state, selectCat, openRequests, openPeople } = useM()
@@ -61,6 +62,7 @@ export default function Sidebar() {
 
       <div style={{ marginTop: 'auto', background: 'var(--accent,#2A5FA8)', borderRadius: 18, padding: 17, color: '#EAF3EE', position: 'relative', overflow: 'hidden' }}>
         <div style={{ position: 'absolute', top: -20, right: -20, width: 80, height: 80, borderRadius: '50%', background: 'rgba(255,255,255,.07)' }} />
+        {MASCOT_URL && <img src={MASCOT_URL} alt="" aria-hidden className="lok-mascot" style={{ position: 'absolute', right: -8, bottom: -12, width: 74, opacity: 0.95, transform: 'rotate(6deg)' }} />}
         <div style={{ display: 'flex', alignItems: 'center', gap: 7, fontSize: 13.5, fontWeight: 800, marginBottom: 7, color: '#fff' }}>
           <svg width={15} height={15} viewBox="0 0 24 24" fill="#fff"><path d="M12 2l2.4 1.8 3-.2 1 2.8 2.6 1.5-.7 2.9L23 12l-1.7 2.4.7 2.9-2.6 1.5-1 2.8-3-.2L12 22l-2.4-1.8-3 .2-1-2.8L2.7 16.3l.7-2.9L1 12l1.7-2.4L2 6.7l2.6-1.5 1-2.8 3 .2z" /></svg>
           Dorm-Verified trading

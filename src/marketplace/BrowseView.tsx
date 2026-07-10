@@ -3,6 +3,7 @@ import ListingCard from './ListingCard'
 import { Search, Star } from '../components/Icons'
 import { CATEGORIES, CAT_META, BUILDINGS, type Category } from '../theme'
 import { useIsNarrow } from './useIsMobile'
+import { MASCOT_URL } from '../brand'
 import type { EnrichedItem } from '../types'
 
 const CONDS = ['All', 'Like new', 'Good', 'Fair']
@@ -177,7 +178,11 @@ export default function BrowseView() {
       ) : (
         // truly empty marketplace (fresh install / no listings anywhere)
         <div style={{ animation: 'lok-fade .3s ease both', maxWidth: 520, margin: '44px auto 0', textAlign: 'center', background: '#FBF8F1', border: '1px solid #E4DDCE', borderRadius: 24, padding: '44px 36px' }}>
-          <div style={{ width: 76, height: 76, borderRadius: 22, background: '#EAF1EC', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px', color: 'var(--accent,#2A5FA8)', fontSize: 34 }}>🧺</div>
+          {MASCOT_URL ? (
+            <img src={MASCOT_URL} alt="Kapi, the LOKITA capybara" className="lok-mascot" style={{ width: 130, margin: '0 auto 14px', display: 'block' }} />
+          ) : (
+            <div style={{ width: 76, height: 76, borderRadius: 22, background: '#EAF1EC', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px', color: 'var(--accent,#2A5FA8)', fontSize: 34 }}>🧺</div>
+          )}
           <div style={{ fontFamily: "'Bricolage Grotesque',sans-serif", fontWeight: 800, fontSize: 20, marginBottom: 8 }}>No listings yet</div>
           <div style={{ fontSize: 14, color: '#6F6A5C', lineHeight: 1.6, marginBottom: 24 }}>
             The marketplace is brand new. Be the first to post something — your neighbours will see it right away.
