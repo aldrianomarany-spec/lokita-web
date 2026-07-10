@@ -21,7 +21,7 @@ function Avatar({ photo, initial, size }: { photo: string | null; initial: strin
 }
 
 export default function MessagesView() {
-  const { state, openConversation, sendMsg, setMsgDraft, patch } = useM()
+  const { state, openConversation, sendMsg, setMsgDraft, patch, openListingById } = useM()
   const s = state
   const isPhone = useIsPhone()
   const [uid, setUid] = useState<string | null>(null)
@@ -66,7 +66,12 @@ export default function MessagesView() {
           <div style={{ width: isPhone ? '100%' : 300, flex: 'none', background: '#FBF8F1', border: '1px solid #E4DDCE', borderRadius: 20, overflow: 'hidden', overflowY: 'auto' }}>
             {s.convs.map((c) => (
               <div key={c.id} onClick={() => openConversation(c.id)} className="lok-navi" style={{ cursor: 'pointer', padding: '14px 16px', display: 'flex', gap: 12, alignItems: 'center', borderBottom: '1px solid #EEE7D8', background: c.id === s.activeConvId ? '#F1ECE1' : '#FBF8F1' }}>
-                <Avatar photo={c.other_photo} initial={(c.other_name.charAt(0) || '?').toUpperCase()} size={44} />
+                <div style={{ position: 'relative', flex: 'none' }}>
+                  <Avatar photo={c.other_photo} initial={(c.other_name.charAt(0) || '?').toUpperCase()} size={44} />
+                  {c.item_photo && (
+                    <img src={c.item_photo} alt="" style={{ position: 'absolute', bottom: -3, right: -5, width: 22, height: 22, borderRadius: 6, objectFit: 'cover', border: '2px solid #FBF8F1' }} />
+                  )}
+                </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
                     <div style={{ fontWeight: 700, fontSize: 14, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.other_name}</div>
@@ -84,18 +89,43 @@ export default function MessagesView() {
           {showThread && (
           <div style={{ flex: 1, background: '#FBF8F1', border: '1px solid #E4DDCE', borderRadius: 20, display: 'flex', flexDirection: 'column', overflow: 'hidden', minWidth: 0 }}>
             {active && (
-              <div style={{ padding: '15px 18px', borderBottom: '1px solid #EEE7D8', display: 'flex', alignItems: 'center', gap: 12 }}>
+              <div style={{ padding: '13px 16px', borderBottom: '1px solid #EEE7D8', display: 'flex', alignItems: 'center', gap: 12 }}>
                 {isPhone && (
                   <button onClick={back} aria-label="Back" className="lok-navi" style={{ flex: 'none', border: '1px solid #E4DDCE', background: '#F4EFE5', width: 34, height: 34, borderRadius: 10, cursor: 'pointer', color: '#5A5648', fontSize: 16, fontWeight: 700 }}>‹</button>
                 )}
                 <Avatar photo={active.other_photo} initial={(active.other_name.charAt(0) || '?').toUpperCase()} size={40} />
-                <div style={{ flex: 1 }}>
+                <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 7, fontWeight: 700, fontSize: 15 }}>
                     {active.other_name}
                     {active.other_verified && <Verified size={13} />}
                   </div>
-                  <div style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 11, color: '#8A8578', marginTop: 2 }}>Re: {active.item_title}</div>
+                  <div style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 11, color: '#8A8578', marginTop: 2 }}>{active.item_title ? 'About a listing' : 'Direct message'}</div>
                 </div>
+              </div>
+            )}
+            {/* pinned product card — the item this chat is about (like any
+                marketplace app), tap to open the listing */}
+            {active && active.listing_id && active.item_title && (
+              <div
+                onClick={() => openListingById(active.listing_id!)}
+                className="lok-btn"
+                style={{ cursor: 'pointer', margin: '10px 14px 0', background: '#FBF8F1', border: '1px solid #E4DDCE', borderRadius: 14, padding: '10px 12px', display: 'flex', alignItems: 'center', gap: 12 }}
+              >
+                <div style={{ width: 52, height: 52, borderRadius: 10, background: '#EAE1CB', overflow: 'hidden', flex: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20 }}>
+                  {active.item_photo ? <img src={active.item_photo} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : '📦'}
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontWeight: 700, fontSize: 13.5, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{active.item_title}</div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 3 }}>
+                    {active.item_price != null && (
+                      <span style={{ fontFamily: "'Bricolage Grotesque',sans-serif", fontWeight: 800, fontSize: 14, color: 'var(--accent,#2A5FA8)' }}>Rp {Number(active.item_price).toLocaleString('id-ID')}</span>
+                    )}
+                    {active.item_status && active.item_status !== 'active' && (
+                      <span style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 9, fontWeight: 600, color: '#9A6A12', background: '#FBF2DD', padding: '2px 7px', borderRadius: 6 }}>{active.item_status.toUpperCase()}</span>
+                    )}
+                  </div>
+                </div>
+                <span style={{ flex: 'none', fontSize: 12, fontWeight: 700, color: 'var(--accent,#2A5FA8)' }}>View item ›</span>
               </div>
             )}
             <div style={{ flex: 1, overflowY: 'auto', padding: '20px 22px', display: 'flex', flexDirection: 'column', gap: 10, background: '#F4EFE5' }}>

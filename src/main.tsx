@@ -7,6 +7,17 @@ import CompleteProfile from './auth/CompleteProfile'
 import ResetPassword from './auth/ResetPassword'
 import RequireSession from './auth/RequireSession'
 import Marketplace from './marketplace/Marketplace'
+import { MASCOT_URL, BRAND_LOGO_URL } from './brand'
+
+// browser-tab icon: use our mascot (fallback: the logo) instead of the default
+const faviconUrl = MASCOT_URL || BRAND_LOGO_URL
+if (faviconUrl) {
+  const link = (document.querySelector("link[rel~='icon']") as HTMLLinkElement) || document.createElement('link')
+  link.rel = 'icon'
+  link.type = 'image/png'
+  link.href = faviconUrl
+  document.head.appendChild(link)
+}
 
 const router = createBrowserRouter([
   { path: '/', element: <AuthFlow /> },

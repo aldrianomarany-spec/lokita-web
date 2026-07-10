@@ -24,6 +24,7 @@ import {
   subscribeListings,
   subscribePresence,
   subscribeMyProfile,
+  fetchListingById,
   submitOrderReview,
   fetchWishlistIds,
   addToWishlist,
@@ -114,6 +115,8 @@ export interface State {
   notifs: NotifRow[]
   notifsLoading: boolean
   notifFilter: string
+  // transient toast for a just-arrived notification (click to open)
+  toast: NotifRow | null
   photo: string | null
   editOpen: boolean
   checkoutOpen: boolean
@@ -172,6 +175,7 @@ const initialState: State = {
   notifs: [],
   notifsLoading: false,
   notifFilter: 'all',
+  toast: null,
   photo: null,
   editOpen: false,
   checkoutOpen: false,
@@ -236,6 +240,8 @@ export interface MarketplaceApi {
   selectNotifFilter: (k: string) => void
   markAllRead: () => void
   openNotifTarget: (n: NotifRow) => void
+  dismissToast: () => void
+  openListingById: (id: string) => Promise<void>
   openProfile: () => void
   openEdit: () => void
   closeEdit: () => void
@@ -428,6 +434,8 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
     }
   }, [patch])
 
+  const toastTimer = useRef<number | null>(null)
+
   // ref so the realtime callback always sees the currently-open thread
   const activeConvRef = useRef<string | null>(null)
   useEffect(() => {
@@ -445,7 +453,16 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
         loadConversations()
         if (activeConvRef.current) loadMessages(activeConvRef.current)
       })
-      unsubN = subscribeNotifications(uid, () => loadNotifications())
+      unsubN = subscribeNotifications(
+        uid,
+        () => loadNotifications(),
+        (n) => {
+          // pop a toast for the fresh notification; auto-dismiss after 5s
+          patch({ toast: n })
+          if (toastTimer.current) window.clearTimeout(toastTimer.current)
+          toastTimer.current = window.setTimeout(() => patch({ toast: null }), 5000)
+        },
+      )
     })
     return () => {
       unsubM?.()
@@ -668,6 +685,19 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
     markAllRead: async () => {
       await markAllNotificationsRead()
       loadNotifications()
+    },
+    dismissToast: () => {
+      if (toastTimer.current) window.clearTimeout(toastTimer.current)
+      patch({ toast: null })
+    },
+    openListingById: async (id) => {
+      try {
+        const it = await fetchListingById(id, state.profile.floor ? state.profile.floor.toLowerCase() : null)
+        if (it) patch({ sel: it, menuOpen: false })
+        else alert('This listing is no longer available.')
+      } catch {
+        alert('Could not open the listing.')
+      }
     },
     openNotifTarget: async (n) => {
       markNotificationRead(n.id).catch(() => {})

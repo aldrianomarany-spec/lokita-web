@@ -30,7 +30,7 @@ const rootStyle = {
 } as React.CSSProperties
 
 function Shell() {
-  const { state, onPhoto, openSell } = useM()
+  const { state, onPhoto, openSell, openNotifTarget, dismissToast } = useM()
   const s = state
   const isPhone = useIsPhone()
 
@@ -63,6 +63,34 @@ function Shell() {
         >
           <Plus size={24} />
         </button>
+      )}
+
+      {/* realtime notification toast — click to open, auto-dismisses */}
+      {s.toast && (
+        <div
+          onClick={() => {
+            const n = s.toast!
+            dismissToast()
+            openNotifTarget(n)
+          }}
+          style={{ position: 'fixed', top: 82, right: 16, left: isPhone ? 16 : 'auto', maxWidth: 360, zIndex: 120, background: '#201E18', color: '#F7F3EA', borderRadius: 16, padding: '13px 16px', display: 'flex', gap: 12, alignItems: 'flex-start', cursor: 'pointer', boxShadow: '0 18px 40px -12px rgba(32,30,24,.5)', animation: 'lok-rise .3s cubic-bezier(.2,.8,.3,1) both' }}
+        >
+          <span style={{ flex: 'none', fontSize: 18, marginTop: 1 }}>🔔</span>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontWeight: 800, fontSize: 13.5 }}>{s.toast.title}</div>
+            {s.toast.body && <div style={{ fontSize: 12, color: 'rgba(247,243,234,.75)', marginTop: 2, lineHeight: 1.4, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{s.toast.body}</div>}
+            <div style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 9, color: 'rgba(247,243,234,.5)', marginTop: 4, letterSpacing: '.06em' }}>TAP TO OPEN</div>
+          </div>
+          <button
+            onClick={(e) => {
+              e.stopPropagation()
+              dismissToast()
+            }}
+            style={{ flex: 'none', border: 'none', background: 'rgba(247,243,234,.12)', color: '#F7F3EA', width: 24, height: 24, borderRadius: 8, cursor: 'pointer', fontSize: 12 }}
+          >
+            ✕
+          </button>
+        </div>
       )}
 
       {/* modals */}

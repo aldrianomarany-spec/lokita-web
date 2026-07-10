@@ -674,7 +674,11 @@ export interface ConversationRow {
   last_content: string
   last_at: string
   unread: number
+  // product context (null for direct/request chats)
   item_title: string
+  item_price: number | null
+  item_photo: string | null
+  item_status: string | null
 }
 
 export async function fetchConversations(): Promise<ConversationRow[]> {
@@ -682,10 +686,10 @@ export async function fetchConversations(): Promise<ConversationRow[]> {
   if (!uid) return []
   const { data: convs, error } = await supabase
     .from('conversations')
-    .select('*, listing:listing_id(title)')
+    .select('*, listing:listing_id(title, price, status, listing_photos(photo_url, sort_order))')
     .or(`buyer_id.eq.${uid},seller_id.eq.${uid}`)
   if (error) throw error
-  const rows = (convs as (Record<string, unknown> & { id: string; buyer_id: string; seller_id: string; listing_id: string | null; created_at: string; listing: { title: string } | null })[]) || []
+  const rows = (convs as (Record<string, unknown> & { id: string; buyer_id: string; seller_id: string; listing_id: string | null; created_at: string; listing: { title: string; price: number; status: string; listing_photos: { photo_url: string; sort_order: number }[] | null } | null })[]) || []
   if (!rows.length) return []
   const ids = rows.map((r) => r.id)
   const { data: msgs } = await supabase
@@ -719,7 +723,10 @@ export async function fetchConversations(): Promise<ConversationRow[]> {
       last_content: last?.content || '',
       last_at: last?.created_at || r.created_at,
       unread: ms.filter((m) => m.sender_id !== uid && !m.is_read).length,
-      item_title: r.listing?.title || 'a listing',
+      item_title: r.listing?.title || '',
+      item_price: r.listing?.price ?? null,
+      item_photo: firstPhoto(r.listing?.listing_photos),
+      item_status: r.listing?.status ?? null,
     }
   })
   result.sort((a, b) => new Date(b.last_at).getTime() - new Date(a.last_at).getTime())
@@ -821,10 +828,14 @@ export function subscribeMessages(userId: string, onChange: () => void): () => v
   }
 }
 
-export function subscribeNotifications(userId: string, onChange: () => void): () => void {
+export function subscribeNotifications(userId: string, onChange: () => void, onNew?: (n: NotifRow) => void): () => void {
   const ch = supabase
     .channel('notifs-' + userId)
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'notifications', filter: `user_id=eq.${userId}` }, onChange)
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notifications', filter: `user_id=eq.${userId}` }, (payload) => {
+      onChange()
+      if (onNew && payload.new) onNew(payload.new as NotifRow)
+    })
+    .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'notifications', filter: `user_id=eq.${userId}` }, onChange)
     .subscribe()
   return () => {
     supabase.removeChannel(ch)
@@ -1062,4 +1073,25 @@ export function subscribeMyProfile(userId: string, onChange: () => void): () => 
   return () => {
     supabase.removeChannel(ch)
   }
+}
+
+
+// One listing by id, mapped to the card/detail shape (used to open the item
+// straight from a chat's pinned product card).
+export async function fetchListingById(id: string, viewerFloor: string | null): Promise<EnrichedItem | null> {
+  const user = await getUser()
+  const { data, error } = await supabase
+    .from('listings')
+    .select('*, listing_photos(photo_url, sort_order)')
+    .eq('id', id)
+    .maybeSingle()
+  if (error) throw error
+  if (!data) return null
+  const row = data as FeedRow
+  const { data: person } = await supabase
+    .from('public_profiles')
+    .select('id, name, profile_photo_url, verification_status')
+    .eq('id', row.seller_id)
+    .maybeSingle()
+  return mapRow(row, (person as SellerLite | null) || undefined, user?.id, viewerFloor, 0)
 }
