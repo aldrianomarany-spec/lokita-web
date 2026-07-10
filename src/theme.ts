@@ -76,7 +76,7 @@ export const SELL_CATEGORIES = [
   'Others',
 ]
 
-export const BUILDINGS = ['Thomas Building', 'Union Building', 'Elizabeth Building']
+export const BUILDINGS = ['Thomas Building', 'Union Building', 'Elizabeth Building', 'Main Building']
 
 // Floors are specific to each building — codes are what the DB stores, labels
 // are what the user sees. Security Post is a separate shared drop-off point and
@@ -100,6 +100,12 @@ export const FLOORS_BY_BUILDING: Record<string, FloorOption[]> = {
     { code: 'e1', label: 'Floor 1' },
     { code: 'e2', label: 'Floor 2' },
     { code: 'e3', label: 'Floor 3' },
+  ],
+  // JIU staff & lecturers — promoted to trade on LOKITA too
+  'Main Building': [
+    { code: 'mg', label: 'Ground' },
+    { code: 'm1', label: 'Floor 1' },
+    { code: 'm2', label: 'Floor 2' },
   ],
 }
 // every floor option across all buildings (for lookups)

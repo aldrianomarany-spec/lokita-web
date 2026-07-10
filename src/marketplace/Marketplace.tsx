@@ -5,6 +5,7 @@ import { Plus } from '../components/Icons'
 import TopBar from './TopBar'
 import Sidebar from './Sidebar'
 import BrowseView from './BrowseView'
+import RequestsView from './RequestsView'
 import MessagesView from './MessagesView'
 import NotificationsView from './NotificationsView'
 import ProfileView from './ProfileView'
@@ -42,6 +43,7 @@ function Shell() {
         <Sidebar />
         <main className="lok-main" style={{ flex: 1, overflowY: 'auto', padding: '26px 32px 40px' }}>
           {s.view === 'browse' && <BrowseView />}
+          {s.view === 'requests' && <RequestsView />}
           {s.view === 'messages' && <MessagesView />}
           {s.view === 'notifications' && <NotificationsView />}
           {s.view === 'orders' && <OrdersView />}

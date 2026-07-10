@@ -2,8 +2,8 @@ import { supabase } from './supabase'
 import type { Session, User } from '@supabase/supabase-js'
 
 // ---- domain enums mirroring the DB CHECK constraints ----
-export type BuildingCode = 'thomas' | 'union' | 'elizabeth'
-export type FloorCode = 'ground' | 't1' | 't2' | 't3' | 'u2' | 'u3' | 'e1' | 'e2' | 'e3'
+export type BuildingCode = 'thomas' | 'union' | 'elizabeth' | 'main'
+export type FloorCode = 'ground' | 't1' | 't2' | 't3' | 'u2' | 'u3' | 'e1' | 'e2' | 'e3' | 'mg' | 'm1' | 'm2'
 export type ClassStanding = 'freshman' | 'sophomore' | 'junior' | 'senior'
 export type VerificationStatus = 'pending' | 'verified' | 'rejected'
 
@@ -89,10 +89,17 @@ export async function signOut() {
   if (error) throw error
 }
 
-// Send a password-reset email. `redirectTo` is where the link lands — defaults
-// to the configured site URL (see siteUrl) so it never hard-codes localhost.
-export async function resetPassword(email: string, redirectTo: string = siteUrl()) {
+// Send a password-reset email. The link lands on our dedicated set-new-password
+// page (add <site>/reset-password to Supabase's Redirect URLs).
+export async function resetPassword(email: string, redirectTo: string = siteUrl() + '/reset-password') {
   const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo })
+  if (error) throw error
+}
+
+// Set a new password for the currently-authenticated user (the recovery link
+// signs them in first; this is the second half of "forgot password").
+export async function updatePassword(newPassword: string) {
+  const { error } = await supabase.auth.updateUser({ password: newPassword })
   if (error) throw error
 }
 

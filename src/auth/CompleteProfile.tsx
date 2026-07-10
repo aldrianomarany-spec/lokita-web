@@ -46,6 +46,7 @@ const BUILDINGS: { v: BuildingCode; label: string }[] = [
   { v: 'thomas', label: 'Thomas Building' },
   { v: 'union', label: 'Union Building' },
   { v: 'elizabeth', label: 'Elizabeth Building' },
+  { v: 'main', label: 'Main Building (JIU Staff & Lecturer)' },
 ]
 // floors are specific to each building; Security Post is a separate shared point
 const FLOORS_BY_BUILDING: Record<BuildingCode, { v: FloorCode; label: string }[]> = {
@@ -63,6 +64,11 @@ const FLOORS_BY_BUILDING: Record<BuildingCode, { v: FloorCode; label: string }[]
     { v: 'e1', label: 'Floor 1' },
     { v: 'e2', label: 'Floor 2' },
     { v: 'e3', label: 'Floor 3' },
+  ],
+  main: [
+    { v: 'mg', label: 'Ground' },
+    { v: 'm1', label: 'Floor 1' },
+    { v: 'm2', label: 'Floor 2' },
   ],
 }
 const STANDINGS: { v: ClassStanding; label: string }[] = [

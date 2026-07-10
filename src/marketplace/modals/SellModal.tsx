@@ -113,6 +113,20 @@ export default function SellModal() {
               <div style={{ fontSize: 11, color: '#8A8578', fontWeight: 500 }}>Clear your whole room in one deal</div>
             </div>
           </div>
+
+          {s.bundleOn && (
+            <div>
+              <div style={{ ...cap, marginBottom: 6 }}>WHAT'S IN THE BUNDLE (one item per line)</div>
+              <textarea
+                className="lok-field"
+                value={f.bundleItems}
+                onChange={(e) => setF('bundleItems', e.target.value)}
+                placeholder={'Desk lamp\nMini fridge\nTextbooks (5)\nClothes hanger rack'}
+                style={{ ...fieldBase, width: '100%', minHeight: 84, resize: 'vertical' }}
+              />
+            </div>
+          )}
+
         </div>
 
         <button disabled={busy} className="lok-btn" onClick={() => submitListing(photos)} style={{ width: '100%', border: 'none', background: listBg, color: '#F7F3EA', fontFamily: 'inherit', fontWeight: 700, fontSize: 14.5, padding: 14, borderRadius: 14, cursor: busy ? 'default' : 'pointer', marginTop: 18, transition: 'background .2s ease', boxShadow: '0 8px 20px -8px rgba(42,95,168,.6)' }}>{listLabel}</button>

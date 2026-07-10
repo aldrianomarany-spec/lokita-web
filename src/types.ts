@@ -20,6 +20,8 @@ export interface Item {
   desc: string
   // real-listing extras
   photoUrl?: string | null
+  photoUrls?: string[]
+  bundleItems?: string[]
   isFeatured?: boolean
   sellerVerified?: boolean
   ownerId?: string

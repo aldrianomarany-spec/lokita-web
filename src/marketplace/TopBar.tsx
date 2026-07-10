@@ -1,6 +1,8 @@
+import { useState } from 'react'
 import { useM } from './context'
 import { useIsPhone } from './useIsMobile'
-import { Search, Plus, Heart, MessageBubble, Bell, Verified } from '../components/Icons'
+import { Search, Plus, Star, MessageBubble, Bell, Verified } from '../components/Icons'
+import { BUILDINGS } from '../theme'
 
 const navBtn: React.CSSProperties = {
   position: 'relative',
@@ -60,11 +62,11 @@ const Avatar = ({ photo, initial, size, radius, fontSize }: { photo: string | nu
 )
 
 export default function TopBar() {
-  const { state, patch, goHome, goSignup, goLogin, openEdit, setQuery, clearQuery, openSell, toggleSavedView, openMessages, openNotifs, toggleMenu, openProfile, openOrders, logout } = useM()
+  const { state, patch, goHome, goSignup, goLogin, selectBldg, setQuery, clearQuery, openSell, toggleSavedView, openMessages, openNotifs, toggleMenu, openProfile, openOrders, logout } = useM()
+  const [bldgOpen, setBldgOpen] = useState(false)
   const s = state
   const isPhone = useIsPhone()
   const guest = s.guest
-  const myBuilding = s.profile.building || 'Set your dorm'
 
   const savedCount = Object.keys(s.saved).length
   const unreadCount = s.convs.reduce((sum, c) => sum + c.unread, 0)
@@ -111,18 +113,41 @@ export default function TopBar() {
         )}
       </div>
 
-      {/* your dorm — hidden on phone and for guests */}
-      {!isPhone && !guest && (
-        <button
-          className="lok-btn"
-          onClick={openEdit}
-          title="Your dorm — click to change"
-          style={{ flex: 'none', cursor: 'pointer', border: '1px solid #E4DDCE', display: 'flex', alignItems: 'center', gap: 9, fontFamily: 'inherit', fontWeight: 700, fontSize: 13.5, color: '#201E18', background: '#F4EFE5', padding: '9px 13px', borderRadius: 12 }}
-        >
-          <span style={{ width: 7, height: 7, borderRadius: '50%', background: 'var(--accent,#2A5FA8)' }} />
-          {myBuilding}
-          <span style={{ fontFamily: "'Spline Sans Mono',monospace", fontWeight: 500, fontSize: 10, color: '#A29C8B' }}>JIU · CIKARANG</span>
-        </button>
+      {/* building filter — the homepage shows only the chosen building's items */}
+      {!isPhone && (
+        <div style={{ position: 'relative', flex: 'none' }}>
+          <button
+            className="lok-btn"
+            onClick={() => setBldgOpen((v) => !v)}
+            title="Filter the marketplace by building"
+            style={{ cursor: 'pointer', border: '1px solid #E4DDCE', display: 'flex', alignItems: 'center', gap: 9, fontFamily: 'inherit', fontWeight: 700, fontSize: 13.5, color: '#201E18', background: '#F4EFE5', padding: '9px 13px', borderRadius: 12 }}
+          >
+            <span style={{ width: 7, height: 7, borderRadius: '50%', background: 'var(--accent,#2A5FA8)' }} />
+            {s.bldg === 'All' ? 'All buildings' : s.bldg}
+            <span style={{ fontFamily: "'Spline Sans Mono',monospace", fontWeight: 500, fontSize: 10, color: '#A29C8B' }}>JIU · CIKARANG ▾</span>
+          </button>
+          {bldgOpen && (
+            <div style={{ position: 'absolute', top: 46, left: 0, width: 230, background: '#FBF8F1', border: '1px solid #E4DDCE', borderRadius: 14, boxShadow: '0 20px 44px -16px rgba(32,30,24,.35)', padding: 8, zIndex: 70, animation: 'lok-pop .16s ease both' }}>
+              {['All', ...BUILDINGS].map((b) => {
+                const active = s.bldg === b
+                return (
+                  <button
+                    key={b}
+                    className="lok-navi"
+                    onClick={() => {
+                      selectBldg(b)
+                      setBldgOpen(false)
+                    }}
+                    style={{ width: '100%', textAlign: 'left', border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontWeight: active ? 800 : 600, fontSize: 13.5, padding: '9px 11px', borderRadius: 9, background: active ? '#EAF1EC' : 'transparent', color: active ? '#12503A' : '#4A463B', display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 1 }}
+                  >
+                    {b === 'All' ? 'All buildings' : b}
+                    {b === 'Main Building' && <span style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 9, color: '#A29C8B', fontWeight: 500 }}>JIU STAFF & LECTURERS</span>}
+                  </button>
+                )
+              })}
+            </div>
+          )}
+        </div>
       )}
 
       {/* search */}
@@ -168,8 +193,8 @@ export default function TopBar() {
 
         {/* Saved: on phone it lives as a chip in the category bar */}
         {!isPhone && (
-          <button className="lok-navi" onClick={toggleSavedView} title="Saved" style={{ ...navBtn, background: '#F4EFE5', color: '#5A5648' }}>
-            <Heart fill={s.savedOnly ? 'currentColor' : 'none'} size={18} />
+          <button className="lok-navi" onClick={toggleSavedView} title="Saved" style={{ ...navBtn, background: s.savedOnly ? '#FBF2DD' : '#F4EFE5', color: s.savedOnly ? '#E7A81E' : '#5A5648' }}>
+            <Star fill={s.savedOnly ? '#E7A81E' : 'none'} size={20} />
             {savedCount > 0 && badge(savedCount)}
           </button>
         )}

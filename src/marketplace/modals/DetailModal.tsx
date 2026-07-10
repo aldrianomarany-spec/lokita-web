@@ -4,11 +4,12 @@ import { T } from '../../theme'
 import { tagStyle } from '../tagStyle'
 import { useIsPhone } from '../useIsMobile'
 import Overlay, { stop } from './Overlay'
-import { ChevronRight, Heart, MapPin, MessageBubble, ShieldCheck, Verified } from '../../components/Icons'
+import { ChevronRight, MapPin, MessageBubble, ShieldCheck, Star, Verified } from '../../components/Icons'
 
 export default function DetailModal() {
   const { state, closeDetail, chatSeller, openCheckout, openSellerProfile, deleteMyListing, toggleSaveItem, goSignup } = useM()
   const [deleting, setDeleting] = useState(false)
+  const [photoIdx, setPhotoIdx] = useState(0)
   const isPhone = useIsPhone()
   const guest = state.guest
   const sel = state.sel
@@ -19,7 +20,9 @@ export default function DetailModal() {
   const t = T[sel.tone]
   const ts = tagStyle(sel)
   const proxTag = (sel as { proxTag?: string }).proxTag || ''
-  const hasPhoto = !!sel.photoUrl
+  const photos = sel.photoUrls && sel.photoUrls.length ? sel.photoUrls : sel.photoUrl ? [sel.photoUrl] : []
+  const mainPhoto = photos[Math.min(photoIdx, photos.length - 1)] || null
+  const hasPhoto = !!mainPhoto
   const isOwner = !!sel.mine
   const isSaved = !!state.saved[sel.id]
 
@@ -42,7 +45,7 @@ export default function DetailModal() {
         {/* image panel — full width on phone, left column on desktop */}
         <div style={{ width: isPhone ? '100%' : '47%', flex: 'none', background: t.tint, position: 'relative', minHeight: isPhone ? 240 : 480, height: isPhone ? 240 : 'auto', overflow: 'hidden' }}>
           {hasPhoto ? (
-            <img src={sel.photoUrl!} alt={sel.title} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
+            <img src={mainPhoto!} alt={sel.title} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
           ) : (
             <div style={{ position: 'absolute', inset: 0, backgroundImage: `repeating-linear-gradient(135deg,${t.stripe} 0 14px,transparent 14px 28px)`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <span style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 12, color: t.label, textAlign: 'center', padding: '0 24px' }}>{sel.photo}</span>
@@ -54,10 +57,26 @@ export default function DetailModal() {
               onClick={() => toggleSaveItem(sel.id)}
               className="lok-heart"
               title={isSaved ? 'Remove from saved' : 'Save item'}
-              style={{ position: 'absolute', top: 14, right: 14, width: 40, height: 40, borderRadius: '50%', border: 'none', background: 'rgba(251,248,241,.92)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: isSaved ? '#D4562F' : '#5A5648', boxShadow: '0 2px 8px rgba(32,30,24,.15)' }}
+              style={{ position: 'absolute', top: 14, right: 14, width: 40, height: 40, borderRadius: '50%', border: 'none', background: 'rgba(251,248,241,.92)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: isSaved ? '#E7A81E' : '#5A5648', boxShadow: '0 2px 8px rgba(32,30,24,.15)' }}
             >
-              <Heart fill={isSaved ? '#D4562F' : 'none'} size={19} />
+              <Star fill={isSaved ? '#E7A81E' : 'none'} size={21} />
             </button>
+          )}
+          {photos.length > 1 && (
+            <div style={{ position: 'absolute', bottom: 10, left: 10, right: 10, display: 'flex', gap: 7, overflowX: 'auto', padding: 4 }}>
+              {photos.map((u, i) => (
+                <button
+                  key={i}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    setPhotoIdx(i)
+                  }}
+                  style={{ flex: 'none', width: 48, height: 48, borderRadius: 10, overflow: 'hidden', padding: 0, cursor: 'pointer', border: i === Math.min(photoIdx, photos.length - 1) ? '2.5px solid #FBF8F1' : '2.5px solid rgba(251,248,241,.45)', boxShadow: '0 2px 8px rgba(32,30,24,.3)' }}
+                >
+                  <img src={u} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                </button>
+              ))}
+            </div>
           )}
         </div>
 
@@ -79,6 +98,20 @@ export default function DetailModal() {
             </span>
           </div>
           <p style={{ fontSize: 14, lineHeight: 1.65, color: '#5A5648', margin: '0 0 18px' }}>{sel.desc}</p>
+
+          {sel.bundleItems && sel.bundleItems.length > 0 && (
+            <div style={{ background: '#F4EFE5', border: '1px solid #E4DDCE', borderRadius: 16, padding: '14px 16px', marginBottom: 18 }}>
+              <div style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 10, color: '#7E8154', letterSpacing: '.06em', marginBottom: 9 }}>WHAT'S IN THIS BUNDLE · {sel.bundleItems.length} ITEMS</div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                {sel.bundleItems.map((it, i) => (
+                  <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 9, fontSize: 13.5, fontWeight: 600, color: '#3A362C' }}>
+                    <span style={{ width: 17, height: 17, borderRadius: 6, background: '#E4E5D3', color: '#7E8154', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, flex: 'none' }}>✓</span>
+                    {it}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* seller card */}
           <div onClick={() => openSellerProfile(sel.ownerId ?? null, sel.seller)} className="lok-btn" style={{ cursor: 'pointer', background: '#F4EFE5', border: '1px solid #E4DDCE', borderRadius: 16, padding: 15, display: 'flex', alignItems: 'center', gap: 13, marginBottom: 13 }}>

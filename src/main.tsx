@@ -4,12 +4,14 @@ import { createBrowserRouter, RouterProvider, Navigate } from 'react-router-dom'
 import './index.css'
 import AuthFlow from './auth/AuthFlow'
 import CompleteProfile from './auth/CompleteProfile'
+import ResetPassword from './auth/ResetPassword'
 import RequireSession from './auth/RequireSession'
 import Marketplace from './marketplace/Marketplace'
 
 const router = createBrowserRouter([
   { path: '/', element: <AuthFlow /> },
   { path: '/onboarding', element: <CompleteProfile /> },
+  { path: '/reset-password', element: <ResetPassword /> },
   {
     path: '/app',
     element: (

@@ -15,12 +15,16 @@ export async function getUserId(): Promise<string | null> {
 // ---------------------------------------------------------------------------
 // display formatters (DB codes → UI labels used by the existing components)
 // ---------------------------------------------------------------------------
-const BUILDING_LABEL: Record<string, string> = { thomas: 'Thomas Building', union: 'Union Building', elizabeth: 'Elizabeth Building' }
-const BUILDING_CODE: Record<string, 'thomas' | 'union' | 'elizabeth'> = { 'Thomas Building': 'thomas', 'Union Building': 'union', 'Elizabeth Building': 'elizabeth' }
-const FLOOR_LABEL: Record<string, string> = { ground: 'Ground', t1: 'T1', t2: 'T2', t3: 'T3', u2: 'U2', u3: 'U3', e1: 'Floor 1', e2: 'Floor 2', e3: 'Floor 3' }
-// reverse map (label → code) so profile edits round-trip without relying on
-// lowercasing (which breaks for labels like "Floor 1").
-const FLOOR_CODE: Record<string, string> = Object.fromEntries(Object.entries(FLOOR_LABEL).map(([code, label]) => [label, code]))
+const BUILDING_LABEL: Record<string, string> = { thomas: 'Thomas Building', union: 'Union Building', elizabeth: 'Elizabeth Building', main: 'Main Building' }
+const BUILDING_CODE: Record<string, 'thomas' | 'union' | 'elizabeth' | 'main'> = { 'Thomas Building': 'thomas', 'Union Building': 'union', 'Elizabeth Building': 'elizabeth', 'Main Building': 'main' }
+const FLOOR_LABEL: Record<string, string> = { ground: 'Ground', t1: 'T1', t2: 'T2', t3: 'T3', u2: 'U2', u3: 'U3', e1: 'Floor 1', e2: 'Floor 2', e3: 'Floor 3', mg: 'Ground', m1: 'Floor 1', m2: 'Floor 2' }
+// floor label → code must be resolved per-building (labels like "Ground" and
+// "Floor 1" repeat across buildings).
+import { FLOORS_BY_BUILDING } from '../theme'
+function floorCodeFor(buildingLabel: string, floorLabel: string): string | null {
+  const opts = FLOORS_BY_BUILDING[buildingLabel] || []
+  return opts.find((o) => o.label === floorLabel)?.code ?? null
+}
 const STANDING_LABEL: Record<string, string> = { freshman: 'Freshman', sophomore: 'Sophomore', junior: 'Junior', senior: 'Senior' }
 
 function memberSince(iso: string | undefined): string {
@@ -58,7 +62,7 @@ export function uiEditsToDb(pf: UiProfile): Partial<DbProfile> {
     student_id_number: pf.studentId.trim() || null,
     whatsapp_number: pf.whatsapp.trim() || null,
     building: pf.building ? BUILDING_CODE[pf.building] ?? null : null,
-    floor: (pf.floor ? FLOOR_CODE[pf.floor] ?? null : null) as DbProfile['floor'],
+    floor: (pf.floor && pf.building ? floorCodeFor(pf.building, pf.floor) : null) as DbProfile['floor'],
     room_number: pf.room.trim() || null,
     batch_year: digits ? Number(digits) : null,
     class_standing: (pf.standing ? pf.standing.toLowerCase() : null) as DbProfile['class_standing'],
@@ -143,6 +147,7 @@ export interface DbListing {
   category: string | null
   condition: string | null
   is_graduation_bundle: boolean
+  bundle_items: string[] | null
   status: 'active' | 'sold' | 'removed' | 'flagged'
   building: string | null
   floor: string | null
@@ -273,10 +278,11 @@ const FLOOR_SEQ: Record<string, string[]> = {
   Thomas: ['ground', 't1', 't2', 't3'],
   Union: ['u2', 'u3'],
   Elizabeth: ['e1', 'e2', 'e3'],
+  Main: ['mg', 'm1', 'm2'],
 }
 const bldgOfCode = (f: string | null) => {
   const c = f ? f.charAt(0) : ''
-  return c === 'u' ? 'Union' : c === 'e' ? 'Elizabeth' : 'Thomas'
+  return c === 'u' ? 'Union' : c === 'e' ? 'Elizabeth' : c === 'm' ? 'Main' : 'Thomas'
 }
 const floorOrder = (f: string | null) => FLOOR_SEQ[bldgOfCode(f)].indexOf(f || '')
 function proximityCode(f: string | null, viewer: string | null): { rank: number; tag: string } {
@@ -326,6 +332,8 @@ function mapRow(r: FeedRow, seller: SellerLite | undefined, uid: string | undefi
     proxTag: pr.tag,
     proxRank: pr.rank,
     photoUrl: photos.length ? photos[0].photo_url : null,
+    photoUrls: photos.map((p) => p.photo_url),
+    bundleItems: r.bundle_items || undefined,
     isFeatured: r.is_featured,
     sellerVerified: seller?.verification_status === 'verified',
     ownerId: r.seller_id,
@@ -337,6 +345,7 @@ export interface FeedOpts {
   cond?: string
   sort?: 'Nearest' | 'Newest' | 'Price'
   query?: string
+  building?: string // display label (e.g. "Thomas Building") or "All"
 }
 
 // Live feed: active listings only, filters applied, featured first, capped at 24.
@@ -348,6 +357,10 @@ export async function fetchFeed(opts: FeedOpts, viewerFloor: string | null): Pro
     .eq('status', 'active')
   if (opts.cat && opts.cat !== 'All') q = q.eq('category', opts.cat.toLowerCase())
   if (opts.cond && opts.cond !== 'All') q = q.eq('condition', opts.cond)
+  if (opts.building && opts.building !== 'All') {
+    const code = BUILDING_CODE[opts.building]
+    if (code) q = q.eq('building', code)
+  }
   if (opts.query && opts.query.trim()) q = q.ilike('title', `%${opts.query.trim()}%`)
   q = q.order('is_featured', { ascending: false })
   q = opts.sort === 'Price' ? q.order('price', { ascending: true }) : q.order('created_at', { ascending: false })
@@ -389,6 +402,7 @@ export interface NewListing {
   floor: string // DB code e.g. "t1" (or '')
   description: string
   isBundle: boolean
+  bundleItems: string[] // what's inside a graduation bundle
 }
 
 // Insert a listing owned by the current user, then upload its photos.
@@ -407,6 +421,7 @@ export async function createListing(input: NewListing, photos: File[]): Promise<
       floor: input.floor || null,
       description: input.description || null,
       is_graduation_bundle: input.isBundle,
+      bundle_items: input.isBundle && input.bundleItems.length ? input.bundleItems : null,
       status: 'active',
     })
     .select('id')
@@ -797,4 +812,101 @@ export function subscribeNotifications(userId: string, onChange: () => void): ()
   return () => {
     supabase.removeChannel(ch)
   }
+}
+
+// ===========================================================================
+// REQUESTS — buyers post "looking for X"; anyone signed in can respond.
+// ===========================================================================
+export interface RequestRow {
+  id: string
+  user_id: string
+  title: string
+  description: string | null
+  category: string | null
+  budget_max: number | null
+  status: 'open' | 'fulfilled' | 'closed'
+  created_at: string
+  requester_name: string
+  requester_photo: string | null
+  requester_verified: boolean
+  mine: boolean
+}
+
+export async function fetchRequests(): Promise<RequestRow[]> {
+  const uid = await getUserId()
+  const { data, error } = await supabase
+    .from('requests')
+    .select('*')
+    .eq('status', 'open')
+    .order('created_at', { ascending: false })
+    .limit(50)
+  if (error) throw error
+  const rows = (data as Omit<RequestRow, 'requester_name' | 'requester_photo' | 'requester_verified' | 'mine'>[]) || []
+  if (!rows.length) return []
+  const ids = [...new Set(rows.map((r) => r.user_id))]
+  const { data: people } = await supabase
+    .from('public_profiles')
+    .select('id, name, profile_photo_url, verification_status')
+    .in('id', ids)
+  const byId = new Map(((people as SellerLite[] | null) || []).map((p) => [p.id, p]))
+  return rows.map((r) => {
+    const p = byId.get(r.user_id)
+    return {
+      ...r,
+      requester_name: p?.name || 'Student',
+      requester_photo: p?.profile_photo_url || null,
+      requester_verified: p?.verification_status === 'verified',
+      mine: uid ? r.user_id === uid : false,
+    }
+  })
+}
+
+export interface NewRequest {
+  title: string
+  category: string // display label
+  budgetMax: number | null
+  description: string
+}
+
+export async function createRequest(input: NewRequest): Promise<void> {
+  const uid = await getUserId()
+  if (!uid) throw new Error('Not signed in')
+  const { error } = await supabase.from('requests').insert({
+    user_id: uid,
+    title: input.title,
+    category: input.category ? input.category.toLowerCase() : null,
+    budget_max: input.budgetMax,
+    description: input.description || null,
+  })
+  if (error) throw error
+}
+
+// Owner closes their request ('fulfilled' when someone came through).
+export async function setRequestStatus(id: string, status: 'fulfilled' | 'closed'): Promise<void> {
+  const { error } = await supabase.from('requests').update({ status }).eq('id', id)
+  if (error) throw error
+}
+
+// Chat about a request: a conversation WITHOUT a listing between the helper
+// (buyer_id = me) and the requester (seller_id). Reuses an existing thread.
+export async function getOrCreateRequestConversation(requesterId: string): Promise<string> {
+  const uid = await getUserId()
+  if (!uid) throw new Error('Not signed in')
+  if (requesterId === uid) throw new Error("That's your own request.")
+  const { data: existing } = await supabase
+    .from('conversations')
+    .select('id')
+    .is('listing_id', null)
+    .eq('buyer_id', uid)
+    .eq('seller_id', requesterId)
+    .limit(1)
+    .maybeSingle()
+  if (existing) return (existing as { id: string }).id
+  const { data, error } = await supabase
+    .from('conversations')
+    .insert({ listing_id: null, buyer_id: uid, seller_id: requesterId })
+    .select('id')
+    .single()
+  if (error) throw error
+  return (data as { id: string }).id
 }

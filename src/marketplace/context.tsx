@@ -30,6 +30,7 @@ import {
   fetchConversations,
   fetchMessages,
   getOrCreateConversation,
+  getOrCreateRequestConversation,
   sendMessage as apiSendMessage,
   markConversationRead,
   fetchNotifications,
@@ -61,7 +62,7 @@ const EMPTY_PROFILE: Profile = {
   verification_status: 'pending', profile_photo_url: null,
 }
 
-export type View = 'browse' | 'messages' | 'notifications' | 'profile' | 'orders'
+export type View = 'browse' | 'requests' | 'messages' | 'notifications' | 'profile' | 'orders'
 export type Sort = 'Nearest' | 'Newest' | 'Price'
 export type CoStep = 'options' | 'qris' | 'done' | 'review' | 'reviewdone'
 export type ListState = 'idle' | 'saving' | 'done'
@@ -74,6 +75,7 @@ export interface SellForm {
   loc: string
   floor: string
   desc: string
+  bundleItems: string // one item per line (graduation bundles)
 }
 
 export interface State {
@@ -82,6 +84,7 @@ export interface State {
   view: View
   cat: string
   cond: string
+  bldg: string // homepage building filter: 'All' or a building label
   sort: Sort
   query: string
   sel: Item | null
@@ -139,6 +142,7 @@ const initialState: State = {
   view: 'browse',
   cat: 'All',
   cond: 'All',
+  bldg: 'All',
   sort: 'Nearest',
   query: '',
   sel: null,
@@ -183,7 +187,7 @@ const initialState: State = {
   photoUploading: false,
   listState: 'idle',
   bundleOn: false,
-  f: { title: '', price: '', cat: 'Furniture', cond: 'Good', loc: 'Thomas Building', floor: '', desc: '' },
+  f: { title: '', price: '', cat: 'Furniture', cond: 'Good', loc: 'Thomas Building', floor: '', desc: '', bundleItems: '' },
 }
 
 // (proximity now lives in src/lib/api.ts, computed on real DB floor codes)
@@ -200,6 +204,9 @@ export interface MarketplaceApi {
   clearQuery: () => void
   selectCat: (label: string) => void
   selectCond: (label: string) => void
+  selectBldg: (label: string) => void
+  openRequests: () => void
+  openRequestChat: (requesterId: string) => Promise<void>
   selectSort: (k: Sort) => void
   toggleSavedView: () => void
   toggleSaveItem: (id: string) => void
@@ -269,7 +276,7 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
 
   // live feed from Supabase (filters/sort/cap applied server-side)
   const loadFeed = useCallback(
-    async (opts: { cat: string; cond: string; sort: Sort; query: string }, viewerFloor: string | null) => {
+    async (opts: { cat: string; cond: string; sort: Sort; query: string; building: string }, viewerFloor: string | null) => {
       patch({ feedLoading: true, feedError: null })
       try {
         const [feed, counts] = await Promise.all([fetchFeed(opts, viewerFloor), fetchCategoryCounts()])
@@ -282,27 +289,27 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
   )
 
   // re-fetch whenever the filters or the viewer's floor change (query debounced)
-  const { cat, cond, sort, query } = state
+  const { cat, cond, sort, query, bldg } = state
   const viewerFloor = state.profile.floor
   useEffect(() => {
     const floorCode = viewerFloor ? viewerFloor.toLowerCase() : null
-    const t = window.setTimeout(() => loadFeed({ cat, cond, sort, query }, floorCode), query ? 300 : 0)
+    const t = window.setTimeout(() => loadFeed({ cat, cond, sort, query, building: bldg }, floorCode), query ? 300 : 0)
     return () => window.clearTimeout(t)
-  }, [cat, cond, sort, query, viewerFloor, loadFeed])
+  }, [cat, cond, sort, query, bldg, viewerFloor, loadFeed])
 
   // Keep the latest feed params in a ref so the realtime callback can reload
   // with the current filters without re-subscribing on every keystroke.
-  const feedParamsRef = useRef({ cat, cond, sort, query, viewerFloor })
+  const feedParamsRef = useRef({ cat, cond, sort, query, bldg, viewerFloor })
   useEffect(() => {
-    feedParamsRef.current = { cat, cond, sort, query, viewerFloor }
-  }, [cat, cond, sort, query, viewerFloor])
+    feedParamsRef.current = { cat, cond, sort, query, bldg, viewerFloor }
+  }, [cat, cond, sort, query, bldg, viewerFloor])
 
   // Realtime feed: when any listing changes (new post, price drop, sold), reload
   // so the browse grid updates live — no manual refresh.
   useEffect(() => {
     const unsub = subscribeListings(() => {
       const p = feedParamsRef.current
-      loadFeed({ cat: p.cat, cond: p.cond, sort: p.sort, query: p.query }, p.viewerFloor ? p.viewerFloor.toLowerCase() : null)
+      loadFeed({ cat: p.cat, cond: p.cond, sort: p.sort, query: p.query, building: p.bldg }, p.viewerFloor ? p.viewerFloor.toLowerCase() : null)
     })
     return () => unsub()
   }, [loadFeed])
@@ -433,7 +440,7 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
       const id = await createOrder({ listingId: sel.id, sellerId: sel.ownerId, payment_method: state.pay, pickup_method: pickupCode(state.pickup) })
       const floorCode = state.profile.floor ? state.profile.floor.toLowerCase() : null
       await Promise.all([
-        loadFeed({ cat: state.cat, cond: state.cond, sort: state.sort, query: state.query }, floorCode),
+        loadFeed({ cat: state.cat, cond: state.cond, sort: state.sort, query: state.query, building: state.bldg }, floorCode),
         loadOrders(),
       ])
       loadProfile()
@@ -472,6 +479,18 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
     clearQuery: () => patch({ query: '' }),
     selectCat: (label) => patch({ cat: label, savedOnly: false, view: 'browse' }),
     selectCond: (label) => patch({ cond: label }),
+    selectBldg: (label) => patch({ bldg: label, savedOnly: false, view: 'browse' }),
+    openRequests: () => patch({ view: 'requests', menuOpen: false, sel: null }),
+    openRequestChat: async (requesterId) => {
+      if (state.guest) return goSignup()
+      try {
+        const cid = await getOrCreateRequestConversation(requesterId)
+        patch({ view: 'messages', activeConvId: cid, msgDraft: '', menuOpen: false, sel: null })
+        await Promise.all([loadConversations(), loadMessages(cid)])
+      } catch (e) {
+        alert('Could not open chat: ' + (e instanceof Error ? e.message : 'unknown error'))
+      }
+    },
     selectSort: (k) => patch({ sort: k }),
     toggleSavedView: () =>
       patch((prev) => ({ savedOnly: !prev.savedOnly, cat: 'All', query: '', menuOpen: false, view: 'browse' })),
@@ -524,16 +543,16 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
         sellOpen: false,
         listState: 'idle',
         bundleOn: false,
-        f: { title: '', price: '', cat: 'Furniture', cond: 'Good', loc: 'Thomas Building', floor: '', desc: '' },
+        f: { title: '', price: '', cat: 'Furniture', cond: 'Good', loc: 'Thomas Building', floor: '', desc: '', bundleItems: '' },
       }),
     reloadFeed: () => {
       const floorCode = state.profile.floor ? state.profile.floor.toLowerCase() : null
-      loadFeed({ cat: state.cat, cond: state.cond, sort: state.sort, query: state.query }, floorCode)
+      loadFeed({ cat: state.cat, cond: state.cond, sort: state.sort, query: state.query, building: state.bldg }, floorCode)
     },
     deleteMyListing: async (id) => {
       await deleteListing(id)
       const floorCode = state.profile.floor ? state.profile.floor.toLowerCase() : null
-      await loadFeed({ cat: state.cat, cond: state.cond, sort: state.sort, query: state.query }, floorCode)
+      await loadFeed({ cat: state.cat, cond: state.cond, sort: state.sort, query: state.query, building: state.bldg }, floorCode)
     },
     setF: (k, v) => patch((prev) => ({ f: { ...prev.f, [k]: v } })),
     toggleBundle: () => patch((prev) => ({ bundleOn: !prev.bundleOn })),
@@ -562,13 +581,16 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
             floor: f.floor,
             description: f.desc.trim(),
             isBundle: state.bundleOn,
+            bundleItems: state.bundleOn
+              ? f.bundleItems.split('\n').map((l) => l.trim()).filter(Boolean).slice(0, 20)
+              : [],
           },
           photos,
         )
         patch({ listState: 'done' })
         // refresh feed + profile stats so the new listing shows immediately
         const floorCode = state.profile.floor ? state.profile.floor.toLowerCase() : null
-        await loadFeed({ cat: state.cat, cond: state.cond, sort: state.sort, query: state.query }, floorCode)
+        await loadFeed({ cat: state.cat, cond: state.cond, sort: state.sort, query: state.query, building: state.bldg }, floorCode)
         loadProfile()
         listTimers.current.push(window.setTimeout(() => api.closeSell(), 900))
       } catch (e) {
@@ -722,7 +744,7 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
             /* already cancelled / gone */
           }
           const floorCode = state.profile.floor ? state.profile.floor.toLowerCase() : null
-          await Promise.all([loadOrders(), loadFeed({ cat: state.cat, cond: state.cond, sort: state.sort, query: state.query }, floorCode)])
+          await Promise.all([loadOrders(), loadFeed({ cat: state.cat, cond: state.cond, sort: state.sort, query: state.query, building: state.bldg }, floorCode)])
           patch({ coStep: 'options', qrisLoading: false, qris: null })
           alert(e instanceof Error ? e.message : 'Could not start QRIS payment')
         }
@@ -753,7 +775,7 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
         /* may already be paid — leave it */
       }
       const floorCode = state.profile.floor ? state.profile.floor.toLowerCase() : null
-      await Promise.all([loadOrders(), loadFeed({ cat: state.cat, cond: state.cond, sort: state.sort, query: state.query }, floorCode)])
+      await Promise.all([loadOrders(), loadFeed({ cat: state.cat, cond: state.cond, sort: state.sort, query: state.query, building: state.bldg }, floorCode)])
     },
     openOrders: () => {
       if (state.guest) return goSignup()
@@ -770,7 +792,7 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
     cancelMyOrder: async (id) => {
       await cancelOrder(id)
       const floorCode = state.profile.floor ? state.profile.floor.toLowerCase() : null
-      await Promise.all([loadOrders(), loadFeed({ cat: state.cat, cond: state.cond, sort: state.sort, query: state.query }, floorCode)])
+      await Promise.all([loadOrders(), loadFeed({ cat: state.cat, cond: state.cond, sort: state.sort, query: state.query, building: state.bldg }, floorCode)])
     },
     submitReviewFor: async (order, rating, comment) => {
       await submitOrderReview(order, rating, comment)

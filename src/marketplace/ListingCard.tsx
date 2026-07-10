@@ -1,7 +1,7 @@
 import { useM } from './context'
 import { T } from '../theme'
 import type { EnrichedItem } from '../types'
-import { Heart, MapPin, Verified } from '../components/Icons'
+import { MapPin, Star, Verified } from '../components/Icons'
 
 // corner tag: FEATURED (accent) or GRAD BUNDLE (olive) — set by the feed mapper
 function tagColors(tag: string): { bg: string; fg: string } | null {
@@ -42,9 +42,10 @@ export default function ListingCard({ it, index }: { it: EnrichedItem; index: nu
             toggleSaveItem(it.id)
           }}
           className="lok-heart"
-          style={{ position: 'absolute', top: 9, right: 9, width: 34, height: 34, borderRadius: '50%', border: 'none', background: 'rgba(251,248,241,.9)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: isSaved ? '#D4562F' : '#5A5648', zIndex: 2 }}
+          style={{ position: 'absolute', top: 9, right: 9, width: 40, height: 40, borderRadius: '50%', border: 'none', background: 'rgba(251,248,241,.9)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: isSaved ? '#E7A81E' : '#5A5648', zIndex: 2 }}
+          title={isSaved ? 'Remove from saved' : 'Save item'}
         >
-          <Heart fill={isSaved ? '#D4562F' : 'none'} />
+          <Star fill={isSaved ? '#E7A81E' : 'none'} size={21} />
         </button>
         <span style={{ position: 'absolute', bottom: 10, left: 11, display: 'flex', alignItems: 'center', gap: 5, fontFamily: "'Spline Sans Mono',monospace", fontSize: 10, fontWeight: 500, color: '#3A362C', background: 'rgba(251,248,241,.92)', backdropFilter: 'blur(4px)', padding: '4px 8px', borderRadius: 8 }}>
           <MapPin size={10} />

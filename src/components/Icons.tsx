@@ -40,6 +40,27 @@ export const Search = ({ size = 17, ...r }: IconProps) =>
 export const Plus = ({ size = 15, ...r }: IconProps) =>
   stroke(size, 2.6, <path d="M12 5v14M5 12h14" />, r)
 
+export const Star = ({
+  size = 17,
+  fill = 'none',
+  ...r
+}: IconProps & { fill?: string }) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill={fill}
+    stroke="currentColor"
+    strokeWidth={2}
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={r.className}
+    style={r.style}
+  >
+    <path d="M12 2.6l2.9 5.9 6.5.95-4.7 4.6 1.1 6.5L12 17.5l-5.8 3.05 1.1-6.5-4.7-4.6 6.5-.95z" />
+  </svg>
+)
+
 export const Heart = ({
   size = 17,
   fill = 'none',

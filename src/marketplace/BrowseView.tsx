@@ -1,7 +1,7 @@
 import { useM, type Sort } from './context'
 import ListingCard from './ListingCard'
-import { Search, Heart } from '../components/Icons'
-import { CATEGORIES, CAT_META, type Category } from '../theme'
+import { Search, Star } from '../components/Icons'
+import { CATEGORIES, CAT_META, BUILDINGS, type Category } from '../theme'
 import { useIsNarrow } from './useIsMobile'
 import type { EnrichedItem } from '../types'
 
@@ -13,7 +13,7 @@ const SORTS: { key: Sort; label: string }[] = [
 ]
 
 export default function BrowseView() {
-  const { state, enrichedItems, selectCond, selectSort, resetFilters, openSell, selectCat, toggleSavedView } = useM()
+  const { state, enrichedItems, selectCond, selectSort, resetFilters, openSell, selectCat, toggleSavedView, selectBldg, openRequests } = useM()
   const s = state
   const isNarrow = useIsNarrow()
   const counts = s.categoryCounts
@@ -26,8 +26,8 @@ export default function BrowseView() {
   const filtersActive = q !== '' || s.cat !== 'All' || s.cond !== 'All' || s.savedOnly
 
   // titles
-  let browseTitle = 'Around you'
-  let browseSub = `Verified students at JIU Cikarang — pay in-app, collect at the Security Post.`
+  let browseTitle = s.bldg === 'All' ? 'Around you' : s.bldg
+  let browseSub = `Verified students at ${s.bldg === 'All' ? 'JIU Cikarang' : s.bldg} — pay in-app, collect at the Security Post.`
   if (s.savedOnly) {
     browseTitle = 'Saved items'
     browseSub = 'Everything you tapped the heart on. Grab them before a neighbour does.'
@@ -45,12 +45,30 @@ export default function BrowseView() {
       {/* mobile category strip — replaces the sidebar when it's hidden */}
       {isNarrow && (
         <div className="lok-catbar">
+          <select
+            className="lok-field"
+            value={s.bldg}
+            onChange={(e) => selectBldg(e.target.value)}
+            style={{ flex: 'none', fontFamily: 'inherit', fontWeight: 700, fontSize: 12.5, padding: '8px 10px', borderRadius: 20, border: '1px solid #E4DDCE', background: '#FBF8F1', color: '#201E18' }}
+          >
+            <option value="All">All buildings</option>
+            {BUILDINGS.map((b) => (
+              <option key={b}>{b}</option>
+            ))}
+          </select>
+          <button
+            onClick={openRequests}
+            className="lok-chip"
+            style={{ flex: 'none', cursor: 'pointer', fontFamily: 'inherit', fontWeight: 700, fontSize: 13, padding: '8px 13px', borderRadius: 20, border: '1px solid #E4DDCE', background: '#FBF8F1', color: '#4A463B' }}
+          >
+            🙋 Requests
+          </button>
           <button
             onClick={toggleSavedView}
             className="lok-chip"
-            style={{ flex: 'none', cursor: 'pointer', fontFamily: 'inherit', fontWeight: 700, fontSize: 13, padding: '8px 13px', borderRadius: 20, display: 'flex', alignItems: 'center', gap: 6, border: `1px solid ${s.savedOnly ? '#D4562F' : '#E4DDCE'}`, background: s.savedOnly ? '#FBEEE9' : '#FBF8F1', color: s.savedOnly ? '#C0492A' : '#4A463B' }}
+            style={{ flex: 'none', cursor: 'pointer', fontFamily: 'inherit', fontWeight: 700, fontSize: 13, padding: '8px 13px', borderRadius: 20, display: 'flex', alignItems: 'center', gap: 6, border: `1px solid ${s.savedOnly ? '#E7A81E' : '#E4DDCE'}`, background: s.savedOnly ? '#FBF2DD' : '#FBF8F1', color: s.savedOnly ? '#9A6A12' : '#4A463B' }}
           >
-            <Heart fill={s.savedOnly ? '#D4562F' : 'none'} size={14} />
+            <Star fill={s.savedOnly ? '#E7A81E' : 'none'} size={15} />
             Saved
           </button>
           {CATEGORIES.map((label: Category) => {
