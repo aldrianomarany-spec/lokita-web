@@ -22,6 +22,7 @@ import {
   cancelOrder,
   subscribeOrders,
   subscribeListings,
+  subscribePresence,
   submitOrderReview,
   fetchWishlistIds,
   addToWishlist,
@@ -62,7 +63,7 @@ const EMPTY_PROFILE: Profile = {
   verification_status: 'pending', profile_photo_url: null,
 }
 
-export type View = 'browse' | 'requests' | 'messages' | 'notifications' | 'profile' | 'orders'
+export type View = 'browse' | 'requests' | 'people' | 'messages' | 'notifications' | 'profile' | 'orders'
 export type Sort = 'Nearest' | 'Newest' | 'Price'
 export type CoStep = 'options' | 'qris' | 'done' | 'review' | 'reviewdone'
 export type ListState = 'idle' | 'saving' | 'done'
@@ -81,6 +82,8 @@ export interface SellForm {
 export interface State {
   // read-only guest (no session): browsing allowed, all actions prompt signup
   guest: boolean
+  // user ids currently online (Supabase Realtime Presence — no DB storage)
+  onlineIds: string[]
   view: View
   cat: string
   cond: string
@@ -139,6 +142,7 @@ export interface State {
 
 const initialState: State = {
   guest: false,
+  onlineIds: [],
   view: 'browse',
   cat: 'All',
   cond: 'All',
@@ -206,6 +210,7 @@ export interface MarketplaceApi {
   selectCond: (label: string) => void
   selectBldg: (label: string) => void
   openRequests: () => void
+  openPeople: () => void
   openRequestChat: (requesterId: string) => Promise<void>
   selectSort: (k: Sort) => void
   toggleSavedView: () => void
@@ -372,6 +377,16 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
     return () => unsub?.()
   }, [loadOrders, loadProfile])
 
+  // ---- online presence (members only; guests neither track nor see it) ----
+  useEffect(() => {
+    let unsub: (() => void) | undefined
+    getUserId().then((uid) => {
+      if (!uid) return
+      unsub = subscribePresence(uid, (ids) => patch({ onlineIds: ids }))
+    })
+    return () => unsub?.()
+  }, [patch])
+
   // ---- messages + notifications (real, realtime) ----
   const loadConversations = useCallback(async () => {
     patch({ convsLoading: true })
@@ -481,6 +496,10 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
     selectCond: (label) => patch({ cond: label }),
     selectBldg: (label) => patch({ bldg: label, savedOnly: false, view: 'browse' }),
     openRequests: () => patch({ view: 'requests', menuOpen: false, sel: null }),
+    openPeople: () => {
+      if (state.guest) return goSignup()
+      patch({ view: 'people', menuOpen: false, sel: null })
+    },
     openRequestChat: async (requesterId) => {
       if (state.guest) return goSignup()
       try {

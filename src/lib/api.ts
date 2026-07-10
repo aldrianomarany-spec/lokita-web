@@ -106,6 +106,12 @@ export async function uploadAvatar(file: File): Promise<string> {
   if (upErr) throw upErr
   const { data } = supabase.storage.from('profile-photos').getPublicUrl(path)
   await updateMyProfile({ profile_photo_url: data.publicUrl })
+  // housekeeping: previous avatar files are junk now — remove them
+  const { data: files } = await supabase.storage.from('profile-photos').list(user.id)
+  const stale = (files || [])
+    .filter((f) => f.name.startsWith('avatar') && !path.endsWith('/' + f.name))
+    .map((f) => `${user.id}/${f.name}`)
+  if (stale.length) await supabase.storage.from('profile-photos').remove(stale).catch(() => {})
   return data.publicUrl
 }
 
@@ -441,8 +447,17 @@ export async function createListing(input: NewListing, photos: File[]): Promise<
   return id
 }
 
-// Owner-only (enforced by RLS too).
+// Owner-only (enforced by RLS too). Also removes the listing's photo files
+// from storage — otherwise they'd sit there as junk forever.
 export async function deleteListing(id: string): Promise<void> {
+  const user = await getUser()
+  if (user) {
+    const dir = `${user.id}/${id}`
+    const { data: files } = await supabase.storage.from('listing-photos').list(dir)
+    if (files && files.length) {
+      await supabase.storage.from('listing-photos').remove(files.map((f) => `${dir}/${f.name}`)).catch(() => {})
+    }
+  }
   const { error } = await supabase.from('listings').delete().eq('id', id)
   if (error) throw error
 }
@@ -909,4 +924,52 @@ export async function getOrCreateRequestConversation(requesterId: string): Promi
     .single()
   if (error) throw error
   return (data as { id: string }).id
+}
+
+// ===========================================================================
+// PEOPLE — every member of the marketplace, with live online presence.
+// Presence uses Supabase Realtime Presence: nothing is written to the
+// database, so it costs zero storage. Guests neither appear nor see this.
+// ===========================================================================
+export interface MemberRow {
+  id: string
+  name: string
+  photo: string | null
+  building: string // display label or ''
+  verified: boolean
+  since: string
+}
+
+export async function fetchMembers(): Promise<MemberRow[]> {
+  const { data, error } = await supabase
+    .from('public_profiles')
+    .select('id, name, profile_photo_url, building, verification_status, created_at')
+    .order('name', { ascending: true })
+    .limit(200)
+  if (error) throw error
+  const rows = (data as { id: string; name: string; profile_photo_url: string | null; building: string | null; verification_status: string; created_at: string }[]) || []
+  return rows.map((r) => ({
+    id: r.id,
+    name: r.name || 'Student',
+    photo: r.profile_photo_url,
+    building: r.building ? BUILDING_LABEL[r.building] || '' : '',
+    verified: r.verification_status === 'verified',
+    since: memberSince(r.created_at),
+  }))
+}
+
+// Join the shared presence channel as `uid` and report the set of online user
+// ids whenever it changes (join/leave/sync).
+export function subscribePresence(uid: string, onChange: (onlineIds: string[]) => void): () => void {
+  const ch = supabase.channel('lokita-online', { config: { presence: { key: uid } } })
+  const emit = () => onChange(Object.keys(ch.presenceState()))
+  ch.on('presence', { event: 'sync' }, emit)
+    .on('presence', { event: 'join' }, emit)
+    .on('presence', { event: 'leave' }, emit)
+    .subscribe(async (status) => {
+      if (status === 'SUBSCRIBED') await ch.track({ online_at: new Date().toISOString() })
+    })
+  return () => {
+    supabase.removeChannel(ch)
+  }
 }

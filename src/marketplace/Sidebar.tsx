@@ -2,7 +2,7 @@ import { useM } from './context'
 import { CATEGORIES, CAT_META, CAT_DOT, type Category } from '../theme'
 
 export default function Sidebar() {
-  const { state, selectCat, openRequests } = useM()
+  const { state, selectCat, openRequests, openPeople } = useM()
   const s = state
   const counts = s.categoryCounts
   const totalCount = Object.values(counts).reduce((a, n) => a + n, 0)
@@ -23,6 +23,20 @@ export default function Sidebar() {
           <span style={{ flex: 1 }}>Requests</span>
           <span style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 9, color: '#B7AF9C', fontWeight: 500 }}>WANTED</span>
         </button>
+        {!s.guest && (
+          <button
+            onClick={openPeople}
+            className="lok-navi"
+            style={{ width: '100%', border: 'none', cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left', display: 'flex', alignItems: 'center', gap: 12, fontWeight: 600, fontSize: 14, padding: '10px 12px', borderRadius: 11, background: s.view === 'people' ? '#EAF1EC' : 'transparent', color: s.view === 'people' ? '#12503A' : '#4A463B', marginBottom: 2 }}
+          >
+            <span style={{ width: 26, height: 26, borderRadius: 8, background: '#E7F1EA', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, flex: 'none' }}>👋</span>
+            <span style={{ flex: 1 }}>People</span>
+            <span style={{ display: 'flex', alignItems: 'center', gap: 5, fontFamily: "'Spline Sans Mono',monospace", fontSize: 10, color: '#1B7A4B', fontWeight: 600 }}>
+              <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#3DBB6E' }} />
+              {s.onlineIds.length}
+            </span>
+          </button>
+        )}
       </div>
 
       <div>

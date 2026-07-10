@@ -13,7 +13,7 @@ const SORTS: { key: Sort; label: string }[] = [
 ]
 
 export default function BrowseView() {
-  const { state, enrichedItems, selectCond, selectSort, resetFilters, openSell, selectCat, toggleSavedView, selectBldg, openRequests } = useM()
+  const { state, enrichedItems, selectCond, selectSort, resetFilters, openSell, selectCat, toggleSavedView, selectBldg, openRequests, openPeople } = useM()
   const s = state
   const isNarrow = useIsNarrow()
   const counts = s.categoryCounts
@@ -63,6 +63,16 @@ export default function BrowseView() {
           >
             🙋 Requests
           </button>
+          {!s.guest && (
+            <button
+              onClick={openPeople}
+              className="lok-chip"
+              style={{ flex: 'none', cursor: 'pointer', fontFamily: 'inherit', fontWeight: 700, fontSize: 13, padding: '8px 13px', borderRadius: 20, border: '1px solid #E4DDCE', background: '#FBF8F1', color: '#4A463B', display: 'flex', alignItems: 'center', gap: 6 }}
+            >
+              <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#3DBB6E' }} />
+              People
+            </button>
+          )}
           <button
             onClick={toggleSavedView}
             className="lok-chip"
