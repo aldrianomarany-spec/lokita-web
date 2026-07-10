@@ -327,17 +327,6 @@ export default function AuthFlow() {
           style={{ width: '44%', flex: 'none', background: 'var(--accent,#2A5FA8)', color: '#EAF0F8', padding: '48px 46px', display: 'flex', flexDirection: 'column', position: 'relative', overflow: 'hidden' }}
         >
           <div style={{ position: 'absolute', top: -90, right: -70, width: 300, height: 300, borderRadius: '50%', background: 'rgba(255,255,255,.06)' }} />
-          {MASCOT_URL && (
-            <div style={{ position: 'absolute', top: 'clamp(60px, 10vh, 110px)', left: 0, right: 0, display: 'flex', justifyContent: 'center', zIndex: 1, pointerEvents: 'none' }}>
-              <img
-                src={MASCOT_URL}
-                alt="Kapi, the LOKITA capybara"
-                title="Kapi — LOKITA's capybara. Always ready to help you move stuff."
-                className="lok-mascot"
-                style={{ width: 'clamp(300px, 34vw, 520px)', maxHeight: '46vh', objectFit: 'contain', pointerEvents: 'auto' }}
-              />
-            </div>
-          )}
           <div style={{ position: 'absolute', bottom: -140, left: -60, width: 360, height: 360, borderRadius: '50%', background: 'rgba(255,255,255,.05)' }} />
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, position: 'relative' }}>
             <div style={{ width: 44, height: 44, borderRadius: 13, background: '#F5F1E8', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
@@ -348,6 +337,17 @@ export default function AuthFlow() {
               <div style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 9, color: 'rgba(245,241,232,.65)', letterSpacing: '.16em', marginTop: 2 }}>LOKAL · KITA</div>
             </div>
           </div>
+          {MASCOT_URL && (
+            <div style={{ flex: 1, minHeight: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '14px 0', position: 'relative' }}>
+              <img
+                src={MASCOT_URL}
+                alt="Kapi, the LOKITA capybara"
+                title="Kapi — LOKITA's capybara. Always ready to help you move stuff."
+                className="lok-mascot"
+                style={{ maxHeight: '100%', maxWidth: 'min(440px, 82%)', objectFit: 'contain' }}
+              />
+            </div>
+          )}
           <div style={{ marginTop: 'auto', position: 'relative' }}>
             <div style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 11, color: 'rgba(245,241,232,.7)', letterSpacing: '.1em', marginBottom: 16 }}>THE DORM MARKETPLACE · JIU CIKARANG</div>
             <h1 style={{ fontFamily: "'Bricolage Grotesque',sans-serif", fontWeight: 800, fontSize: 40, lineHeight: 1.08, letterSpacing: '-.025em', margin: 0, color: '#F8F5EE' }}>Buy &amp; sell with the students next door.</h1>
