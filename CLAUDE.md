@@ -147,10 +147,18 @@ Done and shipped:
   Never re-add PII to that view. ProfileView has an "Account & privacy" card (change
   password via `updatePassword`, what-others-see summary).
 
+Also shipped (foundation upgrade):
+- Migration 0019: ban enforcement (restrictive insert policies + `is_banned()`, admin
+  Ban/Unban, banned banner) + `expire_stale_orders()` called on app start.
+- Photo compression before every upload (`src/lib/img.ts`).
+- PWA (public/manifest.webmanifest + icons), vendor bundle split (vite manualChunks),
+  legal pages `/terms` + `/privacy` (`src/pages/Legal.tsx`), Vercel Analytics component,
+  GitHub Actions CI (.github/workflows/ci.yml).
+
 Remaining / nice-to-have:
-- Reviews surfaces; wishlist table persistence (star is client-side only).
-- Real Midtrans QRIS (api/qris scaffolding exists; currently prototype/static-QR mode).
-- Security audit re-run; image optimization; code-splitting (bundle >500 kB warning).
+- **Real Midtrans QRIS** — deliberately last; blocked on the owner signing up for
+  Midtrans. api/qris scaffolding exists; currently prototype/static-QR mode.
+- Owner-side toggles: enable Vercel Analytics in the dashboard; custom domain.
 
 Context: the user pitched LOKITA with a PPT (slide 6 = the revenue model above). The project
 may continue from the user's personal Claude account — this file is the handoff; trust it over

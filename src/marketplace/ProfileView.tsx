@@ -351,10 +351,16 @@ export default function ProfileView() {
       </div>
       <AccountPrivacyCard />
 
-      <div style={{ marginTop: 32, paddingTop: 24, borderTop: '1px solid #E4DDCE', display: 'flex', justifyContent: 'center' }}>
+      <div style={{ marginTop: 32, paddingTop: 24, borderTop: '1px solid #E4DDCE', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14 }}>
         <button onClick={logout} className="lok-btn" style={{ border: '1px solid #E4C4B8', background: '#FBEEE9', color: '#C0492A', fontFamily: 'inherit', fontWeight: 700, fontSize: 14, padding: '12px 26px', borderRadius: 13, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 9 }}>
           <Logout /> Log out
         </button>
+        <div style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 10, color: '#A29C8B', letterSpacing: '.06em' }}>
+          <a href="/terms" target="_blank" rel="noreferrer" style={{ color: '#8A8578' }}>TERMS</a>
+          {' · '}
+          <a href="/privacy" target="_blank" rel="noreferrer" style={{ color: '#8A8578' }}>PRIVACY</a>
+          {' · LOKITA'}
+        </div>
       </div>
     </div>
   )

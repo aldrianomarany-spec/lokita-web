@@ -8,6 +8,7 @@ import {
   adminSetListingStatus,
   adminSetFeatured,
   adminSetVerification,
+  adminSetBanned,
   adminSetReportStatus,
   type AdminStats,
   type AdminListingRow,
@@ -254,15 +255,31 @@ export default function AdminView() {
                   <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{m.name}</span>
                   {m.verification_status === 'verified' && <Verified size={13} />}
                   {m.role === 'admin' && <span style={{ ...mono, fontSize: 8.5, color: '#12503A', background: '#EAF1EC', padding: '2px 6px', borderRadius: 6, flex: 'none' }}>ADMIN</span>}
+                  {m.is_banned && <span style={{ ...mono, fontSize: 8.5, color: '#B23A1B', background: '#FBEEE9', padding: '2px 6px', borderRadius: 6, flex: 'none' }}>BANNED</span>}
                 </div>
                 <div style={{ fontSize: 11.5, color: '#8A8578', fontWeight: 600, marginTop: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{m.email || '—'}</div>
               </div>
-              <div style={{ display: 'flex', gap: 7, flex: 'none' }}>
+              <div style={{ display: 'flex', gap: 7, flex: 'none', flexWrap: 'wrap' }}>
                 {m.verification_status === 'verified' ? (
                   <SmallBtn label="Unverify" tone="danger" busy={busyId === m.id} onClick={() => act(m.id, () => adminSetVerification(m.id, 'pending'))} />
                 ) : (
                   <SmallBtn label="Verify ✓" tone="accent" busy={busyId === m.id} onClick={() => act(m.id, () => adminSetVerification(m.id, 'verified'))} />
                 )}
+                {m.role !== 'admin' &&
+                  (m.is_banned ? (
+                    <SmallBtn label="Unban" busy={busyId === m.id} onClick={() => act(m.id, () => adminSetBanned(m.id, false))} />
+                  ) : (
+                    <SmallBtn
+                      label="Ban"
+                      tone="danger"
+                      busy={busyId === m.id}
+                      onClick={() => {
+                        if (window.confirm(`Ban ${m.name}? They can still browse but can't post, buy, or message until unbanned.`)) {
+                          act(m.id, () => adminSetBanned(m.id, true))
+                        }
+                      }}
+                    />
+                  ))}
               </div>
             </div>
           ))

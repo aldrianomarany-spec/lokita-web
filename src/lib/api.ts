@@ -1,6 +1,7 @@
 // Data-access layer: real Supabase queries + mappers between the DB row shapes
 // and the UI display shape the marketplace components already use.
 import { supabase } from './supabase'
+import { compressImage } from './img'
 import { getUser, type Profile as DbProfile } from './auth'
 import type { Profile as UiProfile, EnrichedItem } from '../types'
 import type { Tone } from '../theme'
@@ -52,6 +53,7 @@ export function dbToUiProfile(db: DbProfile): UiProfile & {
     verification_status: db.verification_status,
     profile_photo_url: db.profile_photo_url,
     role: db.role,
+    banned: db.is_banned,
   }
 }
 
@@ -98,9 +100,10 @@ export async function updateMyProfile(fields: Partial<DbProfile>): Promise<DbPro
 
 // Avatar → public profile-photos bucket (reused as the "avatars" bucket).
 // Owner-folder path so RLS lets only the owner write. Returns the public URL.
-export async function uploadAvatar(file: File): Promise<string> {
+export async function uploadAvatar(rawFile: File): Promise<string> {
   const user = await getUser()
   if (!user) throw new Error('Not signed in')
+  const file = await compressImage(rawFile)
   const ext = (file.name.split('.').pop() || 'jpg').toLowerCase()
   const path = `${user.id}/avatar-${Date.now()}.${ext}`
   const { error: upErr } = await supabase.storage.from('profile-photos').upload(path, file, { upsert: true })
@@ -442,7 +445,7 @@ export async function createListing(input: NewListing, photos: File[]): Promise<
   if (error) throw error
   const id = (data as { id: string }).id
   for (let i = 0; i < photos.length; i++) {
-    const f = photos[i]
+    const f = await compressImage(photos[i])
     const ext = (f.name.split('.').pop() || 'jpg').toLowerCase()
     const path = `${user.id}/${id}/${i}.${ext}`
     const { error: upErr } = await supabase.storage.from('listing-photos').upload(path, f, { upsert: true })
@@ -1189,13 +1192,14 @@ export interface AdminMemberRow {
   building: string | null
   verification_status: string
   role: string
+  is_banned: boolean
   created_at: string
 }
 
 export async function fetchAdminMembers(): Promise<AdminMemberRow[]> {
   const { data, error } = await supabase
     .from('profiles')
-    .select('id, name, email, building, verification_status, role, created_at')
+    .select('id, name, email, building, verification_status, role, is_banned, created_at')
     .order('created_at', { ascending: false })
     .limit(200)
   if (error) throw error
@@ -1206,6 +1210,20 @@ export async function fetchAdminMembers(): Promise<AdminMemberRow[]> {
 export async function adminSetVerification(id: string, status: 'verified' | 'pending'): Promise<void> {
   const { error } = await supabase.from('profiles').update({ verification_status: status }).eq('id', id)
   if (error) throw error
+}
+
+// Ban/unban (admin-only via RLS + trigger). Banned accounts can browse but
+// restrictive policies (migration 0019) block every new insert they try.
+export async function adminSetBanned(id: string, banned: boolean): Promise<void> {
+  const { error } = await supabase.from('profiles').update({ is_banned: banned }).eq('id', id)
+  if (error) throw error
+}
+
+// Cancel overdue orders (pending >48h, paid past drop-off deadline) so items
+// don't stay reserved forever. Fire-and-forget on app start; the DB function
+// (migration 0019) is idempotent and safe for any signed-in caller.
+export async function expireStaleOrders(): Promise<void> {
+  await supabase.rpc('expire_stale_orders')
 }
 
 // ---- reports (the reports table + RLS shipped in 0001: users insert their

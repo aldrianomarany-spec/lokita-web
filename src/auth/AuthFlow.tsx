@@ -440,6 +440,11 @@ export default function AuthFlow() {
                 </div>
 
                 <button className="lok-btn" onClick={doSignup} style={primaryBtn}>{btn('signup', 'Create account')}</button>
+                <div style={{ fontSize: 11, color: '#8A8578', fontWeight: 500, textAlign: 'center', marginTop: 10, lineHeight: 1.5 }}>
+                  By creating an account you agree to LOKITA's{' '}
+                  <a href="/terms" target="_blank" rel="noreferrer" style={{ color: 'var(--accent,#2A5FA8)', fontWeight: 700 }}>Terms</a> and{' '}
+                  <a href="/privacy" target="_blank" rel="noreferrer" style={{ color: 'var(--accent,#2A5FA8)', fontWeight: 700 }}>Privacy Policy</a>.
+                </div>
 
                 <div style={{ fontSize: 11.5, color: '#9A927F', textAlign: 'center', marginTop: 14, lineHeight: 1.5 }}>By creating an account you agree to Lokita's <a href="#">Community Rules</a> &amp; dorm verification.</div>
                 <div style={{ textAlign: 'center', marginTop: 20, fontSize: 13.5, color: '#6F6A5C', fontWeight: 500 }}>Already a member? <span onClick={goView('login')} className="lok-link" style={linkStyle}>Log in</span></div>
