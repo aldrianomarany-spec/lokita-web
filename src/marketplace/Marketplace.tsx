@@ -41,6 +41,13 @@ function Shell() {
 
       <TopBar />
 
+      {/* restricted-account notice — writes are blocked by DB policy */}
+      {!s.guest && s.profile.banned && (
+        <div style={{ background: '#B23A1B', color: '#FBEEE9', fontSize: 12.5, fontWeight: 700, padding: '9px 16px', textAlign: 'center', flex: 'none' }}>
+          Your account is restricted — you can browse, but posting, buying and messaging are disabled. Contact the LOKITA team if you think this is a mistake.
+        </div>
+      )}
+
       <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
         <Sidebar />
         <main className="lok-main" style={{ flex: 1, overflowY: 'auto', padding: '26px 32px 40px' }}>

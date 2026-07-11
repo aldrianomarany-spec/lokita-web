@@ -1,4 +1,5 @@
 import { supabase } from './supabase'
+import { compressImage } from './img'
 import type { Session, User } from '@supabase/supabase-js'
 
 // ---- domain enums mirroring the DB CHECK constraints ----
@@ -165,9 +166,10 @@ export async function completeProfile(details: ProfileDetails): Promise<Profile>
 // Student ID verification photo → PRIVATE bucket. Stored under <uid>/... so RLS
 // only lets the owner (and admins) read it. Saves the object path (not a public
 // URL) on the profile and leaves verification_status as 'pending' for review.
-export async function uploadVerificationDoc(file: File): Promise<string> {
+export async function uploadVerificationDoc(rawFile: File): Promise<string> {
   const user = await getUser()
   if (!user) throw new Error('Not signed in')
+  const file = await compressImage(rawFile)
   const ext = file.name.split('.').pop() || 'jpg'
   const path = `${user.id}/student-id.${ext}`
   const { error: upErr } = await supabase.storage

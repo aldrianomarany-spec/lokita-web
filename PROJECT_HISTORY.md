@@ -56,6 +56,20 @@ Everything needed to continue is in these two files + the git commit history
     ever showed it — all contact is in-app chat). Profile page gained an "Account &
     privacy" section: change password in-app (works for Google accounts too) and a
     plain-language card showing what other members see vs what only you see.
+12. **Foundation upgrade (everything except Midtrans, deliberately last)**:
+    - Migration 0019: ban enforcement (restrictive RLS insert policies on all user
+      tables + `is_banned()`; admin Ban/Unban buttons; banned users see a browse-only
+      banner) and `expire_stale_orders()` (pending >48h or missed drop-off deadline →
+      auto-cancelled; called fire-and-forget on app start).
+    - Client-side photo compression (`src/lib/img.ts`) on listing photos, avatars and
+      verification docs — max 1600px JPEG, protects free-tier storage.
+    - PWA: manifest + generated icons + theme-color → installable "Add to Home Screen".
+    - Bundle split (vite manualChunks): app js 641 kB → 222 kB.
+    - Legal pages at /terms and /privacy (fees, escrow, UU PDP), linked from signup
+      consent line + profile footer.
+    - Vercel Analytics component (owner must enable Analytics in the Vercel dashboard)
+      and GitHub Actions CI (build check on every push/PR).
+    - Real Midtrans QRIS remains the final step, pending the owner's Midtrans signup.
 
 ### 4. Deployment
 - **GitHub** `aldrianomarany-spec/lokita-web` — work branch `lokita-web-v2`,

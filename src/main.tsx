@@ -1,12 +1,14 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import { createBrowserRouter, RouterProvider, Navigate } from 'react-router-dom'
+import { Analytics } from '@vercel/analytics/react'
 import './index.css'
 import AuthFlow from './auth/AuthFlow'
 import CompleteProfile from './auth/CompleteProfile'
 import ResetPassword from './auth/ResetPassword'
 import RequireSession from './auth/RequireSession'
 import Marketplace from './marketplace/Marketplace'
+import { Terms, Privacy } from './pages/Legal'
 import { MASCOT_URL, BRAND_LOGO_URL } from './brand'
 
 // browser-tab icon: use our mascot (fallback: the logo) instead of the default
@@ -23,6 +25,8 @@ const router = createBrowserRouter([
   { path: '/', element: <AuthFlow /> },
   { path: '/onboarding', element: <CompleteProfile /> },
   { path: '/reset-password', element: <ResetPassword /> },
+  { path: '/terms', element: <Terms /> },
+  { path: '/privacy', element: <Privacy /> },
   {
     path: '/app',
     element: (
@@ -37,5 +41,7 @@ const router = createBrowserRouter([
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <RouterProvider router={router} />
+    {/* privacy-friendly page analytics (only active on Vercel with Analytics enabled) */}
+    <Analytics />
   </React.StrictMode>,
 )

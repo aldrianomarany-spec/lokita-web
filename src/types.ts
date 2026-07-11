@@ -49,4 +49,5 @@ export interface Profile {
   verification_status?: string
   profile_photo_url?: string | null
   role?: 'user' | 'admin' // unlocks the Control Room view
+  banned?: boolean // restricted account: browse-only, shown a banner
 }

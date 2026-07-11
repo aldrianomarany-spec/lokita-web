@@ -42,6 +42,7 @@ import {
   subscribeMessages,
   subscribeNotifications,
   countOpenReports,
+  expireStaleOrders,
   type ProfileStats,
   type OrderRow,
   type ConversationRow,
@@ -380,7 +381,11 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
     let unsub: (() => void) | undefined
     getUserId().then((uid) => {
       if (!uid) return
-      loadOrders()
+      // sweep overdue orders first (pending >48h / missed drop-off) so
+      // reserved items free up, then load the fresh list
+      expireStaleOrders()
+        .catch(() => {})
+        .finally(() => loadOrders())
       // refresh both the orders list AND profile stats — so a seller's "Sold"
       // (and either party's "Buying") tick up live when the counterparty acts.
       unsub = subscribeOrders(uid, () => {
