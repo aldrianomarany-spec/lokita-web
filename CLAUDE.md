@@ -109,15 +109,36 @@ Migrations live in `supabase/migrations/`, applied in order via the Supabase SQL
 - `notepad` on a non-existent path creates a blank file that can block `git pull` — have the user
   `del` stray blank files first.
 
-## Status / roadmap
+## Status / roadmap (last updated 2026-07-11)
 
-Done: Auth flow, profile, listings/feed, orders + escrow, messages + notifications (all realtime,
-backed by Supabase, fresh-install empty states).
+**LIVE at `lokita.vercel.app`.** Vercel deploys **production from `main`**, previews from
+`lokita-web-v2`. To ship: push to `lokita-web-v2`, then merge into `main` (user does this via
+GitHub's "Compare & pull request" button).
 
-Remaining:
-- **Wishlist + Reviews** — persist the ♡ save to the `wishlist` table (currently local-only in
-  `context.toggleSaveItem`); finish review surfaces.
-- **Security & validation audit** — re-check RLS on every table, confirm no service_role client-side,
-  add client + DB input validation.
-- **Deploy / production readiness** — Vercel (`vercel.json` SPA rewrite + `DEPLOY.md` exist),
-  email confirmation ON, Google OAuth, admin/verification review, mobile responsiveness, image optimization.
+Done and shipped:
+- Auth (email/password + Google OAuth for any Google account; campus domain is `@jiu.ac`),
+  guest browse mode, forgot/reset password, onboarding (CompleteProfile) with persistence check.
+- Listings: multi-photo, buildings Thomas/Union/Elizabeth/Main (+ per-building floors),
+  graduation bundles, requests board, save/wishlist star, building filter + ALL.
+- Orders: pending → paid → dropped_off → completed with **seller confirmation**; QRIS
+  (env `VITE_PAYMENT_MODE`, static QR via `VITE_QRIS_IMAGE_URL`) or cash on delivery.
+- Realtime EVERYTHING: feed, chat (e-commerce style with pinned product card), notifications
+  (+ clickable toast), presence/People (online dots), requests, profiles, member stats.
+- **Revenue model (migration 0017)**: seller-side platform fee baked into the published price —
+  fee = 5% of the seller's ask, min Rp 1.000, max Rp 4.000 (`platformFee()` in `src/theme.ts`).
+  Published `listings.price` = ask + fee, set by the `apply_platform_fee` BEFORE INSERT trigger
+  (DB-authoritative; SellModal shows a matching live preview). Buyers pay NO extra fee at
+  checkout — the cut is inside the listed price. Seller's take = `price - platform_fee`.
+  The JS preview formula and the SQL trigger MUST stay in sync.
+- Migrations 0001–0017 exist; the user applies each via the Supabase SQL Editor. As of the last
+  session the user had not yet confirmed running **0015, 0016, 0017** — verify before assuming
+  they're live in production.
+
+Remaining / nice-to-have:
+- Reviews surfaces; wishlist table persistence (star is client-side only).
+- Real Midtrans QRIS (api/qris scaffolding exists; currently prototype/static-QR mode).
+- Security audit re-run; image optimization; code-splitting (bundle >500 kB warning).
+
+Context: the user pitched LOKITA with a PPT (slide 6 = the revenue model above). The project
+may continue from the user's personal Claude account — this file is the handoff; trust it over
+missing chat history.
