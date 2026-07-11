@@ -4,12 +4,15 @@ import {
   fetchAdminStats,
   fetchAdminListings,
   fetchAdminMembers,
+  fetchAdminReports,
   adminSetListingStatus,
   adminSetFeatured,
   adminSetVerification,
+  adminSetReportStatus,
   type AdminStats,
   type AdminListingRow,
   type AdminMemberRow,
+  type AdminReportRow,
 } from '../lib/api'
 import { Verified } from '../components/Icons'
 
@@ -43,22 +46,24 @@ function SmallBtn({ label, onClick, tone = 'plain', busy }: { label: string; onC
 }
 
 export default function AdminView() {
-  const { state } = useM()
+  const { state, refreshReports, openMember } = useM()
   const isAdmin = !state.guest && state.profile.role === 'admin'
 
   const [stats, setStats] = useState<AdminStats | null>(null)
   const [listings, setListings] = useState<AdminListingRow[] | null>(null)
   const [members, setMembers] = useState<AdminMemberRow[] | null>(null)
+  const [reports, setReports] = useState<AdminReportRow[] | null>(null)
   const [err, setErr] = useState<string | null>(null)
   const [busyId, setBusyId] = useState<string | null>(null)
 
   const load = useCallback(async () => {
     setErr(null)
     try {
-      const [s, l, m] = await Promise.all([fetchAdminStats(), fetchAdminListings(), fetchAdminMembers()])
+      const [s, l, m, r] = await Promise.all([fetchAdminStats(), fetchAdminListings(), fetchAdminMembers(), fetchAdminReports()])
       setStats(s)
       setListings(l)
       setMembers(m)
+      setReports(r)
     } catch (e) {
       setErr(e instanceof Error ? e.message : 'Could not load admin data')
     }
@@ -73,6 +78,7 @@ export default function AdminView() {
     try {
       await fn()
       await load()
+      refreshReports() // keep the sidebar badge in sync
     } catch (e) {
       alert('Action failed: ' + (e instanceof Error ? e.message : 'unknown error'))
     } finally {
@@ -130,6 +136,61 @@ export default function AdminView() {
             <div style={{ fontSize: 11, color: 'rgba(247,243,234,.65)', fontWeight: 600, marginTop: 6 }}>+ {rp(stats.feePending)} riding on active listings</div>
           )}
         </div>
+      </div>
+
+      {/* reports queue — open ones first, resolved/dismissed shown muted */}
+      <div style={{ ...mono, marginBottom: 10 }}>
+        REPORTS · QUEUE {reports && reports.filter((r) => r.status === 'open').length > 0 ? `· ${reports.filter((r) => r.status === 'open').length} OPEN` : ''}
+      </div>
+      <div style={{ ...card, overflow: 'hidden', marginBottom: 26 }}>
+        {reports === null ? (
+          <div style={{ padding: 28, textAlign: 'center' }}>
+            <span className="lok-spin" style={{ width: 22, height: 22, border: '3px solid #DAD1BF', borderTopColor: 'var(--accent,#2A5FA8)', borderRadius: '50%', display: 'inline-block' }} />
+          </div>
+        ) : reports.length === 0 ? (
+          <div style={{ padding: '30px 20px', textAlign: 'center', color: '#8A8578', fontSize: 13 }}>No reports — all quiet. 🎉</div>
+        ) : (
+          [...reports]
+            .sort((a, b) => (a.status === 'open' ? 0 : 1) - (b.status === 'open' ? 0 : 1))
+            .map((r) => {
+              const open = r.status === 'open'
+              return (
+                <div key={r.id} style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap', padding: '12px 16px', borderBottom: '1px solid #EEE7D8', opacity: open ? 1 : 0.55 }}>
+                  <span style={{ flex: 'none', fontSize: 16 }}>{r.target_type === 'listing' ? '🏷️' : '👤'}</span>
+                  <div style={{ flex: '1 1 220px', minWidth: 0 }}>
+                    <div style={{ fontWeight: 700, fontSize: 13.5, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{r.target_label}</div>
+                    <div style={{ fontSize: 11.5, color: '#8A8578', fontWeight: 600, marginTop: 2 }}>
+                      {r.reason} — reported by {r.reporter_name}
+                    </div>
+                  </div>
+                  <span style={{ ...mono, fontSize: 9, color: open ? '#B23A1B' : '#3D7A54', background: open ? '#FBEEE9' : '#EAF1EC', padding: '4px 9px', borderRadius: 7, flex: 'none' }}>
+                    {open ? 'OPEN' : r.status === 'resolved' ? 'HANDLED' : 'DISMISSED'}
+                  </span>
+                  {open && (
+                    <div style={{ display: 'flex', gap: 7, flex: 'none', flexWrap: 'wrap' }}>
+                      {r.target_type === 'listing' && r.target_active && (
+                        <SmallBtn
+                          label="Remove listing"
+                          tone="danger"
+                          busy={busyId === r.id}
+                          onClick={() =>
+                            act(r.id, async () => {
+                              await adminSetListingStatus(r.target_id, 'removed')
+                              await adminSetReportStatus(r.id, 'resolved')
+                            })
+                          }
+                        />
+                      )}
+                      {r.target_type === 'user' && (
+                        <SmallBtn label="View profile" onClick={() => openMember(r.target_id, r.target_label)} />
+                      )}
+                      <SmallBtn label="Dismiss" busy={busyId === r.id} onClick={() => act(r.id, () => adminSetReportStatus(r.id, 'reviewed'))} />
+                    </div>
+                  )}
+                </div>
+              )
+            })
+        )}
       </div>
 
       {/* listings moderation */}

@@ -46,6 +46,11 @@ Everything needed to continue is in these two files + the git commit history
    verification. No new migrations: it uses the `is_admin()` security rules that shipped
    in migration 0001. Grant admin with:
    `update public.profiles set role='admin' where email='<email>';`
+10. **Reports (trust & safety)** — 🚩 Report button on item pages and member profiles
+    (reason chips: Scam / Prohibited / Wrong info / Harassment / Other + optional note),
+    a REPORTS queue at the top of the Control Room (Remove listing / View profile /
+    Dismiss), and a red open-count badge on the Admin sidebar item. Rides the `reports`
+    table + RLS from migration 0001 — zero new SQL.
 
 ### 4. Deployment
 - **GitHub** `aldrianomarany-spec/lokita-web` — work branch `lokita-web-v2`,

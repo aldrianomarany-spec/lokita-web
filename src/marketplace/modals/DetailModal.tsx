@@ -4,6 +4,7 @@ import { T } from '../../theme'
 import { tagStyle } from '../tagStyle'
 import { useIsPhone } from '../useIsMobile'
 import Overlay, { stop } from './Overlay'
+import ReportForm from '../ReportForm'
 import { ChevronRight, MapPin, MessageBubble, ShieldCheck, Star, Verified } from '../../components/Icons'
 
 export default function DetailModal() {
@@ -161,6 +162,7 @@ export default function DetailModal() {
                   Message seller
                 </button>
                 <button className="lok-btn" onClick={openCheckout} style={{ border: 'none', background: 'var(--accent,#2A5FA8)', color: '#F7F3EA', fontFamily: 'inherit', fontWeight: 700, fontSize: 14.5, padding: 14, borderRadius: 14, cursor: 'pointer', boxShadow: '0 8px 20px -8px rgba(42,95,168,.6)' }}>Buy now · {sel.price}</button>
+                <ReportForm targetType="listing" targetId={sel.id} label="this listing" />
               </>
             )}
           </div>

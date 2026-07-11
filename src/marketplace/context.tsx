@@ -41,6 +41,7 @@ import {
   markNotificationRead,
   subscribeMessages,
   subscribeNotifications,
+  countOpenReports,
   type ProfileStats,
   type OrderRow,
   type ConversationRow,
@@ -143,6 +144,7 @@ export interface State {
   listState: ListState
   bundleOn: boolean
   f: SellForm
+  openReports: number // open-report count for the admin sidebar badge
 }
 
 const initialState: State = {
@@ -198,6 +200,7 @@ const initialState: State = {
   listState: 'idle',
   bundleOn: false,
   f: { title: '', price: '', cat: 'Furniture', cond: 'Good', loc: 'Thomas Building', floor: '', desc: '', bundleItems: '' },
+  openReports: 0,
 }
 
 // (proximity now lives in src/lib/api.ts, computed on real DB floor codes)
@@ -218,6 +221,7 @@ export interface MarketplaceApi {
   openRequests: () => void
   openPeople: () => void
   openAdmin: () => void
+  refreshReports: () => void
   openRequestChat: (requesterId: string) => Promise<void>
   selectSort: (k: Sort) => void
   toggleSavedView: () => void
@@ -397,6 +401,15 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
     return () => unsub?.()
   }, [loadProfile])
 
+  // ---- admin badge: open-report count (RLS returns 0 rows for non-admins) ----
+  const loadReportsCount = useCallback(async () => {
+    patch({ openReports: await countOpenReports() })
+  }, [patch])
+  const isAdminRole = state.profile.role === 'admin'
+  useEffect(() => {
+    if (isAdminRole) loadReportsCount()
+  }, [isAdminRole, loadReportsCount])
+
   // ---- online presence (members only; guests neither track nor see it) ----
   useEffect(() => {
     let unsub: (() => void) | undefined
@@ -531,7 +544,9 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
     openAdmin: () => {
       if (state.guest || state.profile.role !== 'admin') return
       patch({ view: 'admin', menuOpen: false, sel: null })
+      loadReportsCount()
     },
+    refreshReports: () => loadReportsCount(),
     openPeople: () => {
       if (state.guest) return goSignup()
       patch({ view: 'people', menuOpen: false, sel: null })
