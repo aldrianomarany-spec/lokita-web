@@ -27,7 +27,7 @@ const rootStyle = {
   display: 'flex',
   flexDirection: 'column',
   overflow: 'hidden',
-  background: '#F5F5F3', // Grid Market paper (was cream #F1ECE1)
+  background: '#F5F5F3', // Grid Market paper (was cream #ECECEA)
 } as React.CSSProperties
 
 function Shell() {
@@ -75,7 +75,7 @@ function Shell() {
             dismissToast()
             openNotifTarget(n)
           }}
-          style={{ position: 'fixed', top: 82, right: 16, left: isPhone ? 16 : 'auto', maxWidth: 360, zIndex: 120, background: '#201E18', color: '#F7F3EA', borderRadius: 16, padding: '13px 16px', display: 'flex', gap: 12, alignItems: 'flex-start', cursor: 'pointer', boxShadow: '0 18px 40px -12px rgba(32,30,24,.5)', animation: 'lok-rise .3s cubic-bezier(.2,.8,.3,1) both' }}
+          style={{ position: 'fixed', top: 82, right: 16, left: isPhone ? 16 : 'auto', maxWidth: 360, zIndex: 120, background: '#17181A', color: '#F7F3EA', borderRadius: 0, padding: '13px 16px', display: 'flex', gap: 12, alignItems: 'flex-start', cursor: 'pointer', boxShadow: '0 18px 40px -12px rgba(18,19,21,.5)', animation: 'lok-rise .3s cubic-bezier(.2,.8,.3,1) both' }}
         >
           <span style={{ flex: 'none', fontSize: 18, marginTop: 1 }}>🔔</span>
           <div style={{ flex: 1, minWidth: 0 }}>
@@ -88,7 +88,7 @@ function Shell() {
               e.stopPropagation()
               dismissToast()
             }}
-            style={{ flex: 'none', border: 'none', background: 'rgba(247,243,234,.12)', color: '#F7F3EA', width: 24, height: 24, borderRadius: 8, cursor: 'pointer', fontSize: 12 }}
+            style={{ flex: 'none', border: 'none', background: 'rgba(247,243,234,.12)', color: '#F7F3EA', width: 24, height: 24, borderRadius: 0, cursor: 'pointer', fontSize: 12 }}
           >
             ✕
           </button>

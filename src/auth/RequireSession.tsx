@@ -29,10 +29,10 @@ export default function RequireSession({ children }: { children: React.ReactNode
 
   if (status === 'checking') {
     return (
-      <div style={{ height: '100vh', background: '#F1ECE1', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div style={{ height: '100vh', background: '#ECECEA', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <span
           className="lok-spin"
-          style={{ width: 26, height: 26, border: '3px solid #DAD1BF', borderTopColor: '#2A5FA8', borderRadius: '50%', display: 'inline-block' }}
+          style={{ width: 26, height: 26, border: '3px solid #D8D8D4', borderTopColor: '#2A5FA8', borderRadius: '50%', display: 'inline-block' }}
         />
       </div>
     )

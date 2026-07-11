@@ -11,8 +11,8 @@
 body {
   margin: 0;
   font-family: 'Hanken Grotesque', system-ui, sans-serif;
-  color: #201e18;
-  background: #f1ece1;
+  color: #17181A;
+  background: #ECECEA;
   -webkit-font-smoothing: antialiased;
 }
 
@@ -30,12 +30,12 @@ a:hover {
   height: 11px;
 }
 ::-webkit-scrollbar-thumb {
-  background: #dad1bf;
-  border-radius: 8px;
-  border: 3px solid #f1ece1;
+  background: #D8D8D4;
+  border-radius: 0;
+  border: 3px solid #ECECEA;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #c9bfa8;
+  background: #C2C2BE;
 }
 
 /* ---------- keyframes ---------- */
@@ -149,7 +149,7 @@ a:hover {
 .lok-card:hover {
   transform: translateY(-5px);
   box-shadow: 0 18px 38px -14px rgba(32, 30, 24, 0.32);
-  border-color: #201e18;
+  border-color: #17181A;
 }
 .lok-card:active {
   transform: translateY(-2px);

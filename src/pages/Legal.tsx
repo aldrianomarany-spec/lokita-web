@@ -7,12 +7,12 @@ import { Link } from 'react-router-dom'
 const UPDATED = '11 July 2026'
 const CONTACT = 'jiupoem2026@jiu.ac'
 
-const wrap: React.CSSProperties = { minHeight: '100vh', background: '#F1ECE1', padding: '40px 20px 80px', fontFamily: "'Hanken Grotesque',sans-serif", color: '#201E18' }
-const card: React.CSSProperties = { maxWidth: 720, margin: '0 auto', background: '#FBF8F1', border: '1px solid #E4DDCE', borderRadius: 26, padding: '38px 40px' }
+const wrap: React.CSSProperties = { minHeight: '100vh', background: '#ECECEA', padding: '40px 20px 80px', fontFamily: "'Hanken Grotesque',sans-serif", color: '#17181A' }
+const card: React.CSSProperties = { maxWidth: 720, margin: '0 auto', background: '#FFFFFF', border: '1px solid #D8D8D4', borderRadius: 0, padding: '38px 40px' }
 const h1: React.CSSProperties = { fontFamily: "'Bricolage Grotesque',sans-serif", fontSize: 32, fontWeight: 800, letterSpacing: '-.02em', margin: '6px 0 4px' }
 const h2: React.CSSProperties = { fontFamily: "'Bricolage Grotesque',sans-serif", fontSize: 19, fontWeight: 800, letterSpacing: '-.01em', margin: '28px 0 8px' }
-const p: React.CSSProperties = { fontSize: 14, lineHeight: 1.7, color: '#4A463B', margin: '0 0 10px' }
-const mono: React.CSSProperties = { fontFamily: "'Spline Sans Mono',monospace", fontSize: 11, color: '#A29C8B', letterSpacing: '.08em' }
+const p: React.CSSProperties = { fontSize: 14, lineHeight: 1.7, color: '#3A3B3E', margin: '0 0 10px' }
+const mono: React.CSSProperties = { fontFamily: "'Spline Sans Mono',monospace", fontSize: 11, color: '#9A9A94', letterSpacing: '.08em' }
 
 function Shell({ title, label, children }: { title: string; label: string; children: React.ReactNode }) {
   return (
@@ -23,8 +23,8 @@ function Shell({ title, label, children }: { title: string; label: string; child
         <h1 style={h1}>{title}</h1>
         <div style={{ ...mono, fontSize: 10, marginBottom: 8 }}>LAST UPDATED · {UPDATED.toUpperCase()}</div>
         {children}
-        <div style={{ marginTop: 34, paddingTop: 18, borderTop: '1px dashed #D8CFBB', fontSize: 13, color: '#8A8578' }}>
-          Questions? Contact the LOKITA team: <b style={{ color: '#201E18' }}>{CONTACT}</b> ·{' '}
+        <div style={{ marginTop: 34, paddingTop: 18, borderTop: '1px dashed #C9C9C5', fontSize: 13, color: '#8B8B86' }}>
+          Questions? Contact the LOKITA team: <b style={{ color: '#17181A' }}>{CONTACT}</b> ·{' '}
           <Link to="/terms" style={{ color: 'var(--accent,#2A5FA8)' }}>Terms</Link> ·{' '}
           <Link to="/privacy" style={{ color: 'var(--accent,#2A5FA8)' }}>Privacy</Link>
         </div>

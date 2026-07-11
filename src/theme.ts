@@ -19,13 +19,14 @@ export interface ToneStyle {
   label: string
 }
 
+// Grid Market: monochrome placeholder tints (the mock's diagonal gray stripes)
 export const T: Record<Tone, ToneStyle> = {
-  sand: { tint: '#EAE1CB', stripe: 'rgba(150,120,60,.10)', label: '#9A8A5E' },
-  sage: { tint: '#D9E3D6', stripe: 'rgba(60,110,70,.11)', label: '#5E8064' },
-  clay: { tint: '#EBDDD2', stripe: 'rgba(150,90,60,.10)', label: '#9C7458' },
-  haze: { tint: '#DBE1EA', stripe: 'rgba(70,90,130,.11)', label: '#6C7C9A' },
-  blush: { tint: '#ECDEDD', stripe: 'rgba(150,80,80,.10)', label: '#9C6E6E' },
-  olive: { tint: '#E4E5D3', stripe: 'rgba(110,120,60,.11)', label: '#7E8154' },
+  sand: { tint: '#ECECEA', stripe: 'rgba(0,0,0,.04)', label: '#9A9A94' },
+  sage: { tint: '#ECECEA', stripe: 'rgba(0,0,0,.04)', label: '#9A9A94' },
+  clay: { tint: '#ECECEA', stripe: 'rgba(0,0,0,.04)', label: '#9A9A94' },
+  haze: { tint: '#ECECEA', stripe: 'rgba(0,0,0,.04)', label: '#9A9A94' },
+  blush: { tint: '#ECECEA', stripe: 'rgba(0,0,0,.04)', label: '#9A9A94' },
+  olive: { tint: '#ECECEA', stripe: 'rgba(0,0,0,.04)', label: '#9A9A94' },
 }
 
 export type Category =
@@ -58,13 +59,13 @@ export const CAT_META: Record<Category, string> = {
 }
 
 export const CAT_DOT: Record<Category, string> = {
-  All: '#EADFCB',
-  Furniture: '#EAE1CB',
-  Electronics: '#DBE1EA',
-  Appliances: '#D9E3D6',
-  Clothes: '#ECDEDD',
-  Books: '#EBDDD2',
-  Bundles: '#E4E5D3',
+  All: '#ECECEA',
+  Furniture: '#ECECEA',
+  Electronics: '#ECECEA',
+  Appliances: '#ECECEA',
+  Clothes: '#ECECEA',
+  Books: '#ECECEA',
+  Bundles: '#ECECEA',
 }
 
 // categories offered in the Sell form (adds "Others")
