@@ -291,3 +291,11 @@ select.lok-field {
 .lok-catbar::-webkit-scrollbar {
   display: none;
 }
+
+/* the top-bar search is type="search" (anti-autofill) — hide the native ✕,
+   we render our own */
+input[type='search']::-webkit-search-cancel-button,
+input[type='search']::-webkit-search-decoration {
+  -webkit-appearance: none;
+  appearance: none;
+}
