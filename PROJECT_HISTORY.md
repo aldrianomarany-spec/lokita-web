@@ -40,6 +40,12 @@ Everything needed to continue is in these two files + the git commit history
    seller's ask, min Rp 1.000, max Rp 4.000 — added ON TOP at publish time, enforced by a
    DB trigger (migration 0017). Buyers pay the listed price with no extra checkout fee;
    sellers receive 100% of their ask.
+9. **Ratings & reviews** (rate after a completed order; average + comments on member
+   profiles) and the **Admin Control Room** — an admin-only sidebar view with platform
+   stats, LOKITA revenue counter, listing moderation (remove/restore/feature) and member
+   verification. No new migrations: it uses the `is_admin()` security rules that shipped
+   in migration 0001. Grant admin with:
+   `update public.profiles set role='admin' where email='<email>';`
 
 ### 4. Deployment
 - **GitHub** `aldrianomarany-spec/lokita-web` — work branch `lokita-web-v2`,

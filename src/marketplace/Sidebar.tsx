@@ -3,7 +3,7 @@ import { CATEGORIES, CAT_META, CAT_DOT, type Category } from '../theme'
 import { MASCOT_URL } from '../brand'
 
 export default function Sidebar() {
-  const { state, selectCat, openRequests, openPeople } = useM()
+  const { state, selectCat, openRequests, openPeople, openAdmin } = useM()
   const s = state
   const counts = s.categoryCounts
   const totalCount = Object.values(counts).reduce((a, n) => a + n, 0)
@@ -36,6 +36,18 @@ export default function Sidebar() {
               <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#3DBB6E' }} />
               {s.onlineIds.length}
             </span>
+          </button>
+        )}
+        {/* only rendered for role='admin' — RLS guards the data either way */}
+        {!s.guest && s.profile.role === 'admin' && (
+          <button
+            onClick={openAdmin}
+            className="lok-navi"
+            style={{ width: '100%', border: 'none', cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left', display: 'flex', alignItems: 'center', gap: 12, fontWeight: 600, fontSize: 14, padding: '10px 12px', borderRadius: 11, background: s.view === 'admin' ? '#EAF1EC' : 'transparent', color: s.view === 'admin' ? '#12503A' : '#4A463B', marginBottom: 2 }}
+          >
+            <span style={{ width: 26, height: 26, borderRadius: 8, background: '#F1E4E0', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, flex: 'none' }}>🛡️</span>
+            <span style={{ flex: 1 }}>Admin</span>
+            <span style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 9, color: '#B7AF9C', fontWeight: 500 }}>STAFF</span>
           </button>
         )}
       </div>

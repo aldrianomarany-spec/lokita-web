@@ -130,9 +130,14 @@ Done and shipped:
   (DB-authoritative; SellModal shows a matching live preview). Buyers pay NO extra fee at
   checkout — the cut is inside the listed price. Seller's take = `price - platform_fee`.
   The JS preview formula and the SQL trigger MUST stay in sync.
-- Migrations 0001–0017 exist; the user applies each via the Supabase SQL Editor. As of the last
-  session the user had not yet confirmed running **0015, 0016, 0017** — verify before assuming
-  they're live in production.
+- Migrations 0001–0017 exist and are all applied in production (0017 confirmed 2026-07-11).
+- Ratings & reviews: rate the counterparty after a completed order (OrdersView), average + list
+  shown on member profiles. Backed by the `reviews` table + policies from 0001.
+- **Admin Control Room** (`AdminView.tsx`, sidebar item visible when `profiles.role='admin'`):
+  stats tiles + LOKITA revenue (sum of `platform_fee` on sold listings, + pending on active),
+  listing moderation (remove/restore/feature), member verification toggle. Zero new migrations —
+  it rides the `is_admin()` RLS policies from 0001. To grant admin:
+  `update public.profiles set role='admin' where email='<email>';`
 
 Remaining / nice-to-have:
 - Reviews surfaces; wishlist table persistence (star is client-side only).

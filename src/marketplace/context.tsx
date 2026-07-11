@@ -65,7 +65,7 @@ const EMPTY_PROFILE: Profile = {
   verification_status: 'pending', profile_photo_url: null,
 }
 
-export type View = 'browse' | 'requests' | 'people' | 'member' | 'messages' | 'notifications' | 'profile' | 'orders'
+export type View = 'browse' | 'requests' | 'people' | 'member' | 'messages' | 'notifications' | 'profile' | 'orders' | 'admin'
 export type Sort = 'Nearest' | 'Newest' | 'Price'
 export type CoStep = 'options' | 'qris' | 'done' | 'review' | 'reviewdone'
 export type ListState = 'idle' | 'saving' | 'done'
@@ -217,6 +217,7 @@ export interface MarketplaceApi {
   selectBldg: (label: string) => void
   openRequests: () => void
   openPeople: () => void
+  openAdmin: () => void
   openRequestChat: (requesterId: string) => Promise<void>
   selectSort: (k: Sort) => void
   toggleSavedView: () => void
@@ -526,6 +527,11 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
     selectCond: (label) => patch({ cond: label }),
     selectBldg: (label) => patch({ bldg: label, savedOnly: false, view: 'browse' }),
     openRequests: () => patch({ view: 'requests', menuOpen: false, sel: null }),
+    // gate is cosmetic — RLS is the real barrier for every admin query
+    openAdmin: () => {
+      if (state.guest || state.profile.role !== 'admin') return
+      patch({ view: 'admin', menuOpen: false, sel: null })
+    },
     openPeople: () => {
       if (state.guest) return goSignup()
       patch({ view: 'people', menuOpen: false, sel: null })
