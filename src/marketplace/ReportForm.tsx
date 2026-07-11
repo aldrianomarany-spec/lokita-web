@@ -36,7 +36,7 @@ export default function ReportForm({ targetType, targetId, label }: { targetType
       <button
         onClick={() => setOpen(true)}
         className="lok-navi"
-        style={{ border: 'none', background: 'transparent', cursor: 'pointer', fontFamily: 'inherit', fontSize: 12, fontWeight: 600, color: '#A29C8B', padding: '6px 2px', textAlign: 'left' }}
+        style={{ border: 'none', background: 'transparent', cursor: 'pointer', fontFamily: 'inherit', fontSize: 12, fontWeight: 600, color: '#9A9A94', padding: '6px 2px', textAlign: 'left' }}
       >
         🚩 Report {label}
       </button>
@@ -44,10 +44,10 @@ export default function ReportForm({ targetType, targetId, label }: { targetType
   }
 
   return (
-    <div style={{ background: '#F4EFE5', border: '1px solid #E4DDCE', borderRadius: 14, padding: '12px 14px', animation: 'lok-fade .25s ease both' }}>
+    <div style={{ background: '#F5F5F3', border: '1px solid #D8D8D4', borderRadius: 0, padding: '12px 14px', animation: 'lok-fade .25s ease both' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 9 }}>
-        <span style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 10, color: '#A29C8B', letterSpacing: '.06em' }}>REPORT {label.toUpperCase()} — WHY?</span>
-        <button onClick={() => setOpen(false)} style={{ border: 'none', background: 'transparent', cursor: 'pointer', color: '#A29C8B', fontSize: 13 }}>✕</button>
+        <span style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 10, color: '#9A9A94', letterSpacing: '.06em' }}>REPORT {label.toUpperCase()} — WHY?</span>
+        <button onClick={() => setOpen(false)} style={{ border: 'none', background: 'transparent', cursor: 'pointer', color: '#9A9A94', fontSize: 13 }}>✕</button>
       </div>
       <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 9 }}>
         {REASONS.map((r) => {
@@ -57,7 +57,7 @@ export default function ReportForm({ targetType, targetId, label }: { targetType
               key={r}
               onClick={() => setReason(r)}
               className="lok-btn"
-              style={{ cursor: 'pointer', fontFamily: 'inherit', fontSize: 11.5, fontWeight: 700, padding: '6px 11px', borderRadius: 9, border: `1.5px solid ${on ? 'var(--accent,#2A5FA8)' : '#D8CFBB'}`, background: on ? '#EAF1EC' : '#FBF8F1', color: on ? '#12503A' : '#5A5648' }}
+              style={{ cursor: 'pointer', fontFamily: 'inherit', fontSize: 11.5, fontWeight: 700, padding: '6px 11px', borderRadius: 0, border: `1.5px solid ${on ? 'var(--accent,#2A5FA8)' : '#C9C9C5'}`, background: on ? '#E9EDFC' : '#FFFFFF', color: on ? '#2441B8' : '#4A4B4E' }}
             >
               {r}
             </button>
@@ -69,13 +69,13 @@ export default function ReportForm({ targetType, targetId, label }: { targetType
         value={note}
         onChange={(e) => setNote(e.target.value)}
         placeholder="Add a short note (optional)"
-        style={{ width: '100%', boxSizing: 'border-box', background: '#FBF8F1', border: '1.5px solid #E4DDCE', borderRadius: 10, padding: '9px 12px', fontSize: 12.5, fontFamily: 'inherit', fontWeight: 500, color: '#201E18', marginBottom: 9 }}
+        style={{ width: '100%', boxSizing: 'border-box', background: '#FFFFFF', border: '1.5px solid #D8D8D4', borderRadius: 0, padding: '9px 12px', fontSize: 12.5, fontFamily: 'inherit', fontWeight: 500, color: '#17181A', marginBottom: 9 }}
       />
       <button
         onClick={send}
         disabled={!reason || state === 'sending'}
         className="lok-btn"
-        style={{ border: 'none', background: reason ? '#C0492A' : '#D8CFBB', color: '#FBF8F1', fontFamily: 'inherit', fontWeight: 700, fontSize: 12.5, padding: '9px 16px', borderRadius: 10, cursor: reason ? 'pointer' : 'default' }}
+        style={{ border: 'none', background: reason ? '#C0492A' : '#C9C9C5', color: '#FFFFFF', fontFamily: 'inherit', fontWeight: 700, fontSize: 12.5, padding: '9px 16px', borderRadius: 0, cursor: reason ? 'pointer' : 'default' }}
       >
         {state === 'sending' ? 'Sending…' : 'Send report'}
       </button>

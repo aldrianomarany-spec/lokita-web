@@ -52,69 +52,69 @@ export default function CheckoutModal() {
 
   return (
     <Overlay onClose={closeCheckout} z={90}>
-      <div onClick={stop} style={{ background: '#FBF8F1', borderRadius: 26, padding: '28px 30px', width: '100%', maxWidth: 460, animation: 'lok-pop .26s cubic-bezier(.2,.8,.3,1) both', boxShadow: '0 40px 90px -20px rgba(32,30,24,.5)', maxHeight: '90vh', overflowY: 'auto' }}>
+      <div onClick={stop} style={{ background: '#FFFFFF', borderRadius: 0, padding: '28px 30px', width: '100%', maxWidth: 460, animation: 'lok-pop .26s cubic-bezier(.2,.8,.3,1) both', boxShadow: '0 40px 90px -20px rgba(18,19,21,.5)', maxHeight: '90vh', overflowY: 'auto' }}>
         {s.coStep === 'options' && (
           <>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
               <h2 style={{ fontFamily: "'Bricolage Grotesque',sans-serif", fontSize: 21, fontWeight: 800, margin: 0 }}>Complete purchase</h2>
-              <button onClick={closeCheckout} className="lok-navi" style={{ border: '1px solid #E4DDCE', background: '#F4EFE5', width: 34, height: 34, borderRadius: 10, fontSize: 15, cursor: 'pointer', color: '#5A5648' }}>✕</button>
+              <button onClick={closeCheckout} className="lok-navi" style={{ border: '1px solid #D8D8D4', background: '#F5F5F3', width: 34, height: 34, borderRadius: 0, fontSize: 15, cursor: 'pointer', color: '#4A4B4E' }}>✕</button>
             </div>
-            <div style={{ background: '#F4EFE5', border: '1px solid #E4DDCE', borderRadius: 14, padding: '12px 15px', margin: '14px 0 18px' }}>
+            <div style={{ background: '#F5F5F3', border: '1px solid #D8D8D4', borderRadius: 0, padding: '12px 15px', margin: '14px 0 18px' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <div style={{ fontWeight: 700, fontSize: 14 }}>{sel.title}</div>
-                <div style={{ fontWeight: 600, fontSize: 13.5, color: '#3A362C' }}>{rp(sel.priceNum)}</div>
+                <div style={{ fontWeight: 600, fontSize: 13.5, color: '#2A2B2E' }}>{rp(sel.priceNum)}</div>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 7 }}>
-                <div style={{ fontSize: 12, color: '#8A8578', fontWeight: 600 }}>LOKITA platform fee <span title="Keeps LOKITA running — escrow, Security Post & support" style={{ cursor: 'help' }}>ⓘ</span></div>
+                <div style={{ fontSize: 12, color: '#8B8B86', fontWeight: 600 }}>LOKITA platform fee <span title="Keeps LOKITA running — escrow, Security Post & support" style={{ cursor: 'help' }}>ⓘ</span></div>
                 <div style={{ fontSize: 12.5, color: '#3D7A54', fontWeight: 700 }}>Included ✓</div>
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 9, paddingTop: 9, borderTop: '1px dashed #D8CFBB' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 9, paddingTop: 9, borderTop: '1px dashed #C9C9C5' }}>
                 <div style={{ fontWeight: 800, fontSize: 13.5 }}>Total — no extra charges</div>
                 <div style={{ fontFamily: "'Bricolage Grotesque',sans-serif", fontWeight: 800, fontSize: 17, color: 'var(--accent,#2A5FA8)' }}>{rp(total)}</div>
               </div>
             </div>
-            <div style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 10, color: '#A29C8B', letterSpacing: '.06em', marginBottom: 10 }}>HOW TO EXCHANGE</div>
+            <div style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 10, color: '#9A9A94', letterSpacing: '.06em', marginBottom: 10 }}>HOW TO EXCHANGE</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 9, marginBottom: 20 }}>
               {PICKUP_OPTS.map((o) => {
                 const on = s.pickup === o.key
                 return (
-                  <div key={o.key} onClick={() => setPickup(o.key)} className="lok-btn" style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 12, background: on ? '#EAF1EC' : '#F4EFE5', border: `1.5px solid ${on ? 'var(--accent,#2A5FA8)' : '#E4DDCE'}`, borderRadius: 14, padding: '12px 14px' }}>
-                    <div style={{ width: 34, height: 34, borderRadius: 10, background: '#fff', color: 'var(--accent,#2A5FA8)', display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 'none' }}>{o.ic}</div>
+                  <div key={o.key} onClick={() => setPickup(o.key)} className="lok-btn" style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 12, background: on ? '#E9EDFC' : '#F5F5F3', border: `1.5px solid ${on ? 'var(--accent,#2A5FA8)' : '#D8D8D4'}`, borderRadius: 0, padding: '12px 14px' }}>
+                    <div style={{ width: 34, height: 34, borderRadius: 0, background: '#fff', color: 'var(--accent,#2A5FA8)', display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 'none' }}>{o.ic}</div>
                     <div style={{ flex: 1 }}>
                       <div style={{ fontWeight: 700, fontSize: 13.5 }}>{o.label}</div>
-                      <div style={{ fontSize: 11.5, color: '#6F6A5C', fontWeight: 500 }}>{o.desc}</div>
+                      <div style={{ fontSize: 11.5, color: '#5F6063', fontWeight: 500 }}>{o.desc}</div>
                     </div>
-                    <span style={{ width: 18, height: 18, borderRadius: '50%', border: `2px solid ${on ? 'var(--accent,#2A5FA8)' : '#C9BFA8'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 'none' }}>
+                    <span style={{ width: 18, height: 18, borderRadius: '50%', border: `2px solid ${on ? 'var(--accent,#2A5FA8)' : '#C2C2BE'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 'none' }}>
                       {on && <span style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--accent,#2A5FA8)' }} />}
                     </span>
                   </div>
                 )
               })}
             </div>
-            <div style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 10, color: '#A29C8B', letterSpacing: '.06em', marginBottom: 10 }}>PAYMENT</div>
+            <div style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 10, color: '#9A9A94', letterSpacing: '.06em', marginBottom: 10 }}>PAYMENT</div>
             <div style={{ display: 'flex', gap: 9, marginBottom: 22 }}>
               {PAY_OPTS.map((o) => {
                 const on = s.pay === o.key
                 return (
-                  <div key={o.key} onClick={() => setPay(o.key)} className="lok-btn" style={{ flex: 1, cursor: 'pointer', background: on ? '#EAF1EC' : '#F4EFE5', border: `1.5px solid ${on ? 'var(--accent,#2A5FA8)' : '#E4DDCE'}`, borderRadius: 14, padding: '14px 13px', textAlign: 'center' }}>
-                    <div style={{ width: 34, height: 34, borderRadius: 10, background: '#fff', color: 'var(--accent,#2A5FA8)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 8px' }}>{o.ic}</div>
+                  <div key={o.key} onClick={() => setPay(o.key)} className="lok-btn" style={{ flex: 1, cursor: 'pointer', background: on ? '#E9EDFC' : '#F5F5F3', border: `1.5px solid ${on ? 'var(--accent,#2A5FA8)' : '#D8D8D4'}`, borderRadius: 0, padding: '14px 13px', textAlign: 'center' }}>
+                    <div style={{ width: 34, height: 34, borderRadius: 0, background: '#fff', color: 'var(--accent,#2A5FA8)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 8px' }}>{o.ic}</div>
                     <div style={{ fontWeight: 700, fontSize: 13 }}>{o.label}</div>
-                    <div style={{ fontSize: 11, color: '#6F6A5C', fontWeight: 500, marginTop: 2 }}>{o.desc}</div>
+                    <div style={{ fontSize: 11, color: '#5F6063', fontWeight: 500, marginTop: 2 }}>{o.desc}</div>
                   </div>
                 )
               })}
             </div>
-            <button onClick={coContinue} className="lok-btn" style={{ width: '100%', border: 'none', background: 'var(--accent,#2A5FA8)', color: '#F7F3EA', fontFamily: 'inherit', fontWeight: 700, fontSize: 14.5, padding: 14, borderRadius: 14, cursor: 'pointer', boxShadow: '0 8px 20px -8px rgba(27,94,67,.7)' }}>Continue · {rp(total)}</button>
+            <button onClick={coContinue} className="lok-btn" style={{ width: '100%', border: 'none', background: 'var(--accent,#2A5FA8)', color: '#F7F3EA', fontFamily: 'inherit', fontWeight: 700, fontSize: 14.5, padding: 14, borderRadius: 0, cursor: 'pointer', boxShadow: '0 8px 20px -8px rgba(53,85,230,.7)' }}>Continue · {rp(total)}</button>
           </>
         )}
 
         {s.coStep === 'qris' && (
           <div style={{ textAlign: 'center' }}>
             <div style={{ fontFamily: "'Bricolage Grotesque',sans-serif", fontSize: 20, fontWeight: 800, marginBottom: 4 }}>Scan to pay</div>
-            <div style={{ fontSize: 13, color: '#6F6A5C', marginBottom: 18 }}>Open any QRIS-enabled app (GoPay, OVO, DANA, mobile banking) and scan</div>
-            <div style={{ width: 220, height: 220, margin: '0 auto 16px', borderRadius: 18, background: '#fff', border: '1px solid #E4DDCE', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 12, overflow: 'hidden' }}>
+            <div style={{ fontSize: 13, color: '#5F6063', marginBottom: 18 }}>Open any QRIS-enabled app (GoPay, OVO, DANA, mobile banking) and scan</div>
+            <div style={{ width: 220, height: 220, margin: '0 auto 16px', borderRadius: 0, background: '#fff', border: '1px solid #D8D8D4', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 12, overflow: 'hidden' }}>
               {s.qrisLoading ? (
-                <span className="lok-spin" style={{ width: 28, height: 28, border: '3px solid #DAD1BF', borderTopColor: 'var(--accent,#2A5FA8)', borderRadius: '50%', display: 'inline-block' }} />
+                <span className="lok-spin" style={{ width: 28, height: 28, border: '3px solid #D8D8D4', borderTopColor: 'var(--accent,#2A5FA8)', borderRadius: '50%', display: 'inline-block' }} />
               ) : s.qris ? (
                 <img src={s.qris.qrUrl} alt="QRIS payment code" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
               ) : (
@@ -122,37 +122,37 @@ export default function CheckoutModal() {
               )}
             </div>
             <div style={{ fontFamily: "'Bricolage Grotesque',sans-serif", fontWeight: 800, fontSize: 22, color: 'var(--accent,#2A5FA8)' }}>{rp(total)}</div>
-            <div style={{ fontSize: 11, color: '#A29C8B', fontWeight: 600, marginTop: 2 }}>platform fee included — no extra charges</div>
-            <div style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 11, color: '#A29C8B', marginBottom: 18 }}>LOKITA · QRIS{manualQr ? ' · PROTOTYPE' : ''}</div>
+            <div style={{ fontSize: 11, color: '#9A9A94', fontWeight: 600, marginTop: 2 }}>platform fee included — no extra charges</div>
+            <div style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 11, color: '#9A9A94', marginBottom: 18 }}>LOKITA · QRIS{manualQr ? ' · PROTOTYPE' : ''}</div>
             {s.qris && manualQr && (
               <>
-                <button onClick={confirmQrisPaid} className="lok-btn" style={{ width: '100%', border: 'none', background: 'var(--accent,#2A5FA8)', color: '#F7F3EA', fontFamily: 'inherit', fontWeight: 700, fontSize: 14.5, padding: 14, borderRadius: 14, cursor: 'pointer', marginBottom: 10 }}>I've completed payment</button>
-                <div style={{ fontSize: 11.5, color: '#8A8578', fontWeight: 500, lineHeight: 1.5, marginBottom: 12 }}>The seller checks the money arrived, then accepts your order — you'll get a notification.</div>
+                <button onClick={confirmQrisPaid} className="lok-btn" style={{ width: '100%', border: 'none', background: 'var(--accent,#2A5FA8)', color: '#F7F3EA', fontFamily: 'inherit', fontWeight: 700, fontSize: 14.5, padding: 14, borderRadius: 0, cursor: 'pointer', marginBottom: 10 }}>I've completed payment</button>
+                <div style={{ fontSize: 11.5, color: '#8B8B86', fontWeight: 500, lineHeight: 1.5, marginBottom: 12 }}>The seller checks the money arrived, then accepts your order — you'll get a notification.</div>
               </>
             )}
             {s.qris && !manualQr && (
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 9, background: '#EAF1EC', border: '1px solid #CFE2D7', borderRadius: 12, padding: '11px 14px', marginBottom: 12, fontSize: 12.5, fontWeight: 600, color: '#12503A' }}>
-                <span className="lok-spin" style={{ width: 14, height: 14, border: '2px solid #A9CBB8', borderTopColor: '#12503A', borderRadius: '50%', display: 'inline-block' }} />
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 9, background: '#E9EDFC', border: '1px solid #C7D2F2', borderRadius: 0, padding: '11px 14px', marginBottom: 12, fontSize: 12.5, fontWeight: 600, color: '#2441B8' }}>
+                <span className="lok-spin" style={{ width: 14, height: 14, border: '2px solid #A9CBB8', borderTopColor: '#2441B8', borderRadius: '50%', display: 'inline-block' }} />
                 Waiting for your payment — this confirms automatically.
               </div>
             )}
-            <button onClick={cancelQrisPayment} className="lok-btn" style={{ width: '100%', border: '1px solid #E4C4B8', background: '#FBEEE9', color: '#C0492A', fontFamily: 'inherit', fontWeight: 700, fontSize: 13.5, padding: 12, borderRadius: 13, cursor: 'pointer' }}>Cancel payment</button>
+            <button onClick={cancelQrisPayment} className="lok-btn" style={{ width: '100%', border: '1px solid #E4C4B8', background: '#FBEEE9', color: '#C0492A', fontFamily: 'inherit', fontWeight: 700, fontSize: 13.5, padding: 12, borderRadius: 0, cursor: 'pointer' }}>Cancel payment</button>
           </div>
         )}
 
         {s.coStep === 'done' && (
           <div style={{ textAlign: 'center' }}>
-            <div style={{ width: 66, height: 66, borderRadius: '50%', background: '#EAF1EC', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 18px', color: 'var(--accent,#2A5FA8)' }}>
+            <div style={{ width: 66, height: 66, borderRadius: '50%', background: '#E9EDFC', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 18px', color: 'var(--accent,#2A5FA8)' }}>
               <Check size={32} />
             </div>
             <div style={{ fontFamily: "'Bricolage Grotesque',sans-serif", fontWeight: 800, fontSize: 20, marginBottom: 9 }}>Order placed</div>
-            <div style={{ fontSize: 13.5, color: '#5A5648', lineHeight: 1.6, marginBottom: 12 }}>{doneMsg}</div>
+            <div style={{ fontSize: 13.5, color: '#4A4B4E', lineHeight: 1.6, marginBottom: 12 }}>{doneMsg}</div>
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'center', marginBottom: 22 }}>
-              <span style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 10, color: '#3A362C', background: '#F1ECE1', padding: '5px 10px', borderRadius: 8 }}>{payLabel}</span>
-              <span style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 10, color: '#3A362C', background: '#F1ECE1', padding: '5px 10px', borderRadius: 8 }}>{pickupLabel}</span>
+              <span style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 10, color: '#2A2B2E', background: '#ECECEA', padding: '5px 10px', borderRadius: 0 }}>{payLabel}</span>
+              <span style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 10, color: '#2A2B2E', background: '#ECECEA', padding: '5px 10px', borderRadius: 0 }}>{pickupLabel}</span>
             </div>
-            <button onClick={openOrders} className="lok-btn" style={{ width: '100%', border: 'none', background: 'var(--accent,#2A5FA8)', color: '#F7F3EA', fontFamily: 'inherit', fontWeight: 700, fontSize: 14.5, padding: 14, borderRadius: 14, cursor: 'pointer', marginBottom: 10 }}>View my orders</button>
-            <button onClick={closeCheckout} className="lok-btn" style={{ width: '100%', border: '1px solid #D8CFBB', background: '#F4EFE5', color: '#201E18', fontFamily: 'inherit', fontWeight: 700, fontSize: 14, padding: 12, borderRadius: 13, cursor: 'pointer' }}>Keep browsing</button>
+            <button onClick={openOrders} className="lok-btn" style={{ width: '100%', border: 'none', background: 'var(--accent,#2A5FA8)', color: '#F7F3EA', fontFamily: 'inherit', fontWeight: 700, fontSize: 14.5, padding: 14, borderRadius: 0, cursor: 'pointer', marginBottom: 10 }}>View my orders</button>
+            <button onClick={closeCheckout} className="lok-btn" style={{ width: '100%', border: '1px solid #C9C9C5', background: '#F5F5F3', color: '#17181A', fontFamily: 'inherit', fontWeight: 700, fontSize: 14, padding: 12, borderRadius: 0, cursor: 'pointer' }}>Keep browsing</button>
           </div>
         )}
       </div>

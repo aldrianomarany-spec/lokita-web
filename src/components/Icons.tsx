@@ -164,7 +164,7 @@ export const WhatsApp = ({
 // so it reads against different badge backgrounds.
 export const Verified = ({
   size = 14,
-  checkColor = '#FBF8F1',
+  checkColor = '#FFFFFF',
   color = 'var(--accent, #2A5FA8)',
   style,
 }: IconProps & { checkColor?: string; color?: string }) => (

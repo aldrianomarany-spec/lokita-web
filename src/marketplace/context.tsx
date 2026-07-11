@@ -823,7 +823,7 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
         if (PAYMENT_MODE !== 'midtrans') {
           try {
             const payload = `LOKITA PROTOTYPE PAYMENT\nOrder: ${id}\nAmount: Rp ${amount.toLocaleString('id-ID')}\nItem: ${state.sel?.title ?? ''}\n(No real money moves — demo only.)`
-            const qrUrl = await QRCode.toDataURL(payload, { width: 440, margin: 1, color: { dark: '#201E18', light: '#FFFFFF' } })
+            const qrUrl = await QRCode.toDataURL(payload, { width: 440, margin: 1, color: { dark: '#17181A', light: '#FFFFFF' } })
             patch({ coStep: 'qris', qrisLoading: false, qris: { orderId: id, qrUrl, amount, manual: true } })
           } catch {
             // QR generation never really fails, but keep the order usable

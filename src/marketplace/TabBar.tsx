@@ -13,19 +13,19 @@ export default function TabBar() {
     <button
       onClick={onClick}
       className="lok-navi"
-      style={{ flex: 1, border: 'none', background: 'none', cursor: 'pointer', fontFamily: 'inherit', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, padding: '7px 0 5px', position: 'relative', color: active ? 'var(--accent,#2A5FA8)' : '#8A8578' }}
+      style={{ flex: 1, border: 'none', background: 'none', cursor: 'pointer', fontFamily: 'inherit', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, padding: '7px 0 5px', position: 'relative', color: active ? 'var(--accent,#2A5FA8)' : '#8B8B86' }}
     >
       <span style={{ fontSize: 19, lineHeight: 1, filter: active ? 'none' : 'grayscale(.6)' }}>{icon}</span>
       <span style={{ fontSize: 9.5, fontWeight: 700, letterSpacing: '.02em' }}>{label}</span>
       {!!badge && badge > 0 && (
-        <span style={{ position: 'absolute', top: 3, left: '50%', marginLeft: 8, minWidth: 15, height: 15, padding: '0 4px', borderRadius: 8, background: '#D4562F', color: '#fff', fontSize: 9, fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'Spline Sans Mono',monospace" }}>{badge}</span>
+        <span style={{ position: 'absolute', top: 3, left: '50%', marginLeft: 8, minWidth: 15, height: 15, padding: '0 4px', borderRadius: 0, background: '#D4562F', color: '#fff', fontSize: 9, fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'Spline Sans Mono',monospace" }}>{badge}</span>
       )}
     </button>
   )
 
   return (
     <nav
-      style={{ position: 'fixed', left: 0, right: 0, bottom: 0, zIndex: 45, background: '#FBF8F1', borderTop: '1px solid #E4DDCE', display: 'flex', alignItems: 'flex-end', paddingBottom: 'env(safe-area-inset-bottom)', boxShadow: '0 -6px 20px -12px rgba(32,30,24,.25)' }}
+      style={{ position: 'fixed', left: 0, right: 0, bottom: 0, zIndex: 45, background: '#FFFFFF', borderTop: '1px solid #D8D8D4', display: 'flex', alignItems: 'flex-end', paddingBottom: 'env(safe-area-inset-bottom)', boxShadow: '0 -6px 20px -12px rgba(18,19,21,.25)' }}
     >
       {item('Home', '🏠', s.view === 'browse', goHome)}
       {item('Requests', '🙋', s.view === 'requests', openRequests)}
@@ -35,7 +35,7 @@ export default function TabBar() {
           onClick={openSell}
           aria-label="Post an item"
           className="lok-btn"
-          style={{ border: 'none', width: 50, height: 50, borderRadius: '50%', background: 'var(--accent,#2A5FA8)', color: '#F7F3EA', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', marginTop: -22, boxShadow: '0 8px 20px -6px rgba(42,95,168,.65), 0 0 0 5px #F1ECE1' }}
+          style={{ border: 'none', width: 50, height: 50, borderRadius: '50%', background: 'var(--accent,#2A5FA8)', color: '#F7F3EA', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', marginTop: -22, boxShadow: '0 8px 20px -6px rgba(53,85,230,.65), 0 0 0 5px #ECECEA' }}
         >
           <Plus size={22} />
         </button>
