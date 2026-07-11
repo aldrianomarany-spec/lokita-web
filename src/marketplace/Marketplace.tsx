@@ -27,7 +27,7 @@ const rootStyle = {
   display: 'flex',
   flexDirection: 'column',
   overflow: 'hidden',
-  background: '#F1ECE1',
+  background: '#F5F5F3', // Grid Market paper (was cream #F1ECE1)
 } as React.CSSProperties
 
 function Shell() {

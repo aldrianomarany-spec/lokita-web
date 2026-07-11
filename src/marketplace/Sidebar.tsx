@@ -11,7 +11,7 @@ export default function Sidebar() {
   return (
     <aside
       className="lok-sidebar"
-      style={{ width: 236, flex: 'none', background: '#FBF8F1', borderRight: '1px solid #E4DDCE', padding: '20px 15px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 24 }}
+      style={{ width: 236, flex: 'none', background: '#F5F5F3', borderRight: '1px solid #D8D8D4', padding: '20px 15px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 24 }}
     >
       <div>
         <div style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 10, color: '#A29C8B', padding: '0 11px 9px', letterSpacing: '.1em' }}>COMMUNITY</div>

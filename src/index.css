@@ -304,3 +304,22 @@ input[type='search']::-webkit-search-decoration {
 .lok-main.lok-tabbar-pad {
   padding-bottom: 108px !important;
 }
+
+/* ===== GRID MARKET skin (design exploration 1a) ============================
+   Font remap: display -> Space Grotesk, body -> Archivo, labels -> system
+   mono. Inline styles name the old families, so remap via attribute
+   selectors. DELETE this whole block (and restore ACCENT in theme.ts) to
+   revert to the warm-editorial look. */
+body {
+  font-family: 'Archivo', 'Hanken Grotesque', sans-serif;
+}
+[style*='Bricolage'] {
+  font-family: 'Space Grotesk', sans-serif !important;
+}
+[style*='Hanken'] {
+  font-family: 'Archivo', sans-serif !important;
+}
+[style*='Spline Sans Mono'] {
+  font-family: ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace !important;
+}
+/* ===== end GRID MARKET skin ================================================ */

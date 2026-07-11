@@ -96,8 +96,8 @@ export default function TopBar() {
       style={{
         height: 70,
         flex: 'none',
-        background: '#FBF8F1',
-        borderBottom: '1px solid #E4DDCE',
+        background: '#F5F5F3',
+        borderBottom: '1px solid #17181A',
         display: 'flex',
         alignItems: 'center',
         gap: isPhone ? 10 : 20,
@@ -105,17 +105,18 @@ export default function TopBar() {
         zIndex: 40,
       }}
     >
-      {/* brand — logo only on phone */}
-      <div onClick={goHome} style={{ display: 'flex', alignItems: 'center', gap: 11, cursor: 'pointer', flex: 'none' }}>
-        <div className="lok-locpin" style={{ width: 38, height: 38, borderRadius: 12, background: BRAND_LOGO_URL ? '#FBF8F1' : 'var(--accent,#2A5FA8)', border: BRAND_LOGO_URL ? '1px solid #E4DDCE' : 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', overflow: 'hidden' }}>
-          {BRAND_LOGO_URL ? <img src={BRAND_LOGO_URL} alt="LOKITA" style={{ width: 30, height: 30, objectFit: 'contain' }} /> : <div style={{ width: 14, height: 14, borderRadius: '50%', background: '#F1ECE1' }} />}
-        </div>
-        {!isPhone && (
-          <div>
-            <div style={{ fontFamily: "'Bricolage Grotesque',sans-serif", fontWeight: 800, fontSize: 20, letterSpacing: '-.02em', lineHeight: 1 }}>LOKITA</div>
-            <div style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 9, color: '#8A8578', letterSpacing: '.14em', marginTop: 2 }}>LOKAL · KITA</div>
+      {/* brand — Grid Market text wordmark with the blue period */}
+      <div onClick={goHome} style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer', flex: 'none' }}>
+        {BRAND_LOGO_URL && isPhone && <img src={BRAND_LOGO_URL} alt="LOKITA" style={{ width: 30, height: 30, objectFit: 'contain' }} />}
+        {!isPhone ? (
+          <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 700, fontSize: 22, letterSpacing: '-0.5px', color: '#17181A', lineHeight: 1 }}>
+            LOKITA<span style={{ color: 'var(--accent,#3555E6)' }}>.</span>
           </div>
-        )}
+        ) : !BRAND_LOGO_URL ? (
+          <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 700, fontSize: 19, letterSpacing: '-0.5px', color: '#17181A' }}>
+            L<span style={{ color: 'var(--accent,#3555E6)' }}>.</span>
+          </div>
+        ) : null}
       </div>
 
       {/* building filter — the homepage shows only the chosen building's items */}
@@ -125,7 +126,7 @@ export default function TopBar() {
             className="lok-btn"
             onClick={() => setBldgOpen((v) => !v)}
             title="Filter the marketplace by building"
-            style={{ cursor: 'pointer', border: '1px solid #E4DDCE', display: 'flex', alignItems: 'center', gap: 9, fontFamily: 'inherit', fontWeight: 700, fontSize: 13.5, color: '#201E18', background: '#F4EFE5', padding: '9px 13px', borderRadius: 12 }}
+            style={{ cursor: 'pointer', border: '1px solid #D8D8D4', display: 'flex', alignItems: 'center', gap: 9, fontFamily: 'inherit', fontWeight: 500, fontSize: 13, color: '#17181A', background: '#FFFFFF', padding: '9px 13px', borderRadius: 0 }}
           >
             <span style={{ width: 7, height: 7, borderRadius: '50%', background: 'var(--accent,#2A5FA8)' }} />
             {s.bldg === 'All' ? 'All buildings' : s.bldg}
@@ -156,7 +157,7 @@ export default function TopBar() {
       )}
 
       {/* search */}
-      <div style={{ flex: 1, minWidth: 0, maxWidth: 560, display: 'flex', alignItems: 'center', gap: isPhone ? 8 : 11, background: '#F4EFE5', border: '1px solid #E4DDCE', borderRadius: 14, padding: isPhone ? '10px 12px' : '11px 16px' }}>
+      <div style={{ flex: 1, minWidth: 0, maxWidth: 560, display: 'flex', alignItems: 'center', gap: isPhone ? 8 : 11, background: '#FFFFFF', border: '1px solid #D8D8D4', borderRadius: 0, padding: isPhone ? '10px 12px' : '10px 14px' }}>
         <span style={{ color: '#A29C8B', display: 'flex', flex: 'none' }}>
           <Search />
         </span>
