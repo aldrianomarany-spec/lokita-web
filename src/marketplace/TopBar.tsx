@@ -65,6 +65,10 @@ const Avatar = ({ photo, initial, size, radius, fontSize }: { photo: string | nu
 export default function TopBar() {
   const { state, patch, goHome, goSignup, goLogin, selectBldg, setQuery, clearQuery, openSell, toggleSavedView, openMessages, openNotifs, toggleMenu, openProfile, openOrders, logout } = useM()
   const [bldgOpen, setBldgOpen] = useState(false)
+  // Anti-autofill: Chrome's password manager targets this box (the page's main
+  // text input) and injects saved emails. readOnly-until-focused blocks all
+  // programmatic fills — browsers never autofill readonly inputs.
+  const [searchFocused, setSearchFocused] = useState(false)
   const s = state
   const isPhone = useIsPhone()
   const guest = s.guest
@@ -157,8 +161,12 @@ export default function TopBar() {
           <Search />
         </span>
         <input
+          type="search"
           name="lokita-search"
           autoComplete="off"
+          readOnly={!searchFocused}
+          onFocus={() => setSearchFocused(true)}
+          onBlur={() => setSearchFocused(false)}
           value={s.query}
           onChange={(e) => {
             // Chrome mistakes this box for a login field and injects the user's
