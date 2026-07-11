@@ -375,7 +375,7 @@ export default function AuthFlow() {
                 <label style={labelStyle}>Email address</label>
                 <div className="lok-in" style={{ ...fieldWrap, marginBottom: 15 }}>
                   <svg width={17} height={17} viewBox="0 0 24 24" fill="none" stroke="#A29C8B" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="5" width="18" height="14" rx="2.5" /><path d="m3 7 9 6 9-6" /></svg>
-                  <input value={f.user} onChange={set('user')} type="email" placeholder="you@jiu.ac" style={inputStyle} onKeyDown={(e) => { if (e.key === 'Enter') doLogin() }} />
+                  <input value={f.user} onChange={set('user')} type="email" autoComplete="username" placeholder="you@jiu.ac" style={inputStyle} onKeyDown={(e) => { if (e.key === 'Enter') doLogin() }} />
                 </div>
 
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 7 }}>
@@ -384,7 +384,7 @@ export default function AuthFlow() {
                 </div>
                 <div className="lok-in" style={{ ...fieldWrap, marginBottom: 22 }}>
                   <svg width={17} height={17} viewBox="0 0 24 24" fill="none" stroke="#A29C8B" strokeWidth={2} strokeLinecap="round"><rect x="4" y="10" width="16" height="10" rx="2.5" /><path d="M8 10V7a4 4 0 0 1 8 0v3" /></svg>
-                  <input value={f.pass} onChange={set('pass')} type={showPw ? 'text' : 'password'} placeholder="••••••••" style={inputStyle} onKeyDown={(e) => { if (e.key === 'Enter') doLogin() }} />
+                  <input value={f.pass} onChange={set('pass')} type={showPw ? 'text' : 'password'} autoComplete="current-password" placeholder="••••••••" style={inputStyle} onKeyDown={(e) => { if (e.key === 'Enter') doLogin() }} />
                   <span onClick={() => setShowPw(!showPw)} style={{ cursor: 'pointer', color: '#A29C8B', display: 'flex' }}>{showPw ? eyeOff : eyeOpen}</span>
                 </div>
 
@@ -421,20 +421,20 @@ export default function AuthFlow() {
                 <label style={labelStyle}>Email</label>
                 <div className="lok-in" style={{ ...fieldWrap, padding: '12px 15px', marginBottom: 13 }}>
                   <svg width={17} height={17} viewBox="0 0 24 24" fill="none" stroke="#A29C8B" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="5" width="18" height="14" rx="2.5" /><path d="m3 7 9 6 9-6" /></svg>
-                  <input value={f.email} onChange={set('email')} placeholder="you@jiu.ac" style={inputStyle} />
+                  <input value={f.email} onChange={set('email')} type="email" autoComplete="email" placeholder="you@jiu.ac" style={inputStyle} />
                 </div>
 
                 <div style={{ display: 'flex', gap: 11, marginBottom: 22 }}>
                   <div style={{ flex: 1 }}>
                     <label style={labelStyle}>Password</label>
                     <div className="lok-in" style={{ display: 'flex', alignItems: 'center', background: '#FBF8F1', border: '1.5px solid #E4DDCE', borderRadius: 13, padding: '12px 14px' }}>
-                      <input value={f.np} onChange={set('np')} type="password" placeholder="••••••" style={inputStyle} />
+                      <input value={f.np} onChange={set('np')} type="password" autoComplete="new-password" placeholder="••••••" style={inputStyle} />
                     </div>
                   </div>
                   <div style={{ flex: 1 }}>
                     <label style={labelStyle}>Confirm</label>
                     <div className="lok-in" style={{ display: 'flex', alignItems: 'center', background: '#FBF8F1', border: `1.5px solid ${cpMismatch ? '#D4562F' : '#E4DDCE'}`, borderRadius: 13, padding: '12px 14px' }}>
-                      <input value={f.cp} onChange={set('cp')} type="password" placeholder="••••••" style={inputStyle} />
+                      <input value={f.cp} onChange={set('cp')} type="password" autoComplete="new-password" placeholder="••••••" style={inputStyle} />
                     </div>
                   </div>
                 </div>
@@ -462,7 +462,7 @@ export default function AuthFlow() {
                 <label style={labelStyle}>Registered email</label>
                 <div className="lok-in" style={{ ...fieldWrap, marginBottom: 22 }}>
                   <svg width={17} height={17} viewBox="0 0 24 24" fill="none" stroke="#A29C8B" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="5" width="18" height="14" rx="2.5" /><path d="m3 7 9 6 9-6" /></svg>
-                  <input value={f.fEmail} onChange={set('fEmail')} placeholder="you@jiu.ac" style={inputStyle} />
+                  <input value={f.fEmail} onChange={set('fEmail')} type="email" autoComplete="email" placeholder="you@jiu.ac" style={inputStyle} />
                 </div>
                 <button className="lok-btn" onClick={doReset} style={primaryBtn}>{btn('reset', 'Send reset link')}</button>
               </div>

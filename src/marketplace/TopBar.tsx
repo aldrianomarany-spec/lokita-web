@@ -157,8 +157,17 @@ export default function TopBar() {
           <Search />
         </span>
         <input
+          name="lokita-search"
+          autoComplete="off"
           value={s.query}
-          onChange={(e) => setQuery(e.target.value)}
+          onChange={(e) => {
+            // Chrome mistakes this box for a login field and injects the user's
+            // email on their first click (autofill fires on unfocused inputs) —
+            // which yanked people off "My profile" into a search. Only accept
+            // input the user actually typed.
+            if (document.activeElement !== e.target) return
+            setQuery(e.target.value)
+          }}
           placeholder={isPhone ? 'Search…' : 'Search your dorm — desk, mini fridge, textbooks…'}
           style={{ flex: 1, minWidth: 0, border: 'none', background: 'none', outline: 'none', fontFamily: 'inherit', fontSize: 14, fontWeight: 500, color: '#201E18' }}
         />
