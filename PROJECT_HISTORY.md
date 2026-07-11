@@ -76,6 +76,13 @@ Everything needed to continue is in these two files + the git commit history
     stuck bell badge). Migration 0020 adds `cleanup_stale_data()` (prunes dead wishlist
     rows + old notifications for everyone), called on every app start alongside
     `expire_stale_orders()` — the database tidies itself.
+14. **Editorial homepage + app tab bar** (from the owner's LOKITA_Explorations design
+    file — adopted the best ideas into the existing identity instead of re-skinning):
+    newspaper-style dateline rule ("FRIDAY 11 JUL · 8 ITEMS NEAR THOMAS · the campus
+    secondhand daily"), a big hero card for the top item (featured items get ★ FEATURED,
+    otherwise TODAY'S PICK), a dark Graduation-Bundles spotlight band after the grid,
+    and on phones an app-style bottom tab bar (Home · Requests · +Sell · Messages ·
+    Profile) replacing the floating post button.
 
 ### 4. Deployment
 - **GitHub** `aldrianomarany-spec/lokita-web` — work branch `lokita-web-v2`,

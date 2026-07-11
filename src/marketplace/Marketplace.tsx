@@ -1,8 +1,8 @@
 import { MarketplaceProvider, useM } from './context'
 import { ACCENT, ACCENT_DEEP } from '../theme'
 import { useIsPhone } from './useIsMobile'
-import { Plus } from '../components/Icons'
 import TopBar from './TopBar'
+import TabBar from './TabBar'
 import Sidebar from './Sidebar'
 import BrowseView from './BrowseView'
 import RequestsView from './RequestsView'
@@ -31,9 +31,10 @@ const rootStyle = {
 } as React.CSSProperties
 
 function Shell() {
-  const { state, onPhoto, openSell, openNotifTarget, dismissToast } = useM()
+  const { state, onPhoto, openNotifTarget, dismissToast } = useM()
   const s = state
   const isPhone = useIsPhone()
+  const showTabBar = isPhone && !s.guest
 
   return (
     <div style={rootStyle}>
@@ -50,7 +51,7 @@ function Shell() {
 
       <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
         <Sidebar />
-        <main className="lok-main" style={{ flex: 1, overflowY: 'auto', padding: '26px 32px 40px' }}>
+        <main className={'lok-main' + (showTabBar ? ' lok-tabbar-pad' : '')} style={{ flex: 1, overflowY: 'auto', padding: showTabBar ? '26px 32px 108px' : '26px 32px 40px' }}>
           {s.view === 'browse' && <BrowseView />}
           {s.view === 'requests' && <RequestsView />}
           {s.view === 'people' && <PeopleView />}
@@ -63,16 +64,8 @@ function Shell() {
         </main>
       </div>
 
-      {/* floating Post button on phones (top-bar button is hidden there) */}
-      {isPhone && !s.guest && s.view === 'browse' && (
-        <button
-          onClick={openSell}
-          aria-label="Post an item"
-          style={{ position: 'fixed', right: 18, bottom: 20, width: 56, height: 56, borderRadius: '50%', border: 'none', background: 'var(--accent,#2A5FA8)', color: '#F7F3EA', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: '0 10px 24px -8px rgba(42,95,168,.7)', zIndex: 45 }}
-        >
-          <Plus size={24} />
-        </button>
-      )}
+      {/* app-style bottom navigation on phones (replaces the old floating FAB) */}
+      {showTabBar && <TabBar />}
 
       {/* realtime notification toast — click to open, auto-dismisses */}
       {s.toast && (

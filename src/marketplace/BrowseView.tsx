@@ -14,7 +14,7 @@ const SORTS: { key: Sort; label: string }[] = [
 ]
 
 export default function BrowseView() {
-  const { state, enrichedItems, selectCond, selectSort, resetFilters, openSell, selectCat, toggleSavedView, selectBldg, openRequests, openPeople } = useM()
+  const { state, enrichedItems, selectCond, selectSort, resetFilters, openSell, selectCat, toggleSavedView, selectBldg, openRequests, openPeople, openItem } = useM()
   const s = state
   const isNarrow = useIsNarrow()
   const counts = s.categoryCounts
@@ -25,6 +25,13 @@ export default function BrowseView() {
   // view is applied client-side here.
   const list: EnrichedItem[] = s.savedOnly ? enrichedItems.filter((i) => s.saved[i.id]) : enrichedItems
   const filtersActive = q !== '' || s.cat !== 'All' || s.cond !== 'All' || s.savedOnly
+
+  // editorial front page: on the default feed, the top item (featured items
+  // already sort first) becomes a big hero card, newspaper-style
+  const showHero = !filtersActive && !s.feedLoading && list.length >= 3
+  const hero = showHero ? list[0] : null
+  const gridItems = hero ? list.slice(1) : list
+  const dateline = new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'short' }).toUpperCase()
 
   // titles
   let browseTitle = s.bldg === 'All' ? 'Around you' : s.bldg
@@ -114,6 +121,12 @@ export default function BrowseView() {
         </div>
       </div>
 
+      {/* editorial dateline rule — "the campus secondhand daily" */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, borderTop: '2px solid #201E18', borderBottom: '1px solid #E4DDCE', padding: '8px 2px', marginBottom: 16, fontFamily: "'Spline Sans Mono',monospace", fontSize: 10, letterSpacing: '.08em', color: '#8A8578' }}>
+        <span>{dateline} · {list.length} ITEM{list.length === 1 ? '' : 'S'} NEAR {(s.bldg === 'All' ? (s.profile.building || 'YOU') : s.bldg).toUpperCase()}</span>
+        {!isNarrow && <span>LOKITA · THE CAMPUS SECONDHAND DAILY</span>}
+      </div>
+
       {/* filter bar */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginBottom: 24, paddingBottom: 20, borderBottom: '1px solid #E4DDCE' }}>
         {CONDS.map((label) => {
@@ -158,11 +171,62 @@ export default function BrowseView() {
           Couldn't load listings: {s.feedError}
         </div>
       ) : list.length > 0 ? (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(248px,1fr))', gap: 20 }}>
-          {list.map((it: EnrichedItem, i) => (
-            <ListingCard key={it.id} it={it} index={i} />
-          ))}
-        </div>
+        <>
+          {/* hero — today's pick / featured item, editorial front-page style */}
+          {hero && (
+            <div
+              onClick={() => openItem(hero)}
+              className="lok-card"
+              style={{ cursor: 'pointer', display: 'flex', flexDirection: isNarrow ? 'column' : 'row', background: '#FBF8F1', border: '1px solid #E4DDCE', borderRadius: 24, overflow: 'hidden', marginBottom: 20 }}
+            >
+              <div style={{ width: isNarrow ? '100%' : '52%', flex: 'none', minHeight: isNarrow ? 210 : 300, position: 'relative', background: '#EAE1CB' }}>
+                {hero.photoUrl ? (
+                  <img src={hero.photoUrl} alt={hero.title} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
+                ) : (
+                  <div style={{ position: 'absolute', inset: 0, backgroundImage: 'repeating-linear-gradient(135deg,rgba(150,120,60,.10) 0 14px,transparent 14px 28px)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <span style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 12, color: '#9A8A5E', padding: '0 24px', textAlign: 'center' }}>{hero.title}</span>
+                  </div>
+                )}
+                <span style={{ position: 'absolute', top: 14, left: 14, fontFamily: "'Spline Sans Mono',monospace", fontSize: 10, fontWeight: 600, letterSpacing: '.06em', color: hero.isFeatured ? '#9A6A12' : '#12503A', background: hero.isFeatured ? '#FBF2DD' : '#EAF1EC', padding: '5px 10px', borderRadius: 8 }}>
+                  {hero.isFeatured ? '★ FEATURED' : "TODAY'S PICK"}
+                </span>
+              </div>
+              <div style={{ flex: 1, padding: isNarrow ? '18px 20px 22px' : '30px 32px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                <div style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 10.5, color: '#A29C8B', letterSpacing: '.06em', marginBottom: 8 }}>{hero.cat.toUpperCase()} · {hero.cond.toUpperCase()}</div>
+                <div style={{ fontFamily: "'Bricolage Grotesque',sans-serif", fontSize: isNarrow ? 24 : 32, fontWeight: 800, letterSpacing: '-.02em', lineHeight: 1.08, marginBottom: 10 }}>{hero.title}</div>
+                <div style={{ fontFamily: "'Bricolage Grotesque',sans-serif", fontSize: isNarrow ? 22 : 26, fontWeight: 800, color: 'var(--accent,#2A5FA8)', marginBottom: 12 }}>{hero.price}</div>
+                <div style={{ fontSize: 13, color: '#6F6A5C', fontWeight: 600 }}>{hero.seller} · {hero.proxTag}</div>
+                <div style={{ marginTop: 18 }}>
+                  <span style={{ display: 'inline-block', fontSize: 13, fontWeight: 800, color: 'var(--accent,#2A5FA8)' }}>View item ›</span>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(248px,1fr))', gap: 20 }}>
+            {gridItems.map((it: EnrichedItem, i) => (
+              <ListingCard key={it.id} it={it} index={i} />
+            ))}
+          </div>
+
+          {/* graduation-bundle spotlight band — editorial "takeover" strip */}
+          {!filtersActive && (
+            <div style={{ marginTop: 26, background: '#201E18', borderRadius: 20, padding: '20px 24px', display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
+              <span style={{ fontSize: 26, flex: 'none' }}>🎓</span>
+              <div style={{ flex: '1 1 260px' }}>
+                <div style={{ fontFamily: "'Bricolage Grotesque',sans-serif", fontWeight: 800, fontSize: 17, color: '#F7F3EA' }}>Graduating? Sell your whole room in one go.</div>
+                <div style={{ fontSize: 12.5, color: 'rgba(247,243,234,.7)', fontWeight: 500, marginTop: 3 }}>Graduation Bundles — one listing, one buyer, empty room.</div>
+              </div>
+              <button
+                onClick={() => selectCat('Bundles')}
+                className="lok-btn"
+                style={{ flex: 'none', border: 'none', background: '#F7F3EA', color: '#201E18', fontFamily: 'inherit', fontWeight: 800, fontSize: 13, padding: '11px 18px', borderRadius: 12, cursor: 'pointer' }}
+              >
+                Browse bundles →
+              </button>
+            </div>
+          )}
+        </>
       ) : filtersActive ? (
         // there are listings, just none matching the current filters/search
         <div style={{ animation: 'lok-fade .3s ease both', maxWidth: 520, margin: '44px auto 0', textAlign: 'center', background: '#FBF8F1', border: '1px solid #E4DDCE', borderRadius: 24, padding: '44px 36px' }}>
