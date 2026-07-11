@@ -47,7 +47,11 @@ export default function Sidebar() {
           >
             <span style={{ width: 26, height: 26, borderRadius: 8, background: '#F1E4E0', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, flex: 'none' }}>🛡️</span>
             <span style={{ flex: 1 }}>Admin</span>
-            <span style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 9, color: '#B7AF9C', fontWeight: 500 }}>STAFF</span>
+            {s.openReports > 0 ? (
+              <span title={`${s.openReports} open report${s.openReports > 1 ? 's' : ''}`} style={{ minWidth: 19, height: 19, borderRadius: 10, background: '#D4562F', color: '#FBF8F1', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'Spline Sans Mono',monospace", fontSize: 10, fontWeight: 700, padding: '0 5px' }}>{s.openReports}</span>
+            ) : (
+              <span style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 9, color: '#B7AF9C', fontWeight: 500 }}>STAFF</span>
+            )}
           </button>
         )}
       </div>

@@ -138,6 +138,14 @@ Done and shipped:
   listing moderation (remove/restore/feature), member verification toggle. Zero new migrations —
   it rides the `is_admin()` RLS policies from 0001. To grant admin:
   `update public.profiles set role='admin' where email='<email>';`
+- **Reports**: `ReportForm.tsx` (🚩 on DetailModal + MemberProfileView, reason chips + note),
+  REPORTS queue at the top of AdminView (Remove listing / View profile / Dismiss), red
+  open-count badge on the Admin sidebar item (`state.openReports`, `countOpenReports()` —
+  RLS-safe, returns 0 for non-admins). Uses the `reports` table from 0001; no new SQL.
+- **Privacy (migration 0018)**: `public_profiles` view no longer exposes `whatsapp_number`
+  (was readable by all members + anon guests; never shown in any UI — contact is in-app).
+  Never re-add PII to that view. ProfileView has an "Account & privacy" card (change
+  password via `updatePassword`, what-others-see summary).
 
 Remaining / nice-to-have:
 - Reviews surfaces; wishlist table persistence (star is client-side only).

@@ -10,6 +10,7 @@ import {
   type ReviewRow,
 } from '../lib/api'
 import ListingCard from './ListingCard'
+import ReportForm from './ReportForm'
 import { MessageBubble, ShieldCheck, Verified } from '../components/Icons'
 import type { EnrichedItem } from '../types'
 
@@ -188,6 +189,13 @@ export default function MemberProfileView() {
               {r.comment && <p style={{ fontSize: 13, lineHeight: 1.55, color: '#5A5648', margin: 0 }}>{r.comment}</p>}
             </div>
           ))}
+        </div>
+      )}
+
+      {/* report — never on your own profile */}
+      {!isMe && id && (
+        <div style={{ maxWidth: 440, marginBottom: 34 }}>
+          <ReportForm targetType="user" targetId={id} label="this member" />
         </div>
       )}
     </div>

@@ -1207,3 +1207,87 @@ export async function adminSetVerification(id: string, status: 'verified' | 'pen
   const { error } = await supabase.from('profiles').update({ verification_status: status }).eq('id', id)
   if (error) throw error
 }
+
+// ---- reports (the reports table + RLS shipped in 0001: users insert their
+// own, admins read all and update status) -----------------------------------
+
+export type ReportTargetType = 'listing' | 'user'
+
+export async function createReport(targetType: ReportTargetType, targetId: string, reason: string, note: string): Promise<void> {
+  const user = await getUser()
+  if (!user) throw new Error('Not signed in')
+  const { error } = await supabase.from('reports').insert({
+    reporter_id: user.id,
+    target_type: targetType,
+    target_id: targetId,
+    reason: note.trim() ? `${reason} — ${note.trim()}` : reason,
+  })
+  if (error) throw error
+}
+
+export interface AdminReportRow {
+  id: string
+  target_type: ReportTargetType | 'message'
+  target_id: string
+  reason: string
+  status: 'open' | 'reviewed' | 'resolved'
+  created_at: string
+  reporter_name: string
+  target_label: string // listing title or member name
+  target_active: boolean // listing still active (so "Remove" makes sense)
+}
+
+export async function fetchAdminReports(): Promise<AdminReportRow[]> {
+  const { data, error } = await supabase
+    .from('reports')
+    .select('id, target_type, target_id, reason, status, created_at, reporter_id')
+    .order('created_at', { ascending: false })
+    .limit(100)
+  if (error) throw error
+  const rows = (data as { id: string; target_type: AdminReportRow['target_type']; target_id: string; reason: string; status: AdminReportRow['status']; created_at: string; reporter_id: string | null }[]) || []
+  const listingIds = rows.filter((r) => r.target_type === 'listing').map((r) => r.target_id)
+  const personIds = [
+    ...rows.filter((r) => r.target_type === 'user').map((r) => r.target_id),
+    ...rows.map((r) => r.reporter_id).filter(Boolean) as string[],
+  ]
+  const [{ data: listings }, { data: people }] = await Promise.all([
+    listingIds.length
+      ? supabase.from('listings').select('id, title, status').in('id', [...new Set(listingIds)])
+      : Promise.resolve({ data: [] as { id: string; title: string; status: string }[] }),
+    personIds.length
+      ? supabase.from('public_profiles').select('id, name').in('id', [...new Set(personIds)])
+      : Promise.resolve({ data: [] as { id: string; name: string }[] }),
+  ])
+  const listingById = new Map(((listings as { id: string; title: string; status: string }[]) || []).map((l) => [l.id, l]))
+  const nameById = new Map(((people as { id: string; name: string }[]) || []).map((p) => [p.id, p.name]))
+  return rows.map((r) => {
+    const listing = r.target_type === 'listing' ? listingById.get(r.target_id) : undefined
+    return {
+      id: r.id,
+      target_type: r.target_type,
+      target_id: r.target_id,
+      reason: r.reason,
+      status: r.status,
+      created_at: r.created_at,
+      reporter_name: (r.reporter_id && nameById.get(r.reporter_id)) || 'A member',
+      target_label: r.target_type === 'listing' ? listing?.title || '(listing deleted)' : nameById.get(r.target_id) || '(member gone)',
+      target_active: r.target_type === 'listing' ? listing?.status === 'active' : true,
+    }
+  })
+}
+
+// 'resolved' = handled (e.g. listing removed) · 'reviewed' = dismissed as fine
+export async function adminSetReportStatus(id: string, status: 'resolved' | 'reviewed'): Promise<void> {
+  const { error } = await supabase.from('reports').update({ status }).eq('id', id)
+  if (error) throw error
+}
+
+// Open-report count for the sidebar badge. Errors (non-admin) collapse to 0.
+export async function countOpenReports(): Promise<number> {
+  const { count, error } = await supabase
+    .from('reports')
+    .select('id', { count: 'exact', head: true })
+    .eq('status', 'open')
+  if (error) return 0
+  return count || 0
+}
