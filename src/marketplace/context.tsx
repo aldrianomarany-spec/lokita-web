@@ -43,6 +43,7 @@ import {
   subscribeNotifications,
   countOpenReports,
   expireStaleOrders,
+  cleanupStaleData,
   type ProfileStats,
   type OrderRow,
   type ConversationRow,
@@ -382,7 +383,9 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
     getUserId().then((uid) => {
       if (!uid) return
       // sweep overdue orders first (pending >48h / missed drop-off) so
-      // reserved items free up, then load the fresh list
+      // reserved items free up, then load the fresh list; also let the DB
+      // tidy stale wishlist rows + old notifications (fire-and-forget)
+      cleanupStaleData().catch(() => {})
       expireStaleOrders()
         .catch(() => {})
         .finally(() => loadOrders())
@@ -705,7 +708,15 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
     openNotifs: () => {
       if (state.guest) return goSignup()
       patch({ view: 'notifications', menuOpen: false, sel: null })
-      loadNotifications()
+      // seeing the list counts as reading it — clear the bell badge without
+      // making the user hunt for a "mark all read" button
+      loadNotifications().then(() => {
+        markAllNotificationsRead()
+          .then(() =>
+            patch((prev) => ({ notifs: prev.notifs.map((n) => ({ ...n, is_read: true })) })),
+          )
+          .catch(() => {})
+      })
     },
     selectNotifFilter: (k) => patch({ notifFilter: k }),
     markAllRead: async () => {

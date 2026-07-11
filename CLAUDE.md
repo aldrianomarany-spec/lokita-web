@@ -150,6 +150,9 @@ Done and shipped:
 Also shipped (foundation upgrade):
 - Migration 0019: ban enforcement (restrictive insert policies + `is_banned()`, admin
   Ban/Unban, banned banner) + `expire_stale_orders()` called on app start.
+- Migration 0020: `cleanup_stale_data()` (stale wishlist rows + old notifications),
+  called on app start with the expiry sweep. Wishlist badge counts ACTIVE listings only;
+  opening Notifications auto-marks all read.
 - Photo compression before every upload (`src/lib/img.ts`).
 - PWA (public/manifest.webmanifest + icons), vendor bundle split (vite manualChunks),
   legal pages `/terms` + `/privacy` (`src/pages/Legal.tsx`), Vercel Analytics component,

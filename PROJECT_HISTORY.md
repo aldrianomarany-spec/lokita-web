@@ -70,6 +70,12 @@ Everything needed to continue is in these two files + the git commit history
     - Vercel Analytics component (owner must enable Analytics in the Vercel dashboard)
       and GitHub Actions CI (build check on every push/PR).
     - Real Midtrans QRIS remains the final step, pending the owner's Midtrans signup.
+13. **Ghost-badge fix + self-cleaning DB** — the ⭐ wishlist badge counted saves whose
+    listing was sold/removed (page showed nothing); now only active listings count and
+    stale rows are pruned. Opening Notifications now auto-marks everything read (no more
+    stuck bell badge). Migration 0020 adds `cleanup_stale_data()` (prunes dead wishlist
+    rows + old notifications for everyone), called on every app start alongside
+    `expire_stale_orders()` — the database tidies itself.
 
 ### 4. Deployment
 - **GitHub** `aldrianomarany-spec/lokita-web` — work branch `lokita-web-v2`,

@@ -227,12 +227,23 @@ export async function fetchReviewsForUser(userId: string): Promise<ReviewRow[]> 
 }
 
 // Just the listing ids the caller has saved — used to hydrate the ♡ state map.
+// Only count saves whose listing is still ACTIVE — sold/removed/deleted items
+// used to keep the ⭐ badge lit while the wishlist page showed nothing.
+// Stale rows are pruned in the background to keep the table lean.
 export async function fetchWishlistIds(): Promise<string[]> {
   const user = await getUser()
   if (!user) return []
-  const { data, error } = await supabase.from('wishlist').select('listing_id').eq('user_id', user.id)
+  const { data, error } = await supabase
+    .from('wishlist')
+    .select('listing_id, listing:listing_id(status)')
+    .eq('user_id', user.id)
   if (error) throw error
-  return ((data as { listing_id: string }[]) || []).map((r) => r.listing_id)
+  const rows = (data as unknown as { listing_id: string; listing: { status: string } | null }[]) || []
+  const stale = rows.filter((r) => !r.listing || r.listing.status !== 'active').map((r) => r.listing_id)
+  if (stale.length) {
+    supabase.from('wishlist').delete().eq('user_id', user.id).in('listing_id', stale).then(() => {})
+  }
+  return rows.filter((r) => r.listing && r.listing.status === 'active').map((r) => r.listing_id)
 }
 
 export async function addToWishlist(listingId: string): Promise<void> {
@@ -264,7 +275,7 @@ export async function fetchMyWishlist(): Promise<DbListing[]> {
   const rows = (data as unknown as { listing: (DbListing & { listing_photos: { photo_url: string; sort_order: number }[] }) | null }[]) || []
   return rows
     .map((r) => r.listing)
-    .filter((l): l is DbListing & { listing_photos: { photo_url: string; sort_order: number }[] } => !!l)
+    .filter((l): l is DbListing & { listing_photos: { photo_url: string; sort_order: number }[] } => !!l && l.status === 'active')
     .map((l) => ({ ...l, photoUrl: firstPhoto(l.listing_photos) }))
 }
 
@@ -1224,6 +1235,12 @@ export async function adminSetBanned(id: string, banned: boolean): Promise<void>
 // (migration 0019) is idempotent and safe for any signed-in caller.
 export async function expireStaleOrders(): Promise<void> {
   await supabase.rpc('expire_stale_orders')
+}
+
+// DB self-cleaning (migration 0020): prunes stale wishlist rows and old
+// notifications for EVERYONE. Fire-and-forget on app start.
+export async function cleanupStaleData(): Promise<void> {
+  await supabase.rpc('cleanup_stale_data')
 }
 
 // ---- reports (the reports table + RLS shipped in 0001: users insert their
