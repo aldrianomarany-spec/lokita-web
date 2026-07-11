@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useM } from './context'
 import { fetchMyListings, fetchReviewsAboutMe, fetchMyWishlist, type DbListing, type ReviewRow } from '../lib/api'
-import { uploadVerificationDoc } from '../lib/auth'
+import { uploadVerificationDoc, updatePassword } from '../lib/auth'
 import { Camera, Edit, Logout, ShieldCheck, Verified } from '../components/Icons'
 
 const rupiah = (n: number) => 'Rp ' + Number(n).toLocaleString('id-ID')
@@ -53,6 +53,70 @@ function SmallCard({ title, price, badge, badgeBg, badgeFg, dim, photoUrl, onCli
 
 const sectionH2: React.CSSProperties = { fontFamily: "'Bricolage Grotesque',sans-serif", fontSize: 20, fontWeight: 800, letterSpacing: '-.02em', margin: 0 }
 const emptyBox: React.CSSProperties = { background: '#FBF8F1', border: '1px dashed #D8CFBB', borderRadius: 18, padding: 28, textAlign: 'center', marginBottom: 32, color: '#8A8578', fontSize: 13.5 }
+
+// Change password + a plain-language privacy summary. Google-only accounts can
+// set a password here too (adds email login alongside Google).
+function AccountPrivacyCard() {
+  const [pw, setPw] = useState('')
+  const [pw2, setPw2] = useState('')
+  const [pwState, setPwState] = useState<'idle' | 'saving' | 'done'>('idle')
+  const [pwErr, setPwErr] = useState<string | null>(null)
+
+  const savePw = async () => {
+    if (pwState !== 'idle') return
+    setPwErr(null)
+    if (pw.length < 8) return setPwErr('Password must be at least 8 characters.')
+    if (pw !== pw2) return setPwErr("The two passwords don't match.")
+    setPwState('saving')
+    try {
+      await updatePassword(pw)
+      setPwState('done')
+      setPw('')
+      setPw2('')
+      setTimeout(() => setPwState('idle'), 2500)
+    } catch (e) {
+      setPwState('idle')
+      setPwErr(e instanceof Error ? e.message : 'Could not change the password.')
+    }
+  }
+
+  const pwField: React.CSSProperties = { flex: '1 1 180px', background: '#F4EFE5', border: '1.5px solid #E4DDCE', borderRadius: 12, padding: '12px 14px', fontSize: 13, fontFamily: 'inherit', fontWeight: 500, color: '#201E18' }
+
+  return (
+    <div style={{ background: '#FBF8F1', border: '1px solid #E4DDCE', borderRadius: 18, padding: '20px 22px', marginBottom: 32 }}>
+      {/* what's visible to whom — plain language */}
+      <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap', marginBottom: 18 }}>
+        <div style={{ flex: '1 1 260px', background: '#F4EFE5', border: '1px solid #E4DDCE', borderRadius: 14, padding: '13px 15px' }}>
+          <div style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 10, color: '#A29C8B', letterSpacing: '.06em', marginBottom: 7 }}>👁️ OTHER MEMBERS SEE</div>
+          <div style={{ fontSize: 12.5, color: '#5A5648', lineHeight: 1.7, fontWeight: 500 }}>your name & photo · building + floor · batch & standing · rating, reviews & listings</div>
+        </div>
+        <div style={{ flex: '1 1 260px', background: '#EAF1EC', border: '1px solid #CFE2D7', borderRadius: 14, padding: '13px 15px' }}>
+          <div style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 10, color: '#4A8067', letterSpacing: '.06em', marginBottom: 7 }}>🔒 ONLY YOU SEE</div>
+          <div style={{ fontSize: 12.5, color: '#3E4F45', lineHeight: 1.7, fontWeight: 500 }}>WhatsApp number · student ID · email · room number — never shown to other members. All contact happens in-app.</div>
+        </div>
+      </div>
+
+      {/* change password */}
+      <div style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 10, color: '#A29C8B', letterSpacing: '.06em', marginBottom: 9 }}>CHANGE PASSWORD</div>
+      <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
+        <input className="lok-field" type="password" value={pw} onChange={(e) => setPw(e.target.value)} placeholder="New password (min. 8 characters)" style={pwField} />
+        <input className="lok-field" type="password" value={pw2} onChange={(e) => setPw2(e.target.value)} placeholder="Repeat new password" style={pwField} />
+        <button
+          onClick={savePw}
+          disabled={pwState !== 'idle'}
+          className="lok-btn"
+          style={{ flex: 'none', border: 'none', background: pwState === 'done' ? '#3DBB6E' : 'var(--accent,#2A5FA8)', color: '#F7F3EA', fontFamily: 'inherit', fontWeight: 700, fontSize: 13, padding: '12px 20px', borderRadius: 12, cursor: pwState === 'idle' ? 'pointer' : 'default', transition: 'background .2s ease' }}
+        >
+          {pwState === 'saving' ? 'Saving…' : pwState === 'done' ? 'Password changed ✓' : 'Change password'}
+        </button>
+      </div>
+      {pwErr && <div style={{ fontSize: 12, color: '#B23A1B', fontWeight: 600, marginTop: 8 }}>{pwErr}</div>}
+      <div style={{ fontSize: 11.5, color: '#8A8578', fontWeight: 500, marginTop: 10, lineHeight: 1.5 }}>
+        Signed in with Google? Setting a password here also lets you log in with your email.
+      </div>
+    </div>
+  )
+}
 
 export default function ProfileView() {
   const { state, openEdit, pickPhoto, logout, openSell, openItem, refetchProfile } = useM()
@@ -279,6 +343,13 @@ export default function ProfileView() {
       ) : (
         <div style={emptyBox}>No reviews yet. After a completed trade, buyers and sellers can rate each other here.</div>
       )}
+
+      {/* account & privacy */}
+      <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', margin: '32px 0 14px' }}>
+        <h2 style={sectionH2}>Account & privacy</h2>
+        <span style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 11, color: '#A29C8B' }}>YOUR DATA, YOUR RULES</span>
+      </div>
+      <AccountPrivacyCard />
 
       <div style={{ marginTop: 32, paddingTop: 24, borderTop: '1px solid #E4DDCE', display: 'flex', justifyContent: 'center' }}>
         <button onClick={logout} className="lok-btn" style={{ border: '1px solid #E4C4B8', background: '#FBEEE9', color: '#C0492A', fontFamily: 'inherit', fontWeight: 700, fontSize: 14, padding: '12px 26px', borderRadius: 13, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 9 }}>

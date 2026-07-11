@@ -142,6 +142,10 @@ Done and shipped:
   REPORTS queue at the top of AdminView (Remove listing / View profile / Dismiss), red
   open-count badge on the Admin sidebar item (`state.openReports`, `countOpenReports()` —
   RLS-safe, returns 0 for non-admins). Uses the `reports` table from 0001; no new SQL.
+- **Privacy (migration 0018)**: `public_profiles` view no longer exposes `whatsapp_number`
+  (was readable by all members + anon guests; never shown in any UI — contact is in-app).
+  Never re-add PII to that view. ProfileView has an "Account & privacy" card (change
+  password via `updatePassword`, what-others-see summary).
 
 Remaining / nice-to-have:
 - Reviews surfaces; wishlist table persistence (star is client-side only).

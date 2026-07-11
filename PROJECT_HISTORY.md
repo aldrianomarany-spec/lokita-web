@@ -51,6 +51,11 @@ Everything needed to continue is in these two files + the git commit history
     a REPORTS queue at the top of the Control Room (Remove listing / View profile /
     Dismiss), and a red open-count badge on the Admin sidebar item. Rides the `reports`
     table + RLS from migration 0001 — zero new SQL.
+11. **Privacy & Account pass** — migration 0018 removed `whatsapp_number` from the
+    `public_profiles` view (it was API-readable by every member AND guests, while no UI
+    ever showed it — all contact is in-app chat). Profile page gained an "Account &
+    privacy" section: change password in-app (works for Google accounts too) and a
+    plain-language card showing what other members see vs what only you see.
 
 ### 4. Deployment
 - **GitHub** `aldrianomarany-spec/lokita-web` — work branch `lokita-web-v2`,
