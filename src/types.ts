@@ -48,4 +48,5 @@ export interface Profile {
   // populated from the DB row (optional so the empty seed is valid)
   verification_status?: string
   profile_photo_url?: string | null
+  role?: 'user' | 'admin' // unlocks the Control Room view
 }

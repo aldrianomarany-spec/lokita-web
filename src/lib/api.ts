@@ -51,6 +51,7 @@ export function dbToUiProfile(db: DbProfile): UiProfile & {
     since: memberSince(db.created_at),
     verification_status: db.verification_status,
     profile_photo_url: db.profile_photo_url,
+    role: db.role,
   }
 }
 
@@ -1100,4 +1101,109 @@ export async function fetchListingById(id: string, viewerFloor: string | null): 
     .eq('id', row.seller_id)
     .maybeSingle()
   return mapRow(row, (person as SellerLite | null) || undefined, user?.id, viewerFloor, 0)
+}
+
+// ===========================================================================
+// ADMIN (Control Room) — every call here is protected by RLS: the `is_admin()`
+// policies from migration 0001 let role='admin' accounts read all profiles /
+// listings / transactions and moderate them. Non-admins get RLS-filtered
+// results (or errors), so the UI gate in AdminView is convenience, not
+// security.
+// ===========================================================================
+
+export interface AdminStats {
+  members: number
+  activeListings: number
+  soldListings: number
+  completedOrders: number
+  feeCollected: number // LOKITA revenue: platform_fee summed over SOLD listings
+  feePending: number // fees riding on currently-active listings
+}
+
+export async function fetchAdminStats(): Promise<AdminStats> {
+  const [profilesRes, listingsRes, txRes] = await Promise.all([
+    supabase.from('profiles').select('id', { count: 'exact', head: true }),
+    supabase.from('listings').select('status, platform_fee'),
+    supabase.from('transactions').select('status'),
+  ])
+  if (profilesRes.error) throw profilesRes.error
+  if (listingsRes.error) throw listingsRes.error
+  if (txRes.error) throw txRes.error
+  const listings = (listingsRes.data as { status: string; platform_fee: number | null }[]) || []
+  const tx = (txRes.data as { status: string }[]) || []
+  const sum = (rows: typeof listings) => rows.reduce((a, r) => a + Number(r.platform_fee || 0), 0)
+  return {
+    members: profilesRes.count || 0,
+    activeListings: listings.filter((l) => l.status === 'active').length,
+    soldListings: listings.filter((l) => l.status === 'sold').length,
+    completedOrders: tx.filter((t) => t.status === 'completed').length,
+    feeCollected: sum(listings.filter((l) => l.status === 'sold')),
+    feePending: sum(listings.filter((l) => l.status === 'active')),
+  }
+}
+
+export interface AdminListingRow {
+  id: string
+  title: string
+  price: number
+  platform_fee: number
+  status: string
+  is_featured: boolean
+  created_at: string
+  seller_id: string
+  seller_name: string
+}
+
+export async function fetchAdminListings(): Promise<AdminListingRow[]> {
+  const { data, error } = await supabase
+    .from('listings')
+    .select('id, title, price, platform_fee, status, is_featured, created_at, seller_id')
+    .order('created_at', { ascending: false })
+    .limit(200)
+  if (error) throw error
+  const rows = (data as Omit<AdminListingRow, 'seller_name'>[]) || []
+  const ids = [...new Set(rows.map((r) => r.seller_id))]
+  const { data: people } = ids.length
+    ? await supabase.from('public_profiles').select('id, name').in('id', ids)
+    : { data: [] }
+  const nameById = new Map(((people as { id: string; name: string }[]) || []).map((p) => [p.id, p.name]))
+  return rows.map((r) => ({ ...r, platform_fee: Number(r.platform_fee || 0), seller_name: nameById.get(r.seller_id) || 'Student' }))
+}
+
+// Hide a bad listing (or put it back). 'removed' keeps the row + photos with
+// the seller so nothing is lost if it was a mistake.
+export async function adminSetListingStatus(id: string, status: 'active' | 'removed'): Promise<void> {
+  const { error } = await supabase.from('listings').update({ status }).eq('id', id)
+  if (error) throw error
+}
+
+export async function adminSetFeatured(id: string, on: boolean): Promise<void> {
+  const { error } = await supabase.from('listings').update({ is_featured: on }).eq('id', id)
+  if (error) throw error
+}
+
+export interface AdminMemberRow {
+  id: string
+  name: string
+  email: string | null
+  building: string | null
+  verification_status: string
+  role: string
+  created_at: string
+}
+
+export async function fetchAdminMembers(): Promise<AdminMemberRow[]> {
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('id, name, email, building, verification_status, role, created_at')
+    .order('created_at', { ascending: false })
+    .limit(200)
+  if (error) throw error
+  return (data as AdminMemberRow[]) || []
+}
+
+// The privileged-columns trigger allows this write only for admins.
+export async function adminSetVerification(id: string, status: 'verified' | 'pending'): Promise<void> {
+  const { error } = await supabase.from('profiles').update({ verification_status: status }).eq('id', id)
+  if (error) throw error
 }
