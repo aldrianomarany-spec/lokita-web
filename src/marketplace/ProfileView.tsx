@@ -99,8 +99,8 @@ function AccountPrivacyCard() {
       {/* change password */}
       <div style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 10, color: '#A29C8B', letterSpacing: '.06em', marginBottom: 9 }}>CHANGE PASSWORD</div>
       <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
-        <input className="lok-field" type="password" value={pw} onChange={(e) => setPw(e.target.value)} placeholder="New password (min. 8 characters)" style={pwField} />
-        <input className="lok-field" type="password" value={pw2} onChange={(e) => setPw2(e.target.value)} placeholder="Repeat new password" style={pwField} />
+        <input className="lok-field" type="password" autoComplete="new-password" value={pw} onChange={(e) => setPw(e.target.value)} placeholder="New password (min. 8 characters)" style={pwField} />
+        <input className="lok-field" type="password" autoComplete="new-password" value={pw2} onChange={(e) => setPw2(e.target.value)} placeholder="Repeat new password" style={pwField} />
         <button
           onClick={savePw}
           disabled={pwState !== 'idle'}

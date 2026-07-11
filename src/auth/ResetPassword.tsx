@@ -103,9 +103,9 @@ export default function ResetPassword() {
               <div style={{ background: '#FBEEE9', border: '1px solid #E4C4B8', color: '#B23A1B', fontSize: 12.5, fontWeight: 600, borderRadius: 11, padding: '10px 13px', marginBottom: 14, lineHeight: 1.45 }}>{error}</div>
             )}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 11 }}>
-              <input type="password" value={pw} onChange={(e) => setPw(e.target.value)} placeholder="New password (min. 6 characters)" className="lok-field" style={field} />
+              <input type="password" autoComplete="new-password" value={pw} onChange={(e) => setPw(e.target.value)} placeholder="New password (min. 6 characters)" className="lok-field" style={field} />
               <input
-                type="password"
+                type="password" autoComplete="new-password"
                 value={pw2}
                 onChange={(e) => setPw2(e.target.value)}
                 onKeyDown={(e) => {
