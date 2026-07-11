@@ -299,3 +299,8 @@ input[type='search']::-webkit-search-decoration {
   -webkit-appearance: none;
   appearance: none;
 }
+
+/* room for the fixed bottom tab bar on phones (members only) */
+.lok-main.lok-tabbar-pad {
+  padding-bottom: 108px !important;
+}
