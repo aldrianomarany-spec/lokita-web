@@ -40,7 +40,7 @@ export default function EditProfileModal() {
         )}
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 18 }}>
-          <div style={{ width: 66, height: 66, borderRadius: 0, background: 'var(--accent,#2A5FA8)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#F7F3EA', fontWeight: 800, fontSize: 26, fontFamily: "'Bricolage Grotesque',sans-serif", overflow: 'hidden', flex: 'none' }}>
+          <div style={{ width: 66, height: 66, borderRadius: 0, background: 'var(--accent,#101113)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#F7F3EA', fontWeight: 800, fontSize: 26, fontFamily: "'Bricolage Grotesque',sans-serif", overflow: 'hidden', flex: 'none' }}>
             {state.photo ? <img src={state.photo} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : profileInitial}
           </div>
           <div>
@@ -114,7 +114,7 @@ export default function EditProfileModal() {
 
         <div style={{ display: 'flex', gap: 11, marginTop: 20 }}>
           <button onClick={closeEdit} className="lok-btn" style={{ flex: 'none', border: '1px solid #C9C9C5', background: '#F5F5F3', color: '#17181A', fontFamily: 'inherit', fontWeight: 700, fontSize: 14, padding: '13px 20px', borderRadius: 0, cursor: 'pointer' }}>Cancel</button>
-          <button onClick={savePf} disabled={state.pfSaving} className="lok-btn" style={{ flex: 1, border: 'none', background: 'var(--accent,#2A5FA8)', color: '#F7F3EA', fontFamily: 'inherit', fontWeight: 700, fontSize: 14, padding: 13, borderRadius: 0, cursor: 'pointer', boxShadow: '0 8px 20px -8px rgba(53,85,230,.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+          <button onClick={savePf} disabled={state.pfSaving} className="lok-btn" style={{ flex: 1, border: 'none', background: 'var(--accent,#101113)', color: '#F7F3EA', fontFamily: 'inherit', fontWeight: 700, fontSize: 14, padding: 13, borderRadius: 0, cursor: 'pointer', boxShadow: '0 8px 20px -8px rgba(16,17,19,.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
             {state.pfSaving ? <span className="lok-spin" style={{ width: 15, height: 15, border: '2px solid rgba(247,243,234,.4)', borderTopColor: '#F7F3EA', borderRadius: '50%', display: 'inline-block' }} /> : 'Save changes'}
           </button>
         </div>

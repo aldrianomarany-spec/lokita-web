@@ -220,7 +220,7 @@ export default function CompleteProfile() {
         <button
           onClick={submit}
           className="lok-btn"
-          style={{ width: '100%', border: 'none', background: 'var(--accent,#2A5FA8)', color: '#F5F1E8', fontFamily: 'inherit', fontWeight: 700, fontSize: 15, padding: 14, borderRadius: 0, cursor: 'pointer', boxShadow: '0 10px 24px -10px rgba(53,85,230,.8)', marginTop: 20, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 9 }}
+          style={{ width: '100%', border: 'none', background: 'var(--accent,#101113)', color: '#F5F1E8', fontFamily: 'inherit', fontWeight: 700, fontSize: 15, padding: 14, borderRadius: 0, cursor: 'pointer', boxShadow: '0 10px 24px -10px rgba(16,17,19,.8)', marginTop: 20, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 9 }}
         >
           {saving ? (
             <span className="lok-spin" style={{ width: 16, height: 16, border: '2px solid rgba(245,241,232,.4)', borderTopColor: '#F5F1E8', borderRadius: '50%', display: 'inline-block' }} />

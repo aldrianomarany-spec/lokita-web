@@ -17,11 +17,11 @@ body {
 }
 
 a {
-  color: var(--accent, #2a5fa8);
+  color: var(--accent, #101113);
   text-decoration: none;
 }
 a:hover {
-  color: var(--accent-deep, #1e4578);
+  color: var(--accent-deep, #000000);
 }
 
 /* scrollbars — paper-toned */
@@ -209,7 +209,7 @@ a:hover {
     box-shadow 0.16s ease;
 }
 .lok-in:focus-within {
-  border-color: var(--accent, #2a5fa8);
+  border-color: var(--accent, #101113);
   background: #fff;
 }
 .lok-link {
@@ -245,7 +245,7 @@ a:hover {
     background 0.16s ease;
 }
 .lok-field:focus {
-  border-color: var(--accent, #2a5fa8);
+  border-color: var(--accent, #101113);
   background: #fff;
 }
 

@@ -5,6 +5,10 @@ import {
   fetchAdminListings,
   fetchAdminMembers,
   fetchAdminReports,
+  fetchAdminBanners,
+  adminCreateBanner,
+  adminSetBannerActive,
+  adminDeleteBanner,
   adminSetListingStatus,
   adminSetFeatured,
   adminSetVerification,
@@ -14,6 +18,7 @@ import {
   type AdminListingRow,
   type AdminMemberRow,
   type AdminReportRow,
+  type BannerRow,
 } from '../lib/api'
 import { Verified } from '../components/Icons'
 
@@ -22,7 +27,7 @@ const mono: React.CSSProperties = { fontFamily: "'Spline Sans Mono',monospace", 
 const card: React.CSSProperties = { background: '#FFFFFF', border: '1px solid #D8D8D4', borderRadius: 0 }
 
 const STATUS_CHIP: Record<string, { bg: string; fg: string }> = {
-  active: { bg: '#E9EDFC', fg: '#2441B8' },
+  active: { bg: '#F6F0E3', fg: '#8A6C34' },
   sold: { bg: '#FBF2DD', fg: '#9A6A12' },
   removed: { bg: '#FBEEE9', fg: '#B23A1B' },
   flagged: { bg: '#FBEEE9', fg: '#B23A1B' },
@@ -32,7 +37,7 @@ function SmallBtn({ label, onClick, tone = 'plain', busy }: { label: string; onC
   const styles: Record<string, React.CSSProperties> = {
     plain: { border: '1px solid #C9C9C5', background: '#F5F5F3', color: '#2A2B2E' },
     danger: { border: '1px solid #E4C4B8', background: '#FBEEE9', color: '#C0492A' },
-    accent: { border: 'none', background: 'var(--accent,#2A5FA8)', color: '#F7F3EA' },
+    accent: { border: 'none', background: 'var(--accent,#101113)', color: '#F7F3EA' },
   }
   return (
     <button
@@ -54,6 +59,9 @@ export default function AdminView() {
   const [listings, setListings] = useState<AdminListingRow[] | null>(null)
   const [members, setMembers] = useState<AdminMemberRow[] | null>(null)
   const [reports, setReports] = useState<AdminReportRow[] | null>(null)
+  const [bannersA, setBannersA] = useState<BannerRow[] | null>(null)
+  const [bForm, setBForm] = useState({ title: '', subtitle: '', cta: '', target: 'none', value: '' })
+  const [bSaving, setBSaving] = useState(false)
   const [err, setErr] = useState<string | null>(null)
   const [busyId, setBusyId] = useState<string | null>(null)
 
@@ -61,6 +69,7 @@ export default function AdminView() {
     setErr(null)
     try {
       const [s, l, m, r] = await Promise.all([fetchAdminStats(), fetchAdminListings(), fetchAdminMembers(), fetchAdminReports()])
+      fetchAdminBanners().then(setBannersA).catch(() => setBannersA([]))
       setStats(s)
       setListings(l)
       setMembers(m)
@@ -146,7 +155,7 @@ export default function AdminView() {
       <div style={{ ...card, overflow: 'hidden', marginBottom: 26 }}>
         {reports === null ? (
           <div style={{ padding: 28, textAlign: 'center' }}>
-            <span className="lok-spin" style={{ width: 22, height: 22, border: '3px solid #D8D8D4', borderTopColor: 'var(--accent,#2A5FA8)', borderRadius: '50%', display: 'inline-block' }} />
+            <span className="lok-spin" style={{ width: 22, height: 22, border: '3px solid #D8D8D4', borderTopColor: 'var(--accent,#101113)', borderRadius: '50%', display: 'inline-block' }} />
           </div>
         ) : reports.length === 0 ? (
           <div style={{ padding: '30px 20px', textAlign: 'center', color: '#8B8B86', fontSize: 13 }}>No reports — all quiet. 🎉</div>
@@ -164,7 +173,7 @@ export default function AdminView() {
                       {r.reason} — reported by {r.reporter_name}
                     </div>
                   </div>
-                  <span style={{ ...mono, fontSize: 9, color: open ? '#B23A1B' : '#3D7A54', background: open ? '#FBEEE9' : '#E9EDFC', padding: '4px 9px', borderRadius: 0, flex: 'none' }}>
+                  <span style={{ ...mono, fontSize: 9, color: open ? '#B23A1B' : '#3D7A54', background: open ? '#FBEEE9' : '#F6F0E3', padding: '4px 9px', borderRadius: 0, flex: 'none' }}>
                     {open ? 'OPEN' : r.status === 'resolved' ? 'HANDLED' : 'DISMISSED'}
                   </span>
                   {open && (
@@ -194,12 +203,66 @@ export default function AdminView() {
         )}
       </div>
 
+      {/* promotion banners — the homepage black slot */}
+      <div style={{ ...mono, marginBottom: 10 }}>PROMOTION BANNERS · HOMEPAGE SLOT</div>
+      <div style={{ ...card, overflow: 'hidden', marginBottom: 26, padding: '14px 16px' }}>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 8 }}>
+          <input className="lok-field" value={bForm.title} onChange={(e) => setBForm({ ...bForm, title: e.target.value })} placeholder="Headline (e.g. Graduation clearout week)" style={{ flex: '2 1 240px', background: '#F5F5F3', border: '1px solid #D8D8D4', borderRadius: 0, padding: '10px 12px', fontSize: 12.5, fontFamily: 'inherit', color: '#17181A' }} />
+          <input className="lok-field" value={bForm.subtitle} onChange={(e) => setBForm({ ...bForm, subtitle: e.target.value })} placeholder="Subtitle (optional)" style={{ flex: '2 1 220px', background: '#F5F5F3', border: '1px solid #D8D8D4', borderRadius: 0, padding: '10px 12px', fontSize: 12.5, fontFamily: 'inherit', color: '#17181A' }} />
+        </div>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+          <input className="lok-field" value={bForm.cta} onChange={(e) => setBForm({ ...bForm, cta: e.target.value })} placeholder="Button label (e.g. Shop bundles)" style={{ flex: '1 1 170px', background: '#F5F5F3', border: '1px solid #D8D8D4', borderRadius: 0, padding: '10px 12px', fontSize: 12.5, fontFamily: 'inherit', color: '#17181A' }} />
+          <select className="lok-field" value={bForm.target} onChange={(e) => setBForm({ ...bForm, target: e.target.value })} title="Where the button goes" style={{ flex: 'none', background: '#F5F5F3', border: '1px solid #D8D8D4', borderRadius: 0, padding: '10px 12px', fontSize: 12.5, fontFamily: 'inherit', color: '#17181A' }}>
+            <option value="none">No button</option>
+            <option value="category">Open a category</option>
+            <option value="listing">Open a listing</option>
+            <option value="requests">Open Requests</option>
+            <option value="sell">Open the Sell form</option>
+          </select>
+          {(bForm.target === 'category' || bForm.target === 'listing') && (
+            <input className="lok-field" value={bForm.value} onChange={(e) => setBForm({ ...bForm, value: e.target.value })} placeholder={bForm.target === 'category' ? 'Category (e.g. Bundles)' : 'Listing id'} style={{ flex: '1 1 140px', background: '#F5F5F3', border: '1px solid #D8D8D4', borderRadius: 0, padding: '10px 12px', fontSize: 12.5, fontFamily: 'inherit', color: '#17181A' }} />
+          )}
+          <SmallBtn
+            label={bSaving ? 'Publishing…' : 'Publish banner'}
+            tone="accent"
+            busy={bSaving}
+            onClick={async () => {
+              if (!bForm.title.trim() || bSaving) return
+              setBSaving(true)
+              try {
+                await adminCreateBanner({ title: bForm.title.trim(), subtitle: bForm.subtitle.trim() || null, cta_label: bForm.cta.trim() || null, target_type: bForm.target as BannerRow['target_type'], target_value: bForm.value.trim() || null })
+                setBForm({ title: '', subtitle: '', cta: '', target: 'none', value: '' })
+                fetchAdminBanners().then(setBannersA).catch(() => {})
+              } catch (e) {
+                alert('Could not publish: ' + (e instanceof Error ? e.message : 'run migration 0021 first?'))
+              } finally {
+                setBSaving(false)
+              }
+            }}
+          />
+        </div>
+        {bannersA && bannersA.length > 0 && (
+          <div style={{ marginTop: 12, borderTop: '1px solid #E6E6E3' }}>
+            {bannersA.map((b) => (
+              <div key={b.id} style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', padding: '10px 2px', borderBottom: '1px solid #E6E6E3', opacity: b.is_active ? 1 : 0.55 }}>
+                <div style={{ flex: '1 1 200px', minWidth: 0 }}>
+                  <div style={{ fontWeight: 700, fontSize: 13, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{b.title}</div>
+                  <div style={{ fontSize: 11, color: '#8B8B86', fontWeight: 600 }}>{b.cta_label ? `${b.cta_label} → ${b.target_type}${b.target_value ? ' · ' + b.target_value : ''}` : 'no button'}</div>
+                </div>
+                <SmallBtn label={b.is_active ? 'Hide' : 'Show'} busy={busyId === b.id} onClick={() => act(b.id, async () => { await adminSetBannerActive(b.id, !b.is_active); fetchAdminBanners().then(setBannersA).catch(() => {}) })} />
+                <SmallBtn label="Delete" tone="danger" busy={busyId === b.id} onClick={() => act(b.id, async () => { await adminDeleteBanner(b.id); fetchAdminBanners().then(setBannersA).catch(() => {}) })} />
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
       {/* listings moderation */}
       <div style={{ ...mono, marginBottom: 10 }}>LISTINGS · MODERATION</div>
       <div style={{ ...card, overflow: 'hidden', marginBottom: 26 }}>
         {listings === null ? (
           <div style={{ padding: 28, textAlign: 'center' }}>
-            <span className="lok-spin" style={{ width: 22, height: 22, border: '3px solid #D8D8D4', borderTopColor: 'var(--accent,#2A5FA8)', borderRadius: '50%', display: 'inline-block' }} />
+            <span className="lok-spin" style={{ width: 22, height: 22, border: '3px solid #D8D8D4', borderTopColor: 'var(--accent,#101113)', borderRadius: '50%', display: 'inline-block' }} />
           </div>
         ) : listings.length === 0 ? (
           <div style={{ padding: '30px 20px', textAlign: 'center', color: '#8B8B86', fontSize: 13 }}>No listings yet.</div>
@@ -240,7 +303,7 @@ export default function AdminView() {
       <div style={{ ...card, overflow: 'hidden', marginBottom: 30 }}>
         {members === null ? (
           <div style={{ padding: 28, textAlign: 'center' }}>
-            <span className="lok-spin" style={{ width: 22, height: 22, border: '3px solid #D8D8D4', borderTopColor: 'var(--accent,#2A5FA8)', borderRadius: '50%', display: 'inline-block' }} />
+            <span className="lok-spin" style={{ width: 22, height: 22, border: '3px solid #D8D8D4', borderTopColor: 'var(--accent,#101113)', borderRadius: '50%', display: 'inline-block' }} />
           </div>
         ) : members.length === 0 ? (
           <div style={{ padding: '30px 20px', textAlign: 'center', color: '#8B8B86', fontSize: 13 }}>No members yet.</div>
@@ -254,7 +317,7 @@ export default function AdminView() {
                 <div style={{ fontWeight: 700, fontSize: 13.5, display: 'flex', alignItems: 'center', gap: 7 }}>
                   <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{m.name}</span>
                   {m.verification_status === 'verified' && <Verified size={13} />}
-                  {m.role === 'admin' && <span style={{ ...mono, fontSize: 8.5, color: '#2441B8', background: '#E9EDFC', padding: '2px 6px', borderRadius: 0, flex: 'none' }}>ADMIN</span>}
+                  {m.role === 'admin' && <span style={{ ...mono, fontSize: 8.5, color: '#8A6C34', background: '#F6F0E3', padding: '2px 6px', borderRadius: 0, flex: 'none' }}>ADMIN</span>}
                   {m.is_banned && <span style={{ ...mono, fontSize: 8.5, color: '#B23A1B', background: '#FBEEE9', padding: '2px 6px', borderRadius: 0, flex: 'none' }}>BANNED</span>}
                 </div>
                 <div style={{ fontSize: 11.5, color: '#8B8B86', fontWeight: 600, marginTop: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{m.email || '—'}</div>

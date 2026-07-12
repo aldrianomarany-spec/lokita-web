@@ -89,7 +89,7 @@ export default function DetailModal() {
           </div>
           <h2 style={{ fontFamily: "'Bricolage Grotesque',sans-serif", fontSize: 27, fontWeight: 800, letterSpacing: '-.02em', margin: '6px 0 8px', lineHeight: 1.12 }}>{sel.title}</h2>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 9, marginBottom: isOwner && (sel.platformFee || 0) > 0 ? 6 : 16 }}>
-            <span style={{ fontFamily: "'Bricolage Grotesque',sans-serif", fontSize: 28, fontWeight: 800, color: 'var(--accent,#2A5FA8)' }}>{sel.price}</span>
+            <span style={{ fontFamily: "'Bricolage Grotesque',sans-serif", fontSize: 28, fontWeight: 800, color: 'var(--accent,#101113)' }}>{sel.price}</span>
           </div>
           {/* only the owner sees the fee split — buyers just see the listed price */}
           {isOwner && (sel.platformFee || 0) > 0 && (
@@ -134,8 +134,8 @@ export default function DetailModal() {
           </div>
 
           {/* security post note */}
-          <div style={{ background: '#E9EDFC', border: '1px solid #C7D2F2', borderRadius: 0, padding: '14px 15px', display: 'flex', gap: 12, marginBottom: 22 }}>
-            <div style={{ color: 'var(--accent,#2A5FA8)', flex: 'none' }}>
+          <div style={{ background: '#F6F0E3', border: '1px solid #E2D3AF', borderRadius: 0, padding: '14px 15px', display: 'flex', gap: 12, marginBottom: 22 }}>
+            <div style={{ color: 'var(--accent,#101113)', flex: 'none' }}>
               <ShieldCheck size={22} />
             </div>
             <div>
@@ -148,7 +148,7 @@ export default function DetailModal() {
           <div style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column', gap: 11 }}>
             {guest ? (
               <>
-                <button className="lok-btn" onClick={goSignup} style={{ border: 'none', background: 'var(--accent,#2A5FA8)', color: '#F7F3EA', fontFamily: 'inherit', fontWeight: 700, fontSize: 14.5, padding: 14, borderRadius: 0, cursor: 'pointer', boxShadow: '0 8px 20px -8px rgba(53,85,230,.6)' }}>Sign up to buy & message — it's free</button>
+                <button className="lok-btn" onClick={goSignup} style={{ border: 'none', background: 'var(--accent,#101113)', color: '#F7F3EA', fontFamily: 'inherit', fontWeight: 700, fontSize: 14.5, padding: 14, borderRadius: 0, cursor: 'pointer', boxShadow: '0 8px 20px -8px rgba(16,17,19,.6)' }}>Sign up to buy & message — it's free</button>
                 <div style={{ textAlign: 'center', fontSize: 12, color: '#8B8B86', fontWeight: 500 }}>You're browsing as a guest. Create an account to trade with {sel.seller}.</div>
               </>
             ) : isOwner ? (
@@ -161,7 +161,7 @@ export default function DetailModal() {
                   <MessageBubble size={17} />
                   Message seller
                 </button>
-                <button className="lok-btn" onClick={openCheckout} style={{ border: 'none', background: 'var(--accent,#2A5FA8)', color: '#F7F3EA', fontFamily: 'inherit', fontWeight: 700, fontSize: 14.5, padding: 14, borderRadius: 0, cursor: 'pointer', boxShadow: '0 8px 20px -8px rgba(53,85,230,.6)' }}>Buy now · {sel.price}</button>
+                <button className="lok-btn" onClick={openCheckout} style={{ border: 'none', background: 'var(--accent,#101113)', color: '#F7F3EA', fontFamily: 'inherit', fontWeight: 700, fontSize: 14.5, padding: 14, borderRadius: 0, cursor: 'pointer', boxShadow: '0 8px 20px -8px rgba(16,17,19,.6)' }}>Buy now · {sel.price}</button>
                 <ReportForm targetType="listing" targetId={sel.id} label="this listing" />
               </>
             )}

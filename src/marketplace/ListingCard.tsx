@@ -5,7 +5,7 @@ import { MapPin, Star, Verified } from '../components/Icons'
 
 // corner tag: FEATURED (accent) or GRAD BUNDLE (olive) — set by the feed mapper
 function tagColors(tag: string): { bg: string; fg: string } | null {
-  if (tag === 'FEATURED') return { bg: '#E7EEF7', fg: '#2A5FA8' }
+  if (tag === 'FEATURED') return { bg: '#E7EEF7', fg: '#101113' }
   if (tag === 'GRAD BUNDLE') return { bg: '#EFEFDD', fg: '#7E8154' }
   return null
 }

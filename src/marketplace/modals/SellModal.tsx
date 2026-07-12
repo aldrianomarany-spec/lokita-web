@@ -24,7 +24,7 @@ export default function SellModal() {
   const fileRef = useRef<HTMLInputElement>(null)
 
   const listLabel = s.listState === 'saving' ? 'Posting…' : s.listState === 'done' ? 'Posted ✓' : 'Post listing'
-  const listBg = s.listState === 'done' ? '#3DBB6E' : 'var(--accent,#2A5FA8)'
+  const listBg = s.listState === 'done' ? '#3DBB6E' : 'var(--accent,#101113)'
   const busy = s.listState !== 'idle'
 
   const onFiles = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -82,7 +82,7 @@ export default function SellModal() {
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 8, paddingTop: 8, borderTop: '1px dashed #C9C9C5' }}>
                 <span style={{ fontSize: 12.5, fontWeight: 800 }}>Listed at (buyers pay)</span>
-                <span style={{ fontFamily: "'Bricolage Grotesque',sans-serif", fontWeight: 800, fontSize: 16, color: 'var(--accent,#2A5FA8)' }}>{rp(listed)}</span>
+                <span style={{ fontFamily: "'Bricolage Grotesque',sans-serif", fontWeight: 800, fontSize: 16, color: 'var(--accent,#101113)' }}>{rp(listed)}</span>
               </div>
               <div style={{ fontSize: 11, color: '#3D7A54', fontWeight: 600, marginTop: 6 }}>✓ You still receive your full {rp(ask)} when it sells.</div>
             </div>
@@ -124,7 +124,7 @@ export default function SellModal() {
             </select>
           </div>
           <div style={{ fontSize: 11, color: '#8B8B86', fontWeight: 500, lineHeight: 1.5, margin: '-2px 2px 0', display: 'flex', gap: 6 }}>
-            <span style={{ color: 'var(--accent,#2A5FA8)', flex: 'none' }}>ⓘ</span>
+            <span style={{ color: 'var(--accent,#101113)', flex: 'none' }}>ⓘ</span>
             Just tells buyers how near the item is. The actual hand-off always happens at the shared campus Security Post — the buyer picks the exchange method at checkout.
           </div>
 
@@ -155,7 +155,7 @@ export default function SellModal() {
 
         </div>
 
-        <button disabled={busy} className="lok-btn" onClick={() => submitListing(photos)} style={{ width: '100%', border: 'none', background: listBg, color: '#F7F3EA', fontFamily: 'inherit', fontWeight: 700, fontSize: 14.5, padding: 14, borderRadius: 0, cursor: busy ? 'default' : 'pointer', marginTop: 18, transition: 'background .2s ease', boxShadow: '0 8px 20px -8px rgba(53,85,230,.6)' }}>{listLabel}</button>
+        <button disabled={busy} className="lok-btn" onClick={() => submitListing(photos)} style={{ width: '100%', border: 'none', background: listBg, color: '#F7F3EA', fontFamily: 'inherit', fontWeight: 700, fontSize: 14.5, padding: 14, borderRadius: 0, cursor: busy ? 'default' : 'pointer', marginTop: 18, transition: 'background .2s ease', boxShadow: '0 8px 20px -8px rgba(16,17,19,.6)' }}>{listLabel}</button>
       </div>
     </Overlay>
   )

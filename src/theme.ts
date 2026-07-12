@@ -2,13 +2,13 @@
 // LOKITA design tokens — ported from the Web v2 prototype.
 // The brand accent is a tweakable variable; the prototype ships
 // with the blue accent (the user's edit). Change ACCENT/ACCENT_DEEP
-// to re-skin (pine #1B5E43, blue #2A5FA8, violet #8A4E9E, rust #B4531F).
+// to re-skin (pine #1B5E43, blue #101113, violet #8A4E9E, rust #B4531F).
 // ============================================================
 
 // GRID MARKET skin (design exploration 1a): electric blue on neutral paper.
-// Previous warm-editorial accent: '#2A5FA8' / '#1E4578' — restore to revert.
-export const ACCENT = '#3555E6'
-export const ACCENT_DEEP = '#2441B8'
+// Previous warm-editorial accent: '#101113' / '#000000' — restore to revert.
+export const ACCENT = '#101113'
+export const ACCENT_DEEP = '#000000'
 
 // soft, warm/low-sat tint palette with matching stripe + label colours.
 export type Tone = 'sand' | 'sage' | 'clay' | 'haze' | 'blush' | 'olive'

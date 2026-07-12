@@ -80,7 +80,7 @@ export default function ResetPassword() {
 
         {phase === 'waiting' && (
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '18px 0 6px', color: '#5F6063', fontSize: 13.5, fontWeight: 600 }}>
-            <span className="lok-spin" style={{ width: 18, height: 18, border: '2.5px solid #D8D8D4', borderTopColor: 'var(--accent,#2A5FA8)', borderRadius: '50%', display: 'inline-block' }} />
+            <span className="lok-spin" style={{ width: 18, height: 18, border: '2.5px solid #D8D8D4', borderTopColor: 'var(--accent,#101113)', borderRadius: '50%', display: 'inline-block' }} />
             Checking your reset link…
           </div>
         )}
@@ -90,7 +90,7 @@ export default function ResetPassword() {
             <p style={{ fontSize: 13.5, color: '#5F6063', lineHeight: 1.6, margin: '4px 0 18px' }}>
               This reset link is invalid or has expired. Request a new one from the login screen.
             </p>
-            <button onClick={() => navigate('/', { replace: true })} className="lok-btn" style={{ width: '100%', border: 'none', background: 'var(--accent,#2A5FA8)', color: '#F5F1E8', fontFamily: 'inherit', fontWeight: 700, fontSize: 14.5, padding: 13, borderRadius: 0, cursor: 'pointer' }}>Back to login</button>
+            <button onClick={() => navigate('/', { replace: true })} className="lok-btn" style={{ width: '100%', border: 'none', background: 'var(--accent,#101113)', color: '#F5F1E8', fontFamily: 'inherit', fontWeight: 700, fontSize: 14.5, padding: 13, borderRadius: 0, cursor: 'pointer' }}>Back to login</button>
           </>
         )}
 
@@ -116,7 +116,7 @@ export default function ResetPassword() {
                 style={field}
               />
             </div>
-            <button onClick={submit} className="lok-btn" style={{ width: '100%', border: 'none', background: 'var(--accent,#2A5FA8)', color: '#F5F1E8', fontFamily: 'inherit', fontWeight: 700, fontSize: 14.5, padding: 13, borderRadius: 0, cursor: 'pointer', marginTop: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 9 }}>
+            <button onClick={submit} className="lok-btn" style={{ width: '100%', border: 'none', background: 'var(--accent,#101113)', color: '#F5F1E8', fontFamily: 'inherit', fontWeight: 700, fontSize: 14.5, padding: 13, borderRadius: 0, cursor: 'pointer', marginTop: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 9 }}>
               {saving ? <span className="lok-spin" style={{ width: 16, height: 16, border: '2px solid rgba(245,241,232,.4)', borderTopColor: '#F5F1E8', borderRadius: '50%', display: 'inline-block' }} /> : 'Save new password'}
             </button>
           </>
@@ -127,7 +127,7 @@ export default function ResetPassword() {
             <p style={{ fontSize: 13.5, color: '#5F6063', lineHeight: 1.6, margin: '4px 0 18px' }}>
               Your password has been changed. You're signed in — welcome back! 🎉
             </p>
-            <button onClick={() => navigate('/app', { replace: true })} className="lok-btn" style={{ width: '100%', border: 'none', background: 'var(--accent,#2A5FA8)', color: '#F5F1E8', fontFamily: 'inherit', fontWeight: 700, fontSize: 14.5, padding: 13, borderRadius: 0, cursor: 'pointer' }}>Enter the marketplace</button>
+            <button onClick={() => navigate('/app', { replace: true })} className="lok-btn" style={{ width: '100%', border: 'none', background: 'var(--accent,#101113)', color: '#F5F1E8', fontFamily: 'inherit', fontWeight: 700, fontSize: 14.5, padding: 13, borderRadius: 0, cursor: 'pointer' }}>Enter the marketplace</button>
           </>
         )}
       </div>
