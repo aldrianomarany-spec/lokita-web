@@ -156,9 +156,10 @@ export default function BrowseView() {
       {/* black statement slot — admin banner first, featured item as fallback */}
       {banner ? (
         <div
+          key={banner.id}
           onClick={() => banner.target_type !== 'none' && bannerCta(banner)}
           className="lok-card"
-          style={{ display: 'grid', gridTemplateColumns: isNarrow ? '1fr' : '1fr 380px', background: INK, color: PAPER, marginBottom: 18, cursor: banner.target_type !== 'none' ? 'pointer' : 'default' }}
+          style={{ display: 'grid', gridTemplateColumns: isNarrow ? '1fr' : '1fr 380px', background: INK, color: PAPER, marginBottom: 18, cursor: banner.target_type !== 'none' ? 'pointer' : 'default', animation: 'lok-slidein .55s cubic-bezier(.25,.8,.3,1) both', overflow: 'hidden' }}
         >
           <div style={{ padding: isNarrow ? '26px 22px' : '36px 32px', display: 'flex', flexDirection: 'column', gap: 14, justifyContent: 'center' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>

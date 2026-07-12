@@ -338,3 +338,10 @@ body {
 .lok-ticker:hover .lok-ticker-track {
   animation-play-state: paused;
 }
+
+
+/* hero banner rotation: each slide glides in */
+@keyframes lok-slidein {
+  from { opacity: 0; transform: translateX(26px); }
+  to { opacity: 1; transform: translateX(0); }
+}

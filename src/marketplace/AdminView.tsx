@@ -52,6 +52,25 @@ function SmallBtn({ label, onClick, tone = 'plain', busy }: { label: string; onC
   )
 }
 
+function BannerList({ items, busyId, act, refresh }: { items: BannerRow[]; busyId: string | null; act: (id: string, fn: () => Promise<void>) => Promise<void>; refresh: () => void }) {
+  if (!items.length) return null
+  return (
+    <div style={{ marginTop: 12, borderTop: '1px solid #E6E6E3' }}>
+      {items.map((b) => (
+        <div key={b.id} style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', padding: '10px 2px', borderBottom: '1px solid #E6E6E3', opacity: b.is_active ? 1 : 0.55 }}>
+          {b.image_url && <img src={b.image_url} alt="" style={{ width: 44, height: 30, objectFit: 'cover', flex: 'none', border: '1px solid #E6E6E3' }} />}
+          <div style={{ flex: '1 1 200px', minWidth: 0 }}>
+            <div style={{ fontWeight: 700, fontSize: 13, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{b.title}</div>
+            <div style={{ fontSize: 11, color: '#8B8B86', fontWeight: 600 }}>{b.target_type === 'none' ? 'not clickable' : `→ ${b.target_type}${b.target_value ? ' · ' + b.target_value : ''}`}</div>
+          </div>
+          <SmallBtn label={b.is_active ? 'Hide' : 'Show'} busy={busyId === b.id} onClick={() => act(b.id, async () => { await adminSetBannerActive(b.id, !b.is_active); refresh() })} />
+          <SmallBtn label="Delete" tone="danger" busy={busyId === b.id} onClick={() => act(b.id, async () => { await adminDeleteBanner(b.id); refresh() })} />
+        </div>
+      ))}
+    </div>
+  )
+}
+
 export default function AdminView() {
   const { state, refreshReports, openMember } = useM()
   const isAdmin = !state.guest && state.profile.role === 'admin'
@@ -64,6 +83,8 @@ export default function AdminView() {
   const [bForm, setBForm] = useState({ title: '', subtitle: '', cta: '', target: 'none', value: '', placement: 'hero' })
   const [bSaving, setBSaving] = useState(false)
   const [bImage, setBImage] = useState<File | null>(null)
+  const [tForm, setTForm] = useState({ title: '', target: 'none', value: '' })
+  const [tSaving, setTSaving] = useState(false)
   const [err, setErr] = useState<string | null>(null)
   const [busyId, setBusyId] = useState<string | null>(null)
 
@@ -205,8 +226,8 @@ export default function AdminView() {
         )}
       </div>
 
-      {/* promotion banners — the homepage black slot */}
-      <div style={{ ...mono, marginBottom: 10 }}>PROMOTION BANNERS · HOMEPAGE SLOT</div>
+      {/* promotion banners — the big black homepage slot */}
+      <div style={{ ...mono, marginBottom: 10 }}>PROMOTION BANNERS · BIG BLACK SLOT</div>
       <div style={{ ...card, overflow: 'hidden', marginBottom: 26, padding: '14px 16px' }}>
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 8 }}>
           <input className="lok-field" value={bForm.title} onChange={(e) => setBForm({ ...bForm, title: e.target.value })} placeholder="Headline (e.g. Graduation clearout week)" style={{ flex: '2 1 240px', background: '#F5F5F3', border: '1px solid #D8D8D4', borderRadius: 0, padding: '10px 12px', fontSize: 12.5, fontFamily: 'inherit', color: '#000000' }} />
@@ -214,10 +235,6 @@ export default function AdminView() {
         </div>
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
           <input className="lok-field" value={bForm.cta} onChange={(e) => setBForm({ ...bForm, cta: e.target.value })} placeholder="Button label (e.g. Shop bundles)" style={{ flex: '1 1 170px', background: '#F5F5F3', border: '1px solid #D8D8D4', borderRadius: 0, padding: '10px 12px', fontSize: 12.5, fontFamily: 'inherit', color: '#000000' }} />
-          <select className="lok-field" value={bForm.placement} onChange={(e) => setBForm({ ...bForm, placement: e.target.value })} title="Where the banner appears" style={{ flex: 'none', background: '#F5F5F3', border: '1px solid #D8D8D4', borderRadius: 0, padding: '10px 12px', fontSize: 12.5, fontFamily: 'inherit', color: '#000000' }}>
-            <option value="hero">Big black banner</option>
-            <option value="ticker">Moving blue ticker</option>
-          </select>
           <select className="lok-field" value={bForm.target} onChange={(e) => setBForm({ ...bForm, target: e.target.value })} title="Where the button goes" style={{ flex: 'none', background: '#F5F5F3', border: '1px solid #D8D8D4', borderRadius: 0, padding: '10px 12px', fontSize: 12.5, fontFamily: 'inherit', color: '#000000' }}>
             <option value="none">No button</option>
             <option value="category">Open a category</option>
@@ -241,7 +258,7 @@ export default function AdminView() {
               setBSaving(true)
               try {
                 const image_url = bImage ? await uploadBannerImage(bImage) : null
-                await adminCreateBanner({ title: bForm.title.trim(), subtitle: bForm.subtitle.trim() || null, cta_label: bForm.cta.trim() || null, target_type: bForm.target as BannerRow['target_type'], target_value: bForm.value.trim() || null, image_url, placement: bForm.placement as 'hero' | 'ticker' })
+                await adminCreateBanner({ title: bForm.title.trim(), subtitle: bForm.subtitle.trim() || null, cta_label: bForm.cta.trim() || null, target_type: bForm.target as BannerRow['target_type'], target_value: bForm.value.trim() || null, image_url, placement: 'hero' })
                 setBForm({ title: '', subtitle: '', cta: '', target: 'none', value: '', placement: 'hero' })
                 setBImage(null)
                 fetchAdminBanners().then(setBannersA).catch(() => {})
@@ -253,21 +270,47 @@ export default function AdminView() {
             }}
           />
         </div>
-        {bannersA && bannersA.length > 0 && (
-          <div style={{ marginTop: 12, borderTop: '1px solid #E6E6E3' }}>
-            {bannersA.map((b) => (
-              <div key={b.id} style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', padding: '10px 2px', borderBottom: '1px solid #E6E6E3', opacity: b.is_active ? 1 : 0.55 }}>
-                {b.image_url && <img src={b.image_url} alt="" style={{ width: 44, height: 30, objectFit: 'cover', flex: 'none', border: '1px solid #E6E6E3' }} />}
-                <div style={{ flex: '1 1 200px', minWidth: 0 }}>
-                  <div style={{ fontWeight: 700, fontSize: 13, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{b.title}</div>
-                  <div style={{ fontSize: 11, color: '#8B8B86', fontWeight: 600 }}>{b.placement === 'ticker' ? '🔵 ticker · ' : '⬛ hero · '}{b.cta_label ? `${b.cta_label} → ${b.target_type}${b.target_value ? ' · ' + b.target_value : ''}` : 'no button'}</div>
-                </div>
-                <SmallBtn label={b.is_active ? 'Hide' : 'Show'} busy={busyId === b.id} onClick={() => act(b.id, async () => { await adminSetBannerActive(b.id, !b.is_active); fetchAdminBanners().then(setBannersA).catch(() => {}) })} />
-                <SmallBtn label="Delete" tone="danger" busy={busyId === b.id} onClick={() => act(b.id, async () => { await adminDeleteBanner(b.id); fetchAdminBanners().then(setBannersA).catch(() => {}) })} />
-              </div>
-            ))}
-          </div>
-        )}
+        <BannerList items={(bannersA || []).filter((b) => b.placement !== 'ticker')} busyId={busyId} act={act} refresh={() => fetchAdminBanners().then(setBannersA).catch(() => {})} />
+      </div>
+
+      {/* announcement ticker — the moving blue strip, its own section */}
+      <div style={{ ...mono, marginBottom: 10 }}>🔵 ANNOUNCEMENT TICKER · MOVING BLUE STRIP</div>
+      <div style={{ ...card, overflow: 'hidden', marginBottom: 26, padding: '14px 16px' }}>
+        <div style={{ fontSize: 12, color: '#8B8B86', fontWeight: 500, marginBottom: 10, lineHeight: 1.5 }}>
+          Short announcements that scroll across the top of every page. Keep them one sentence — several items chain together.
+        </div>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+          <input className="lok-field" value={tForm.title} onChange={(e) => setTForm({ ...tForm, title: e.target.value })} placeholder="Announcement (e.g. Welcome to LOKITA — trade safely via the Security Post)" style={{ flex: '2 1 300px', background: '#F5F5F3', border: '1px solid #D8D8D4', borderRadius: 0, padding: '10px 12px', fontSize: 12.5, fontFamily: 'inherit', color: '#000000' }} />
+          <select className="lok-field" value={tForm.target} onChange={(e) => setTForm({ ...tForm, target: e.target.value })} title="Where a tap goes" style={{ flex: 'none', background: '#F5F5F3', border: '1px solid #D8D8D4', borderRadius: 0, padding: '10px 12px', fontSize: 12.5, fontFamily: 'inherit', color: '#000000' }}>
+            <option value="none">Not clickable</option>
+            <option value="category">Opens a category</option>
+            <option value="listing">Opens a listing</option>
+            <option value="requests">Opens Requests</option>
+            <option value="sell">Opens the Sell form</option>
+          </select>
+          {(tForm.target === 'category' || tForm.target === 'listing') && (
+            <input className="lok-field" value={tForm.value} onChange={(e) => setTForm({ ...tForm, value: e.target.value })} placeholder={tForm.target === 'category' ? 'Category (e.g. Bundles)' : 'Listing id'} style={{ flex: '1 1 140px', background: '#F5F5F3', border: '1px solid #D8D8D4', borderRadius: 0, padding: '10px 12px', fontSize: 12.5, fontFamily: 'inherit', color: '#000000' }} />
+          )}
+          <SmallBtn
+            label={tSaving ? 'Publishing…' : 'Add to ticker'}
+            tone="accent"
+            busy={tSaving}
+            onClick={async () => {
+              if (!tForm.title.trim() || tSaving) return
+              setTSaving(true)
+              try {
+                await adminCreateBanner({ title: tForm.title.trim(), subtitle: null, cta_label: null, target_type: tForm.target as BannerRow['target_type'], target_value: tForm.value.trim() || null, placement: 'ticker' })
+                setTForm({ title: '', target: 'none', value: '' })
+                fetchAdminBanners().then(setBannersA).catch(() => {})
+              } catch (e) {
+                alert('Could not publish: ' + (e instanceof Error ? e.message : 'run migration 0023 first?'))
+              } finally {
+                setTSaving(false)
+              }
+            }}
+          />
+        </div>
+        <BannerList items={(bannersA || []).filter((b) => b.placement === 'ticker')} busyId={busyId} act={act} refresh={() => fetchAdminBanners().then(setBannersA).catch(() => {})} />
       </div>
 
       {/* listings moderation */}
