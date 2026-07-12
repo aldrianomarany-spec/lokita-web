@@ -1326,3 +1326,64 @@ export async function countOpenReports(): Promise<number> {
   if (error) return 0
   return count || 0
 }
+
+// ---- promotion banners (migration 0021) — admin-written homepage carousel --
+
+export interface BannerRow {
+  id: string
+  title: string
+  subtitle: string | null
+  cta_label: string | null
+  target_type: 'category' | 'listing' | 'requests' | 'sell' | 'none'
+  target_value: string | null
+  sort: number
+  is_active: boolean
+  created_at: string
+}
+
+// active banners for the homepage (guests included — RLS filters to active)
+export async function fetchBanners(): Promise<BannerRow[]> {
+  const { data, error } = await supabase
+    .from('banners')
+    .select('*')
+    .order('sort', { ascending: true })
+    .order('created_at', { ascending: false })
+  if (error) return [] // table not migrated yet → carousel just falls back
+  return ((data as BannerRow[]) || []).filter((b) => b.is_active)
+}
+
+export async function fetchAdminBanners(): Promise<BannerRow[]> {
+  const { data, error } = await supabase
+    .from('banners')
+    .select('*')
+    .order('sort', { ascending: true })
+    .order('created_at', { ascending: false })
+  if (error) throw error
+  return (data as BannerRow[]) || []
+}
+
+export async function adminCreateBanner(b: Pick<BannerRow, 'title' | 'subtitle' | 'cta_label' | 'target_type' | 'target_value'>): Promise<void> {
+  const { error } = await supabase.from('banners').insert(b)
+  if (error) throw error
+}
+
+export async function adminSetBannerActive(id: string, on: boolean): Promise<void> {
+  const { error } = await supabase.from('banners').update({ is_active: on }).eq('id', id)
+  if (error) throw error
+}
+
+export async function adminDeleteBanner(id: string): Promise<void> {
+  const { error } = await supabase.from('banners').delete().eq('id', id)
+  if (error) throw error
+}
+
+// realtime: homepage carousels update the moment the admin publishes
+export function subscribeBanners(onChange: () => void): () => void {
+  const ch = supabase
+    .channel('banners')
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'banners' }, onChange)
+    .subscribe()
+  return () => {
+    supabase.removeChannel(ch)
+  }
+}

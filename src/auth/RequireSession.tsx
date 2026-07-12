@@ -32,7 +32,7 @@ export default function RequireSession({ children }: { children: React.ReactNode
       <div style={{ height: '100vh', background: '#ECECEA', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <span
           className="lok-spin"
-          style={{ width: 26, height: 26, border: '3px solid #D8D8D4', borderTopColor: '#2A5FA8', borderRadius: '50%', display: 'inline-block' }}
+          style={{ width: 26, height: 26, border: '3px solid #D8D8D4', borderTopColor: '#101113', borderRadius: '50%', display: 'inline-block' }}
         />
       </div>
     )

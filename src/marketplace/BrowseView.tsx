@@ -1,4 +1,6 @@
+import { useEffect, useState } from 'react'
 import { useM, type Sort } from './context'
+import { fetchBanners, subscribeBanners, type BannerRow } from '../lib/api'
 import { Search, Star } from '../components/Icons'
 import { CATEGORIES, CAT_META, BUILDINGS, type Category } from '../theme'
 import { useIsNarrow } from './useIsMobile'
@@ -15,6 +17,7 @@ const INK = '#17181A'
 const PAPER = '#F5F5F3'
 const LINE = '#D8D8D4'
 const GRAY = '#8B8B86'
+const GOLD = '#C8A96A'
 
 const CONDS = ['All', 'Like new', 'Good', 'Fair']
 const SORTS: { key: Sort; label: string }[] = [
@@ -39,7 +42,7 @@ function GridCard({ it, saved, onOpen, onSave }: { it: EnrichedItem; saved: bool
   return (
     <div onClick={onOpen} className="lok-card" style={{ background: '#FFFFFF', padding: '0 0 14px', cursor: 'pointer', position: 'relative' }}>
       {(it.isFeatured || it.mine) && (
-        <span style={{ position: 'absolute', top: 10, left: 10, fontFamily: "'Spline Sans Mono',monospace", fontWeight: 600, fontSize: 9, letterSpacing: 1, background: it.isFeatured ? 'var(--accent,#3555E6)' : INK, color: '#FFFFFF', padding: '3px 7px', zIndex: 2 }}>
+        <span style={{ position: 'absolute', top: 10, left: 10, fontFamily: "'Spline Sans Mono',monospace", fontWeight: 600, fontSize: 9, letterSpacing: 1, background: it.isFeatured ? GOLD : INK, color: it.isFeatured ? INK : '#FFFFFF', padding: '3px 7px', zIndex: 2 }}>
           {it.isFeatured ? 'FEATURED' : 'YOURS'}
         </span>
       )}
@@ -74,7 +77,7 @@ function GridCard({ it, saved, onOpen, onSave }: { it: EnrichedItem; saved: bool
 }
 
 export default function BrowseView() {
-  const { state, enrichedItems, selectCond, selectSort, resetFilters, openSell, selectCat, toggleSavedView, selectBldg, openRequests, openPeople, openItem, toggleSaveItem, goSignup } = useM()
+  const { state, enrichedItems, selectCond, selectSort, resetFilters, openSell, selectCat, toggleSavedView, selectBldg, openRequests, openPeople, openItem, toggleSaveItem, goSignup, openListingById } = useM()
   const s = state
   const isNarrow = useIsNarrow()
   const counts = s.categoryCounts
@@ -88,6 +91,32 @@ export default function BrowseView() {
   const showHero = !filtersActive && !s.feedLoading && list.length >= 3
   const hero = showHero ? list[0] : null
   const gridItems = hero ? list.slice(1) : list
+
+  // admin promotion banners (realtime) — rotate; fall back to the item hero
+  const [banners, setBanners] = useState<BannerRow[]>([])
+  const [slide, setSlide] = useState(0)
+  useEffect(() => {
+    let live = true
+    const load = () => fetchBanners().then((b) => live && setBanners(b))
+    load()
+    const unsub = subscribeBanners(load)
+    return () => {
+      live = false
+      unsub()
+    }
+  }, [])
+  useEffect(() => {
+    if (banners.length < 2) return
+    const t = window.setInterval(() => setSlide((v) => (v + 1) % banners.length), 6000)
+    return () => window.clearInterval(t)
+  }, [banners.length])
+  const banner = banners.length ? banners[slide % banners.length] : null
+  const bannerCta = (b: BannerRow) => {
+    if (b.target_type === 'category' && b.target_value) selectCat(b.target_value)
+    else if (b.target_type === 'listing' && b.target_value) openListingById(b.target_value)
+    else if (b.target_type === 'requests') openRequests()
+    else if (b.target_type === 'sell') (s.guest ? goSignup() : openSell())
+  }
   const emptyCat = s.cat !== 'All' ? ` in ${s.cat}` : ''
 
   const save = (it: EnrichedItem) => (s.guest ? goSignup() : toggleSaveItem(it.id))
@@ -124,12 +153,38 @@ export default function BrowseView() {
         </div>
       )}
 
-      {/* dark hero promo — the mock's "brand campaign" panel, with a real item */}
-      {hero && (
+      {/* black statement slot — admin banner first, featured item as fallback */}
+      {banner ? (
+        <div className="lok-card" style={{ display: 'grid', gridTemplateColumns: isNarrow ? '1fr' : '1fr 380px', background: INK, color: PAPER, marginBottom: 18 }}>
+          <div style={{ padding: isNarrow ? '26px 22px' : '36px 32px', display: 'flex', flexDirection: 'column', gap: 14, justifyContent: 'center' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span style={{ fontFamily: "'Spline Sans Mono',monospace", fontWeight: 600, fontSize: 10, letterSpacing: 1, background: GOLD, color: INK, padding: '3px 8px' }}>LOKITA</span>
+              <span style={{ fontFamily: "'Spline Sans Mono',monospace", fontWeight: 500, fontSize: 11, color: '#9A9A94' }}>CAMPUS ANNOUNCEMENT</span>
+            </div>
+            <div style={{ fontFamily: "'Instrument Serif',serif", fontWeight: 400, fontSize: isNarrow ? 28 : 38, lineHeight: 1.06, letterSpacing: '-.5px' }}>{banner.title}</div>
+            {banner.subtitle && <div style={{ fontSize: 14, color: '#B9B9B3' }}>{banner.subtitle}</div>}
+            {banner.cta_label && banner.target_type !== 'none' && (
+              <button onClick={() => bannerCta(banner)} style={{ alignSelf: 'flex-start', background: GOLD, color: INK, border: 'none', padding: '11px 22px', fontFamily: "'Archivo',sans-serif", fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>
+                {banner.cta_label} →
+              </button>
+            )}
+            {banners.length > 1 && (
+              <div style={{ display: 'flex', gap: 6, marginTop: 2 }}>
+                {banners.map((_, i) => (
+                  <button key={i} onClick={() => setSlide(i)} aria-label={`Banner ${i + 1}`} style={{ width: 22, height: 3, border: 'none', cursor: 'pointer', background: i === slide % banners.length ? GOLD : '#3A3B3E', padding: 0 }} />
+                ))}
+              </div>
+            )}
+          </div>
+          <div style={{ background: 'repeating-linear-gradient(45deg,#1C1D20 0 12px,#141518 12px 24px)', display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: isNarrow ? 90 : 0 }}>
+            <span style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 700, fontSize: 26, color: '#2E2F33', letterSpacing: '-.5px' }}>LOKITA<span style={{ color: GOLD }}>.</span></span>
+          </div>
+        </div>
+      ) : hero && (
         <div onClick={() => openItem(hero)} className="lok-card" style={{ cursor: 'pointer', display: 'grid', gridTemplateColumns: isNarrow ? '1fr' : '1fr 380px', background: INK, color: PAPER, marginBottom: 18 }}>
           <div style={{ padding: isNarrow ? '26px 22px' : '36px 32px', display: 'flex', flexDirection: 'column', gap: 14, justifyContent: 'center' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-              <span style={{ fontFamily: "'Spline Sans Mono',monospace", fontWeight: 600, fontSize: 10, letterSpacing: 1, background: 'var(--accent,#3555E6)', color: '#FFFFFF', padding: '3px 8px' }}>
+              <span style={{ fontFamily: "'Spline Sans Mono',monospace", fontWeight: 600, fontSize: 10, letterSpacing: 1, background: GOLD, color: INK, padding: '3px 8px' }}>
                 {hero.isFeatured ? 'FEATURED' : "TODAY'S PICK"}
               </span>
               <span style={{ fontFamily: "'Spline Sans Mono',monospace", fontWeight: 500, fontSize: 11, color: '#9A9A94' }}>{hero.seller}{hero.sellerVerified ? ' · Dorm-Verified' : ''}</span>
@@ -188,7 +243,7 @@ export default function BrowseView() {
       {/* grid / loading / empty */}
       {s.feedLoading ? (
         <div style={{ height: '40vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <span className="lok-spin" style={{ width: 28, height: 28, border: `3px solid ${LINE}`, borderTopColor: 'var(--accent,#3555E6)', borderRadius: '50%', display: 'inline-block' }} />
+          <span className="lok-spin" style={{ width: 28, height: 28, border: `3px solid ${LINE}`, borderTopColor: 'var(--accent,#101113)', borderRadius: '50%', display: 'inline-block' }} />
         </div>
       ) : s.feedError ? (
         <div style={{ maxWidth: 520, margin: '44px auto 0', textAlign: 'center', background: '#FFFFFF', border: '1px solid #E0B4A8', padding: 28, color: '#B23A1B', fontWeight: 600 }}>
@@ -222,7 +277,7 @@ export default function BrowseView() {
           <div style={{ fontSize: 14, color: GRAY, lineHeight: 1.6, marginBottom: 24 }}>
             The marketplace is brand new. Be the first to post something — your neighbours will see it right away.
           </div>
-          <button onClick={openSell} style={{ border: 'none', background: 'var(--accent,#3555E6)', color: '#FFFFFF', fontFamily: "'Archivo',sans-serif", fontWeight: 600, fontSize: 13, padding: '12px 22px', cursor: 'pointer' }}>Post the first item</button>
+          <button onClick={openSell} style={{ border: 'none', background: 'var(--accent,#101113)', color: '#FFFFFF', fontFamily: "'Archivo',sans-serif", fontWeight: 600, fontSize: 13, padding: '12px 22px', cursor: 'pointer' }}>Post the first item</button>
         </div>
       )}
     </div>

@@ -7,7 +7,7 @@ import { BRAND_LOGO_URL } from '../brand'
 
 const navBtn: React.CSSProperties = {
   position: 'relative',
-  border: '1px solid #D8D8D4',
+  border: '1px solid #2E2F33',
   width: 42,
   height: 42,
   borderRadius: 0,
@@ -47,7 +47,7 @@ const Avatar = ({ photo, initial, size, radius, fontSize }: { photo: string | nu
       width: size,
       height: size,
       borderRadius: radius,
-      background: 'var(--accent,#2A5FA8)',
+      background: 'var(--accent,#101113)',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
@@ -96,8 +96,8 @@ export default function TopBar() {
       style={{
         height: 70,
         flex: 'none',
-        background: '#F5F5F3',
-        borderBottom: '1px solid #17181A',
+        background: '#101113',
+        borderBottom: 'none',
         display: 'flex',
         alignItems: 'center',
         gap: isPhone ? 10 : 20,
@@ -109,12 +109,12 @@ export default function TopBar() {
       <div onClick={goHome} style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer', flex: 'none' }}>
         {BRAND_LOGO_URL && isPhone && <img src={BRAND_LOGO_URL} alt="LOKITA" style={{ width: 30, height: 30, objectFit: 'contain' }} />}
         {!isPhone ? (
-          <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 700, fontSize: 22, letterSpacing: '-0.5px', color: '#17181A', lineHeight: 1 }}>
-            LOKITA<span style={{ color: 'var(--accent,#3555E6)' }}>.</span>
+          <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 700, fontSize: 22, letterSpacing: '-0.5px', color: '#FFFFFF', lineHeight: 1 }}>
+            LOKITA<span style={{ color: '#C8A96A' }}>.</span>
           </div>
         ) : !BRAND_LOGO_URL ? (
-          <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 700, fontSize: 19, letterSpacing: '-0.5px', color: '#17181A' }}>
-            L<span style={{ color: 'var(--accent,#3555E6)' }}>.</span>
+          <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 700, fontSize: 19, letterSpacing: '-0.5px', color: '#FFFFFF' }}>
+            L<span style={{ color: '#C8A96A' }}>.</span>
           </div>
         ) : null}
       </div>
@@ -126,9 +126,9 @@ export default function TopBar() {
             className="lok-btn"
             onClick={() => setBldgOpen((v) => !v)}
             title="Filter the marketplace by building"
-            style={{ cursor: 'pointer', border: '1px solid #D8D8D4', display: 'flex', alignItems: 'center', gap: 9, fontFamily: 'inherit', fontWeight: 500, fontSize: 13, color: '#17181A', background: '#FFFFFF', padding: '9px 13px', borderRadius: 0 }}
+            style={{ cursor: 'pointer', border: '1px solid #2E2F33', display: 'flex', alignItems: 'center', gap: 9, fontFamily: 'inherit', fontWeight: 500, fontSize: 13, color: '#F5F5F3', background: '#1B1C1F', padding: '9px 13px', borderRadius: 0 }}
           >
-            <span style={{ width: 7, height: 7, borderRadius: '50%', background: 'var(--accent,#2A5FA8)' }} />
+            <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#C8A96A' }} />
             {s.bldg === 'All' ? 'All buildings' : s.bldg}
             <span style={{ fontFamily: "'Spline Sans Mono',monospace", fontWeight: 500, fontSize: 10, color: '#9A9A94' }}>JIU · CIKARANG ▾</span>
           </button>
@@ -144,7 +144,7 @@ export default function TopBar() {
                       selectBldg(b)
                       setBldgOpen(false)
                     }}
-                    style={{ width: '100%', textAlign: 'left', border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontWeight: active ? 800 : 600, fontSize: 13.5, padding: '9px 11px', borderRadius: 0, background: active ? '#E9EDFC' : 'transparent', color: active ? '#2441B8' : '#3A3B3E', display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 1 }}
+                    style={{ width: '100%', textAlign: 'left', border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontWeight: active ? 800 : 600, fontSize: 13.5, padding: '9px 11px', borderRadius: 0, background: active ? '#F6F0E3' : 'transparent', color: active ? '#8A6C34' : '#3A3B3E', display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 1 }}
                   >
                     {b === 'All' ? 'All buildings' : b}
                     {b === 'Main Building' && <span style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 9, color: '#9A9A94', fontWeight: 500 }}>JIU STAFF & LECTURERS</span>}
@@ -191,10 +191,10 @@ export default function TopBar() {
       {guest ? (
         <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 9, flex: 'none' }}>
           {!isPhone && (
-            <span style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 10, color: '#9A9A94', letterSpacing: '.08em', marginRight: 4 }}>BROWSING AS GUEST</span>
+            <span style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 10, color: '#8B8B86', letterSpacing: '.08em', marginRight: 4 }}>BROWSING AS GUEST</span>
           )}
-          <button className="lok-btn" onClick={goLogin} style={{ border: '1px solid #C9C9C5', background: '#F5F5F3', color: '#17181A', fontFamily: 'inherit', fontWeight: 700, fontSize: 13.5, padding: '10px 15px', borderRadius: 0, cursor: 'pointer' }}>Log in</button>
-          <button className="lok-btn" onClick={goSignup} style={{ border: 'none', background: 'var(--accent,#2A5FA8)', color: '#F7F3EA', fontFamily: 'inherit', fontWeight: 700, fontSize: 13.5, padding: '10px 16px', borderRadius: 0, cursor: 'pointer', boxShadow: '0 6px 16px -6px rgba(53,85,230,.6)' }}>Sign up — it's free</button>
+          <button className="lok-btn" onClick={goLogin} style={{ border: '1px solid #2E2F33', background: '#1B1C1F', color: '#F5F5F3', fontFamily: 'inherit', fontWeight: 700, fontSize: 13.5, padding: '10px 15px', borderRadius: 0, cursor: 'pointer' }}>Log in</button>
+          <button className="lok-btn" onClick={goSignup} style={{ border: 'none', background: '#C8A96A', color: '#101113', fontFamily: 'inherit', fontWeight: 700, fontSize: 13.5, padding: '10px 16px', borderRadius: 0, cursor: 'pointer' }}>Sign up — it's free</button>
         </div>
       ) : (
       <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: isPhone ? 8 : 12, flex: 'none' }}>
@@ -202,21 +202,21 @@ export default function TopBar() {
             phones keep the tab bar + category-strip equivalents */}
         {!isPhone && (
           <>
-            <button className="lok-navi" onClick={openSell} style={{ border: 'none', background: 'none', cursor: 'pointer', fontFamily: "'Archivo',sans-serif", fontWeight: 500, fontSize: 13, color: '#17181A', padding: '8px 4px' }}>
+            <button className="lok-navi" onClick={openSell} style={{ border: 'none', background: 'none', cursor: 'pointer', fontFamily: "'Archivo',sans-serif", fontWeight: 500, fontSize: 13, color: '#F5F5F3', padding: '8px 4px' }}>
               Sell
             </button>
-            <button className="lok-navi" onClick={toggleSavedView} style={{ border: 'none', background: 'none', cursor: 'pointer', fontFamily: "'Archivo',sans-serif", fontWeight: s.savedOnly ? 700 : 500, fontSize: 13, color: s.savedOnly ? 'var(--accent,#3555E6)' : '#17181A', padding: '8px 4px' }}>
+            <button className="lok-navi" onClick={toggleSavedView} style={{ border: 'none', background: 'none', cursor: 'pointer', fontFamily: "'Archivo',sans-serif", fontWeight: s.savedOnly ? 700 : 500, fontSize: 13, color: s.savedOnly ? '#C8A96A' : '#F5F5F3', padding: '8px 4px' }}>
               Saved{savedCount > 0 ? ` (${savedCount})` : ''}
             </button>
           </>
         )}
 
-        <button className="lok-navi" onClick={openMessages} title="Messages" style={{ ...navBtn, background: msgActive ? '#E9EDFC' : '#F5F5F3', color: msgActive ? '#2441B8' : '#4A4B4E' }}>
+        <button className="lok-navi" onClick={openMessages} title="Messages" style={{ ...navBtn, background: msgActive ? '#C8A96A' : '#1B1C1F', color: msgActive ? '#101113' : '#D8D8D4' }}>
           <MessageBubble />
           {unreadCount > 0 && badge(unreadCount)}
         </button>
 
-        <button className="lok-navi" onClick={openNotifs} title="Notifications" style={{ ...navBtn, background: notifActive ? '#E9EDFC' : '#F5F5F3', color: notifActive ? '#2441B8' : '#4A4B4E' }}>
+        <button className="lok-navi" onClick={openNotifs} title="Notifications" style={{ ...navBtn, background: notifActive ? '#C8A96A' : '#1B1C1F', color: notifActive ? '#101113' : '#D8D8D4' }}>
           <Bell />
           {notifBadge > 0 && badge(notifBadge)}
         </button>

@@ -102,8 +102,8 @@ export default function MemberProfileView() {
           <div style={{ display: 'flex', alignItems: 'center', gap: 9, flexWrap: 'wrap' }}>
             <h1 style={{ fontFamily: "'Bricolage Grotesque',sans-serif", fontSize: 26, fontWeight: 800, letterSpacing: '-.02em', margin: 0 }}>{info?.name || s.memberName || 'Member'}</h1>
             {info?.verified && (
-              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12, fontWeight: 800, color: '#E9EDFC', background: 'var(--accent,#2A5FA8)', padding: '6px 11px', borderRadius: 0 }}>
-                <Verified size={13} checkColor="#E9EDFC" /> Dorm-Verified
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12, fontWeight: 800, color: '#F6F0E3', background: 'var(--accent,#101113)', padding: '6px 11px', borderRadius: 0 }}>
+                <Verified size={13} checkColor="#F6F0E3" /> Dorm-Verified
               </span>
             )}
           </div>
@@ -116,7 +116,7 @@ export default function MemberProfileView() {
           </div>
         </div>
         {!isMe && (
-          <button onClick={() => id && openRequestChat(id)} className="lok-btn" style={{ flex: 'none', border: 'none', background: 'var(--accent,#2A5FA8)', color: '#F7F3EA', fontFamily: 'inherit', fontWeight: 700, fontSize: 13.5, padding: '12px 18px', borderRadius: 0, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, boxShadow: '0 6px 16px -6px rgba(53,85,230,.6)' }}>
+          <button onClick={() => id && openRequestChat(id)} className="lok-btn" style={{ flex: 'none', border: 'none', background: 'var(--accent,#101113)', color: '#F7F3EA', fontFamily: 'inherit', fontWeight: 700, fontSize: 13.5, padding: '12px 18px', borderRadius: 0, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, boxShadow: '0 6px 16px -6px rgba(16,17,19,.6)' }}>
             <MessageBubble size={15} />
             Message
           </button>
@@ -126,7 +126,7 @@ export default function MemberProfileView() {
       {/* stats */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(120px,1fr))', gap: 14, marginBottom: 22 }}>
         {[
-          { value: stats ? String(stats.selling) : '…', label: 'Selling now', color: 'var(--accent,#2A5FA8)' },
+          { value: stats ? String(stats.selling) : '…', label: 'Selling now', color: 'var(--accent,#101113)' },
           { value: stats ? String(stats.sold) : '…', label: 'Items sold', color: '#1E9E5A' },
           { value: rating, label: 'Rating', color: '#9A6A12' },
           { value: reviews ? String(reviews.length) : '…', label: 'Reviews', color: '#17181A' },
@@ -139,8 +139,8 @@ export default function MemberProfileView() {
       </div>
 
       {/* trust note */}
-      <div style={{ background: '#E9EDFC', border: '1px solid #C7D2F2', borderRadius: 0, padding: '13px 16px', display: 'flex', gap: 11, alignItems: 'center', marginBottom: 24 }}>
-        <span style={{ color: 'var(--accent,#2A5FA8)', flex: 'none', display: 'flex' }}><ShieldCheck size={19} /></span>
+      <div style={{ background: '#F6F0E3', border: '1px solid #E2D3AF', borderRadius: 0, padding: '13px 16px', display: 'flex', gap: 11, alignItems: 'center', marginBottom: 24 }}>
+        <span style={{ color: 'var(--accent,#101113)', flex: 'none', display: 'flex' }}><ShieldCheck size={19} /></span>
         <span style={{ fontSize: 12.5, color: '#4A5A50', fontWeight: 600 }}>All trades are paid in-app and exchanged via the campus Security Post — no risky meetups.</span>
       </div>
 
@@ -150,7 +150,7 @@ export default function MemberProfileView() {
       </div>
       {items === null ? (
         <div style={{ padding: 24, textAlign: 'center' }}>
-          <span className="lok-spin" style={{ width: 22, height: 22, border: '3px solid #D8D8D4', borderTopColor: 'var(--accent,#2A5FA8)', borderRadius: '50%', display: 'inline-block' }} />
+          <span className="lok-spin" style={{ width: 22, height: 22, border: '3px solid #D8D8D4', borderTopColor: 'var(--accent,#101113)', borderRadius: '50%', display: 'inline-block' }} />
         </div>
       ) : items.length === 0 ? (
         <div style={{ background: '#F5F5F3', border: '1px dashed #C9C9C5', borderRadius: 0, padding: 24, textAlign: 'center', color: '#8B8B86', fontSize: 13, marginBottom: 28 }}>Nothing listed right now.</div>
@@ -168,7 +168,7 @@ export default function MemberProfileView() {
       </div>
       {reviews === null ? (
         <div style={{ padding: 20, textAlign: 'center' }}>
-          <span className="lok-spin" style={{ width: 20, height: 20, border: '3px solid #D8D8D4', borderTopColor: 'var(--accent,#2A5FA8)', borderRadius: '50%', display: 'inline-block' }} />
+          <span className="lok-spin" style={{ width: 20, height: 20, border: '3px solid #D8D8D4', borderTopColor: 'var(--accent,#101113)', borderRadius: '50%', display: 'inline-block' }} />
         </div>
       ) : reviews.length === 0 ? (
         <div style={{ background: '#F5F5F3', border: '1px dashed #C9C9C5', borderRadius: 0, padding: 22, textAlign: 'center', color: '#8B8B86', fontSize: 13, marginBottom: 30 }}>

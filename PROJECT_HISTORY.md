@@ -84,6 +84,14 @@ Everything needed to continue is in these two files + the git commit history
     and on phones an app-style bottom tab bar (Home · Requests · +Sell · Messages ·
     Profile) replacing the floating post button.
 
+15. **"Noir & Gold" redesign** (owner-chosen: light + black statement pieces, champagne
+    gold #C8A96A accent, admin promotion banners): black top bar & phone tab bar, black
+    CTAs, gold badges/active states, Instrument Serif banner headlines. Migration 0021
+    adds the `banners` table (admin-written homepage carousel, realtime, guest-visible;
+    falls back to the featured-item hero when no banner is active) + Control Room
+    banner manager. Look tags for instant restore: `look-warm-editorial`,
+    `look-grid-market`, `look-noir-gold`.
+
 ### 4. Deployment
 - **GitHub** `aldrianomarany-spec/lokita-web` — work branch `lokita-web-v2`,
   **production deploys from `main`** (merge via GitHub's green PR button).

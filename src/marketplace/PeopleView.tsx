@@ -39,7 +39,7 @@ export default function PeopleView() {
 
       {members === null ? (
         <div style={{ height: '30vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <span className="lok-spin" style={{ width: 24, height: 24, border: '3px solid #D8D8D4', borderTopColor: 'var(--accent,#2A5FA8)', borderRadius: '50%', display: 'inline-block' }} />
+          <span className="lok-spin" style={{ width: 24, height: 24, border: '3px solid #D8D8D4', borderTopColor: 'var(--accent,#101113)', borderRadius: '50%', display: 'inline-block' }} />
         </div>
       ) : sorted.length === 0 ? (
         <div style={{ background: '#FFFFFF', border: '1px dashed #C9C9C5', borderRadius: 0, padding: '52px 32px', textAlign: 'center', color: '#8B8B86' }}>
@@ -88,7 +88,7 @@ export default function PeopleView() {
                       onClick={() => openRequestChat(m.id)}
                       className="lok-btn"
                       title={`Message ${m.name}`}
-                      style={{ border: 'none', background: 'var(--accent,#2A5FA8)', color: '#F7F3EA', fontFamily: 'inherit', fontWeight: 700, fontSize: 12.5, padding: '9px 13px', borderRadius: 0, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}
+                      style={{ border: 'none', background: 'var(--accent,#101113)', color: '#F7F3EA', fontFamily: 'inherit', fontWeight: 700, fontSize: 12.5, padding: '9px 13px', borderRadius: 0, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}
                     >
                       <MessageBubble size={14} />
                       Message
