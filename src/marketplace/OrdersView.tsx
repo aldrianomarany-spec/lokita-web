@@ -9,7 +9,7 @@ const when = (iso: string | null) => (iso && !isNaN(new Date(iso).getTime()) ? n
 const STATUS_META: Record<OrderStatus, { label: string; bg: string; fg: string }> = {
   pending: { label: 'Awaiting seller confirmation', bg: '#FBF2DD', fg: '#9A6A12' },
   paid: { label: 'Accepted · awaiting drop-off', bg: '#EFEFDD', fg: '#7E8154' },
-  dropped_off: { label: 'Ready for pickup', bg: '#E7EEF7', fg: '#101113' },
+  dropped_off: { label: 'Ready for pickup', bg: '#E7EEF7', fg: '#000000' },
   completed: { label: 'Completed', bg: '#E7F1EA', fg: '#1E9E5A' },
   cancelled: { label: 'Cancelled', bg: '#EFE7D9', fg: '#8B8B86' },
 }
@@ -62,7 +62,7 @@ function OrderCard({ o }: { o: OrderRow }) {
           </div>
         </div>
         <div style={{ textAlign: 'right', flex: 'none' }}>
-          <div style={{ fontFamily: "'Bricolage Grotesque',sans-serif", fontWeight: 800, fontSize: 18, color: 'var(--accent,#101113)' }}>{rupiah(o.listing_price)}</div>
+          <div style={{ fontFamily: "'Bricolage Grotesque',sans-serif", fontWeight: 800, fontSize: 18, color: 'var(--accent,#000000)' }}>{rupiah(o.listing_price)}</div>
           <span style={{ display: 'inline-block', marginTop: 5, fontFamily: "'Spline Sans Mono',monospace", fontSize: 10, fontWeight: 600, color: sm.fg, background: sm.bg, padding: '3px 8px', borderRadius: 0 }}>{sm.label}</span>
         </div>
       </div>
@@ -127,7 +127,7 @@ function OrderCard({ o }: { o: OrderRow }) {
               <span key={n} onClick={() => setStars(n)} style={{ cursor: 'pointer', fontSize: 30, lineHeight: 1, color: n <= stars ? '#E7A81E' : '#C2C2BE' }}>{n <= stars ? '★' : '☆'}</span>
             ))}
           </div>
-          <textarea value={text} onChange={(e) => setText(e.target.value)} placeholder={`How was your trade with ${o.counterparty_name}?`} className="lok-field" style={{ width: '100%', background: '#F5F5F3', border: '1.5px solid #D8D8D4', borderRadius: 0, padding: '12px 14px', fontSize: 13.5, fontFamily: 'inherit', fontWeight: 500, color: '#17181A', minHeight: 70, resize: 'none' }} />
+          <textarea value={text} onChange={(e) => setText(e.target.value)} placeholder={`How was your trade with ${o.counterparty_name}?`} className="lok-field" style={{ width: '100%', background: '#F5F5F3', border: '1.5px solid #D8D8D4', borderRadius: 0, padding: '12px 14px', fontSize: 13.5, fontFamily: 'inherit', fontWeight: 500, color: '#000000', minHeight: 70, resize: 'none' }} />
           <div style={{ display: 'flex', gap: 10, marginTop: 10 }}>
             <button onClick={() => setReviewing(false)} className="lok-btn" style={ghostBtn}>Cancel</button>
             <button disabled={busy} onClick={postReview} className="lok-btn" style={{ ...primaryBtn, flex: 1 }}>Post review</button>
@@ -138,9 +138,9 @@ function OrderCard({ o }: { o: OrderRow }) {
   )
 }
 
-const chip: React.CSSProperties = { fontFamily: "'Spline Sans Mono',monospace", fontSize: 10, color: '#2A2B2E', background: '#ECECEA', padding: '5px 10px', borderRadius: 0 }
-const primaryBtn: React.CSSProperties = { border: 'none', background: 'var(--accent,#101113)', color: '#F7F3EA', fontFamily: 'inherit', fontWeight: 700, fontSize: 13, padding: '10px 16px', borderRadius: 0, cursor: 'pointer' }
-const ghostBtn: React.CSSProperties = { border: '1px solid #C9C9C5', background: '#F5F5F3', color: '#17181A', fontFamily: 'inherit', fontWeight: 700, fontSize: 13, padding: '10px 16px', borderRadius: 0, cursor: 'pointer' }
+const chip: React.CSSProperties = { fontFamily: "'Spline Sans Mono',monospace", fontSize: 10, color: '#1E1E1E', background: '#ECECEA', padding: '5px 10px', borderRadius: 0 }
+const primaryBtn: React.CSSProperties = { border: 'none', background: 'var(--accent,#000000)', color: '#F7F3EA', fontFamily: 'inherit', fontWeight: 700, fontSize: 13, padding: '10px 16px', borderRadius: 0, cursor: 'pointer' }
+const ghostBtn: React.CSSProperties = { border: '1px solid #C9C9C5', background: '#F5F5F3', color: '#000000', fontFamily: 'inherit', fontWeight: 700, fontSize: 13, padding: '10px 16px', borderRadius: 0, cursor: 'pointer' }
 
 export default function OrdersView() {
   const { state } = useM()
@@ -157,14 +157,14 @@ export default function OrdersView() {
 
       {s.ordersLoading ? (
         <div style={{ height: '40vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <span className="lok-spin" style={{ width: 26, height: 26, border: '3px solid #D8D8D4', borderTopColor: 'var(--accent,#101113)', borderRadius: '50%', display: 'inline-block' }} />
+          <span className="lok-spin" style={{ width: 26, height: 26, border: '3px solid #D8D8D4', borderTopColor: 'var(--accent,#000000)', borderRadius: '50%', display: 'inline-block' }} />
         </div>
       ) : s.ordersError ? (
         <div style={{ background: '#FBEEE9', border: '1px solid #E4C4B8', borderRadius: 0, padding: 24, color: '#B23A1B', fontWeight: 600, textAlign: 'center' }}>Couldn't load orders: {s.ordersError}</div>
       ) : s.orders.length === 0 ? (
         <div style={{ background: '#FFFFFF', border: '1px dashed #C9C9C5', borderRadius: 0, padding: '48px 28px', textAlign: 'center', color: '#8B8B86' }}>
           <div style={{ fontSize: 34, marginBottom: 10 }}>🧾</div>
-          <div style={{ fontFamily: "'Bricolage Grotesque',sans-serif", fontWeight: 800, fontSize: 18, color: '#17181A', marginBottom: 6 }}>No orders yet</div>
+          <div style={{ fontFamily: "'Bricolage Grotesque',sans-serif", fontWeight: 800, fontSize: 18, color: '#000000', marginBottom: 6 }}>No orders yet</div>
           <div style={{ fontSize: 13.5 }}>When you buy an item or make a sale, it'll show up here with its progress.</div>
         </div>
       ) : (

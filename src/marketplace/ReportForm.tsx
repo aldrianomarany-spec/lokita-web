@@ -57,7 +57,7 @@ export default function ReportForm({ targetType, targetId, label }: { targetType
               key={r}
               onClick={() => setReason(r)}
               className="lok-btn"
-              style={{ cursor: 'pointer', fontFamily: 'inherit', fontSize: 11.5, fontWeight: 700, padding: '6px 11px', borderRadius: 0, border: `1.5px solid ${on ? 'var(--accent,#101113)' : '#C9C9C5'}`, background: on ? '#F6F0E3' : '#FFFFFF', color: on ? '#8A6C34' : '#4A4B4E' }}
+              style={{ cursor: 'pointer', fontFamily: 'inherit', fontSize: 11.5, fontWeight: 700, padding: '6px 11px', borderRadius: 0, border: `1.5px solid ${on ? 'var(--accent,#000000)' : '#C9C9C5'}`, background: on ? '#F6F0E3' : '#FFFFFF', color: on ? '#8A6C34' : '#4A4B4E' }}
             >
               {r}
             </button>
@@ -69,7 +69,7 @@ export default function ReportForm({ targetType, targetId, label }: { targetType
         value={note}
         onChange={(e) => setNote(e.target.value)}
         placeholder="Add a short note (optional)"
-        style={{ width: '100%', boxSizing: 'border-box', background: '#FFFFFF', border: '1.5px solid #D8D8D4', borderRadius: 0, padding: '9px 12px', fontSize: 12.5, fontFamily: 'inherit', fontWeight: 500, color: '#17181A', marginBottom: 9 }}
+        style={{ width: '100%', boxSizing: 'border-box', background: '#FFFFFF', border: '1.5px solid #D8D8D4', borderRadius: 0, padding: '9px 12px', fontSize: 12.5, fontFamily: 'inherit', fontWeight: 500, color: '#000000', marginBottom: 9 }}
       />
       <button
         onClick={send}

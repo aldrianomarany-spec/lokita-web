@@ -10,10 +10,10 @@ import type { EnrichedItem } from '../types'
 // ============================================================================
 // GRID MARKET homepage (design exploration 1a) — crisp neutrals, sharp grid,
 // dark hero promo, hairline-separated product cells. Paper #F5F5F3, ink
-// #17181A, electric blue accent, borders #D8D8D4, zero border-radius.
+// #000000, electric blue accent, borders #D8D8D4, zero border-radius.
 // ============================================================================
 
-const INK = '#17181A'
+const INK = '#000000'
 const PAPER = '#F5F5F3'
 const LINE = '#D8D8D4'
 const GRAY = '#8B8B86'
@@ -155,7 +155,11 @@ export default function BrowseView() {
 
       {/* black statement slot — admin banner first, featured item as fallback */}
       {banner ? (
-        <div className="lok-card" style={{ display: 'grid', gridTemplateColumns: isNarrow ? '1fr' : '1fr 380px', background: INK, color: PAPER, marginBottom: 18 }}>
+        <div
+          onClick={() => banner.target_type !== 'none' && bannerCta(banner)}
+          className="lok-card"
+          style={{ display: 'grid', gridTemplateColumns: isNarrow ? '1fr' : '1fr 380px', background: INK, color: PAPER, marginBottom: 18, cursor: banner.target_type !== 'none' ? 'pointer' : 'default' }}
+        >
           <div style={{ padding: isNarrow ? '26px 22px' : '36px 32px', display: 'flex', flexDirection: 'column', gap: 14, justifyContent: 'center' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <span style={{ fontFamily: "'Spline Sans Mono',monospace", fontWeight: 600, fontSize: 10, letterSpacing: 1, background: GOLD, color: INK, padding: '3px 8px' }}>LOKITA</span>
@@ -163,9 +167,15 @@ export default function BrowseView() {
             </div>
             <div style={{ fontFamily: "'Instrument Serif',serif", fontWeight: 400, fontSize: isNarrow ? 28 : 38, lineHeight: 1.06, letterSpacing: '-.5px' }}>{banner.title}</div>
             {banner.subtitle && <div style={{ fontSize: 14, color: '#B9B9B3' }}>{banner.subtitle}</div>}
-            {banner.cta_label && banner.target_type !== 'none' && (
-              <button onClick={() => bannerCta(banner)} style={{ alignSelf: 'flex-start', background: GOLD, color: INK, border: 'none', padding: '11px 22px', fontFamily: "'Archivo',sans-serif", fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>
-                {banner.cta_label} →
+            {banner.target_type !== 'none' && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation()
+                  bannerCta(banner)
+                }}
+                style={{ alignSelf: 'flex-start', background: GOLD, color: INK, border: 'none', padding: '11px 22px', fontFamily: "'Archivo',sans-serif", fontWeight: 600, fontSize: 13, cursor: 'pointer' }}
+              >
+                {banner.cta_label || 'See details'} →
               </button>
             )}
             {banners.length > 1 && (
@@ -176,8 +186,12 @@ export default function BrowseView() {
               </div>
             )}
           </div>
-          <div style={{ background: 'repeating-linear-gradient(45deg,#1C1D20 0 12px,#141518 12px 24px)', display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: isNarrow ? 90 : 0 }}>
-            <span style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 700, fontSize: 26, color: '#2E2F33', letterSpacing: '-.5px' }}>LOKITA<span style={{ color: GOLD }}>.</span></span>
+          <div style={{ background: 'repeating-linear-gradient(45deg,#141414 0 12px,#0A0A0A 12px 24px)', display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: isNarrow ? (banner.image_url ? 180 : 90) : 0, position: 'relative', overflow: 'hidden' }}>
+            {banner.image_url ? (
+              <img src={banner.image_url} alt={banner.title} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
+            ) : (
+              <span style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 700, fontSize: 26, color: '#222222', letterSpacing: '-.5px' }}>LOKITA<span style={{ color: GOLD }}>.</span></span>
+            )}
           </div>
         </div>
       ) : hero && (
@@ -193,7 +207,7 @@ export default function BrowseView() {
             <div style={{ fontSize: 14, color: '#B9B9B3' }}>{hero.price} · {hero.proxTag} · {hero.cond}</div>
             <button style={{ alignSelf: 'flex-start', background: PAPER, color: INK, border: 'none', padding: '11px 22px', fontFamily: "'Archivo',sans-serif", fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>View item →</button>
           </div>
-          <div style={{ background: 'repeating-linear-gradient(45deg,#2A2B2E 0 12px,#232427 12px 24px)', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', minHeight: isNarrow ? 180 : 0, overflow: 'hidden' }}>
+          <div style={{ background: 'repeating-linear-gradient(45deg,#1E1E1E 0 12px,#232427 12px 24px)', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', minHeight: isNarrow ? 180 : 0, overflow: 'hidden' }}>
             {hero.photoUrl ? (
               <img src={hero.photoUrl} alt={hero.title} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
             ) : (
@@ -243,7 +257,7 @@ export default function BrowseView() {
       {/* grid / loading / empty */}
       {s.feedLoading ? (
         <div style={{ height: '40vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <span className="lok-spin" style={{ width: 28, height: 28, border: `3px solid ${LINE}`, borderTopColor: 'var(--accent,#101113)', borderRadius: '50%', display: 'inline-block' }} />
+          <span className="lok-spin" style={{ width: 28, height: 28, border: `3px solid ${LINE}`, borderTopColor: 'var(--accent,#000000)', borderRadius: '50%', display: 'inline-block' }} />
         </div>
       ) : s.feedError ? (
         <div style={{ maxWidth: 520, margin: '44px auto 0', textAlign: 'center', background: '#FFFFFF', border: '1px solid #E0B4A8', padding: 28, color: '#B23A1B', fontWeight: 600 }}>
@@ -277,7 +291,7 @@ export default function BrowseView() {
           <div style={{ fontSize: 14, color: GRAY, lineHeight: 1.6, marginBottom: 24 }}>
             The marketplace is brand new. Be the first to post something — your neighbours will see it right away.
           </div>
-          <button onClick={openSell} style={{ border: 'none', background: 'var(--accent,#101113)', color: '#FFFFFF', fontFamily: "'Archivo',sans-serif", fontWeight: 600, fontSize: 13, padding: '12px 22px', cursor: 'pointer' }}>Post the first item</button>
+          <button onClick={openSell} style={{ border: 'none', background: 'var(--accent,#000000)', color: '#FFFFFF', fontFamily: "'Archivo',sans-serif", fontWeight: 600, fontSize: 13, padding: '12px 22px', cursor: 'pointer' }}>Post the first item</button>
         </div>
       )}
     </div>

@@ -11,13 +11,13 @@
 body {
   margin: 0;
   font-family: 'Hanken Grotesque', system-ui, sans-serif;
-  color: #17181A;
+  color: #000000;
   background: #ECECEA;
   -webkit-font-smoothing: antialiased;
 }
 
 a {
-  color: var(--accent, #101113);
+  color: var(--accent, #000000);
   text-decoration: none;
 }
 a:hover {
@@ -149,7 +149,7 @@ a:hover {
 .lok-card:hover {
   transform: translateY(-5px);
   box-shadow: 0 18px 38px -14px rgba(32, 30, 24, 0.32);
-  border-color: #17181A;
+  border-color: #000000;
 }
 .lok-card:active {
   transform: translateY(-2px);
@@ -209,7 +209,7 @@ a:hover {
     box-shadow 0.16s ease;
 }
 .lok-in:focus-within {
-  border-color: var(--accent, #101113);
+  border-color: var(--accent, #000000);
   background: #fff;
 }
 .lok-link {
@@ -245,7 +245,7 @@ a:hover {
     background 0.16s ease;
 }
 .lok-field:focus {
-  border-color: var(--accent, #101113);
+  border-color: var(--accent, #000000);
   background: #fff;
 }
 

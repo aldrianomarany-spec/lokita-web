@@ -75,7 +75,7 @@ function Shell() {
             dismissToast()
             openNotifTarget(n)
           }}
-          style={{ position: 'fixed', top: 82, right: 16, left: isPhone ? 16 : 'auto', maxWidth: 360, zIndex: 120, background: '#17181A', color: '#F7F3EA', borderRadius: 0, padding: '13px 16px', display: 'flex', gap: 12, alignItems: 'flex-start', cursor: 'pointer', boxShadow: '0 18px 40px -12px rgba(18,19,21,.5)', animation: 'lok-rise .3s cubic-bezier(.2,.8,.3,1) both' }}
+          style={{ position: 'fixed', top: 82, right: 16, left: isPhone ? 16 : 'auto', maxWidth: 360, zIndex: 120, background: '#000000', color: '#F7F3EA', borderRadius: 0, padding: '13px 16px', display: 'flex', gap: 12, alignItems: 'flex-start', cursor: 'pointer', boxShadow: '0 18px 40px -12px rgba(0,0,0,.5)', animation: 'lok-rise .3s cubic-bezier(.2,.8,.3,1) both' }}
         >
           <span style={{ flex: 'none', fontSize: 18, marginTop: 1 }}>🔔</span>
           <div style={{ flex: 1, minWidth: 0 }}>

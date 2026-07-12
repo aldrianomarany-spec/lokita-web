@@ -42,7 +42,7 @@ export default function DetailModal() {
 
   return (
     <Overlay onClose={closeDetail}>
-      <div onClick={stop} style={{ background: '#FFFFFF', borderRadius: isPhone ? 20 : 26, overflow: 'hidden', width: '100%', maxWidth: 900, maxHeight: isPhone ? '94vh' : '88vh', display: 'flex', flexDirection: isPhone ? 'column' : 'row', overflowY: isPhone ? 'auto' : 'hidden', animation: 'lok-pop .26s cubic-bezier(.2,.8,.3,1) both', boxShadow: '0 40px 90px -20px rgba(18,19,21,.5)' }}>
+      <div onClick={stop} style={{ background: '#FFFFFF', borderRadius: isPhone ? 20 : 26, overflow: 'hidden', width: '100%', maxWidth: 900, maxHeight: isPhone ? '94vh' : '88vh', display: 'flex', flexDirection: isPhone ? 'column' : 'row', overflowY: isPhone ? 'auto' : 'hidden', animation: 'lok-pop .26s cubic-bezier(.2,.8,.3,1) both', boxShadow: '0 40px 90px -20px rgba(0,0,0,.5)' }}>
         {/* image panel — full width on phone, left column on desktop */}
         <div style={{ width: isPhone ? '100%' : '47%', flex: 'none', background: t.tint, position: 'relative', minHeight: isPhone ? 240 : 480, height: isPhone ? 240 : 'auto', overflow: 'hidden' }}>
           {hasPhoto ? (
@@ -58,7 +58,7 @@ export default function DetailModal() {
               onClick={() => toggleSaveItem(sel.id)}
               className="lok-heart"
               title={isSaved ? 'Remove from saved' : 'Save item'}
-              style={{ position: 'absolute', top: 14, right: 14, width: 40, height: 40, borderRadius: '50%', border: 'none', background: 'rgba(251,248,241,.92)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: isSaved ? '#E7A81E' : '#4A4B4E', boxShadow: '0 2px 8px rgba(18,19,21,.15)' }}
+              style={{ position: 'absolute', top: 14, right: 14, width: 40, height: 40, borderRadius: '50%', border: 'none', background: 'rgba(251,248,241,.92)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: isSaved ? '#E7A81E' : '#4A4B4E', boxShadow: '0 2px 8px rgba(0,0,0,.15)' }}
             >
               <Star fill={isSaved ? '#E7A81E' : 'none'} size={21} />
             </button>
@@ -72,7 +72,7 @@ export default function DetailModal() {
                     e.stopPropagation()
                     setPhotoIdx(i)
                   }}
-                  style={{ flex: 'none', width: 48, height: 48, borderRadius: 0, overflow: 'hidden', padding: 0, cursor: 'pointer', border: i === Math.min(photoIdx, photos.length - 1) ? '2.5px solid #FFFFFF' : '2.5px solid rgba(251,248,241,.45)', boxShadow: '0 2px 8px rgba(18,19,21,.3)' }}
+                  style={{ flex: 'none', width: 48, height: 48, borderRadius: 0, overflow: 'hidden', padding: 0, cursor: 'pointer', border: i === Math.min(photoIdx, photos.length - 1) ? '2.5px solid #FFFFFF' : '2.5px solid rgba(251,248,241,.45)', boxShadow: '0 2px 8px rgba(0,0,0,.3)' }}
                 >
                   <img src={u} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
                 </button>
@@ -89,7 +89,7 @@ export default function DetailModal() {
           </div>
           <h2 style={{ fontFamily: "'Bricolage Grotesque',sans-serif", fontSize: 27, fontWeight: 800, letterSpacing: '-.02em', margin: '6px 0 8px', lineHeight: 1.12 }}>{sel.title}</h2>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 9, marginBottom: isOwner && (sel.platformFee || 0) > 0 ? 6 : 16 }}>
-            <span style={{ fontFamily: "'Bricolage Grotesque',sans-serif", fontSize: 28, fontWeight: 800, color: 'var(--accent,#101113)' }}>{sel.price}</span>
+            <span style={{ fontFamily: "'Bricolage Grotesque',sans-serif", fontSize: 28, fontWeight: 800, color: 'var(--accent,#000000)' }}>{sel.price}</span>
           </div>
           {/* only the owner sees the fee split — buyers just see the listed price */}
           {isOwner && (sel.platformFee || 0) > 0 && (
@@ -98,8 +98,8 @@ export default function DetailModal() {
             </div>
           )}
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 18 }}>
-            <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12.5, fontWeight: 600, color: '#2A2B2E', background: '#ECECEA', padding: '8px 12px', borderRadius: 0 }}>Condition · {sel.cond}</span>
-            <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12.5, fontWeight: 600, color: '#2A2B2E', background: '#ECECEA', padding: '8px 12px', borderRadius: 0 }}>
+            <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12.5, fontWeight: 600, color: '#1E1E1E', background: '#ECECEA', padding: '8px 12px', borderRadius: 0 }}>Condition · {sel.cond}</span>
+            <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12.5, fontWeight: 600, color: '#1E1E1E', background: '#ECECEA', padding: '8px 12px', borderRadius: 0 }}>
               <MapPin size={12} />
               {proxTag}
             </span>
@@ -111,7 +111,7 @@ export default function DetailModal() {
               <div style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 10, color: '#7E8154', letterSpacing: '.06em', marginBottom: 9 }}>WHAT'S IN THIS BUNDLE · {sel.bundleItems.length} ITEMS</div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                 {sel.bundleItems.map((it, i) => (
-                  <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 9, fontSize: 13.5, fontWeight: 600, color: '#2A2B2E' }}>
+                  <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 9, fontSize: 13.5, fontWeight: 600, color: '#1E1E1E' }}>
                     <span style={{ width: 17, height: 17, borderRadius: 0, background: '#E4E5D3', color: '#7E8154', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, flex: 'none' }}>✓</span>
                     {it}
                   </div>
@@ -122,7 +122,7 @@ export default function DetailModal() {
 
           {/* seller card */}
           <div onClick={() => openMember(sel.ownerId ?? null, sel.seller)} className="lok-btn" style={{ cursor: 'pointer', background: '#F5F5F3', border: '1px solid #D8D8D4', borderRadius: 0, padding: 15, display: 'flex', alignItems: 'center', gap: 13, marginBottom: 13 }}>
-            <div style={{ width: 46, height: 46, borderRadius: '50%', background: t.tint, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, color: '#2A2B2E', flex: 'none', fontFamily: "'Bricolage Grotesque',sans-serif" }}>{sel.sellerInitial}</div>
+            <div style={{ width: 46, height: 46, borderRadius: '50%', background: t.tint, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, color: '#1E1E1E', flex: 'none', fontFamily: "'Bricolage Grotesque',sans-serif" }}>{sel.sellerInitial}</div>
             <div style={{ flex: 1 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 7, fontWeight: 700, fontSize: 15 }}>
                 {sel.seller}
@@ -135,7 +135,7 @@ export default function DetailModal() {
 
           {/* security post note */}
           <div style={{ background: '#F6F0E3', border: '1px solid #E2D3AF', borderRadius: 0, padding: '14px 15px', display: 'flex', gap: 12, marginBottom: 22 }}>
-            <div style={{ color: 'var(--accent,#101113)', flex: 'none' }}>
+            <div style={{ color: 'var(--accent,#000000)', flex: 'none' }}>
               <ShieldCheck size={22} />
             </div>
             <div>
@@ -148,7 +148,7 @@ export default function DetailModal() {
           <div style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column', gap: 11 }}>
             {guest ? (
               <>
-                <button className="lok-btn" onClick={goSignup} style={{ border: 'none', background: 'var(--accent,#101113)', color: '#F7F3EA', fontFamily: 'inherit', fontWeight: 700, fontSize: 14.5, padding: 14, borderRadius: 0, cursor: 'pointer', boxShadow: '0 8px 20px -8px rgba(16,17,19,.6)' }}>Sign up to buy & message — it's free</button>
+                <button className="lok-btn" onClick={goSignup} style={{ border: 'none', background: 'var(--accent,#000000)', color: '#F7F3EA', fontFamily: 'inherit', fontWeight: 700, fontSize: 14.5, padding: 14, borderRadius: 0, cursor: 'pointer', boxShadow: '0 8px 20px -8px rgba(0,0,0,.6)' }}>Sign up to buy & message — it's free</button>
                 <div style={{ textAlign: 'center', fontSize: 12, color: '#8B8B86', fontWeight: 500 }}>You're browsing as a guest. Create an account to trade with {sel.seller}.</div>
               </>
             ) : isOwner ? (
@@ -157,11 +157,11 @@ export default function DetailModal() {
               </button>
             ) : (
               <>
-                <button className="lok-btn" onClick={chatSeller} style={{ border: '1px solid #C9C9C5', background: '#F5F5F3', color: '#17181A', fontFamily: 'inherit', fontWeight: 700, fontSize: 14, padding: 13, borderRadius: 0, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+                <button className="lok-btn" onClick={chatSeller} style={{ border: '1px solid #C9C9C5', background: '#F5F5F3', color: '#000000', fontFamily: 'inherit', fontWeight: 700, fontSize: 14, padding: 13, borderRadius: 0, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
                   <MessageBubble size={17} />
                   Message seller
                 </button>
-                <button className="lok-btn" onClick={openCheckout} style={{ border: 'none', background: 'var(--accent,#101113)', color: '#F7F3EA', fontFamily: 'inherit', fontWeight: 700, fontSize: 14.5, padding: 14, borderRadius: 0, cursor: 'pointer', boxShadow: '0 8px 20px -8px rgba(16,17,19,.6)' }}>Buy now · {sel.price}</button>
+                <button className="lok-btn" onClick={openCheckout} style={{ border: 'none', background: 'var(--accent,#000000)', color: '#F7F3EA', fontFamily: 'inherit', fontWeight: 700, fontSize: 14.5, padding: 14, borderRadius: 0, cursor: 'pointer', boxShadow: '0 8px 20px -8px rgba(0,0,0,.6)' }}>Buy now · {sel.price}</button>
                 <ReportForm targetType="listing" targetId={sel.id} label="this listing" />
               </>
             )}

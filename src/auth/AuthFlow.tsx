@@ -32,7 +32,7 @@ const Spinner = () => (
 )
 
 const LocMark = ({ size = 22 }: { size?: number }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="var(--accent,#101113)" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round">
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="var(--accent,#000000)" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round">
     <path d="M12 21c5-5 8-8.4 8-12a8 8 0 1 0-16 0c0 3.6 3 7 8 12z" />
     <circle cx="12" cy="9" r="3" />
   </svg>
@@ -98,20 +98,20 @@ const inputStyle: React.CSSProperties = {
   fontFamily: 'inherit',
   fontSize: 14,
   fontWeight: 500,
-  color: '#17181A',
+  color: '#000000',
   width: '100%',
 }
 const labelStyle: React.CSSProperties = {
   display: 'block',
   fontSize: 12.5,
   fontWeight: 700,
-  color: '#2A2B2E',
+  color: '#1E1E1E',
   marginBottom: 7,
 }
 const primaryBtn: React.CSSProperties = {
   width: '100%',
   border: 'none',
-  background: 'var(--accent,#101113)',
+  background: 'var(--accent,#000000)',
   color: '#F5F1E8',
   fontFamily: 'inherit',
   fontWeight: 700,
@@ -119,7 +119,7 @@ const primaryBtn: React.CSSProperties = {
   padding: 14,
   borderRadius: 0,
   cursor: 'pointer',
-  boxShadow: '0 10px 24px -10px rgba(16,17,19,.8)',
+  boxShadow: '0 10px 24px -10px rgba(0,0,0,.8)',
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
@@ -128,7 +128,7 @@ const primaryBtn: React.CSSProperties = {
 const linkStyle: React.CSSProperties = {
   cursor: 'pointer',
   fontWeight: 700,
-  color: 'var(--accent,#101113)',
+  color: 'var(--accent,#000000)',
 }
 
 // brand accent (tweakable). CSS custom properties aren't in React.CSSProperties.
@@ -295,7 +295,7 @@ export default function AuthFlow() {
             position: 'absolute',
             inset: 0,
             zIndex: 50,
-            background: 'var(--accent,#101113)',
+            background: 'var(--accent,#000000)',
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
@@ -324,7 +324,7 @@ export default function AuthFlow() {
         {/* LEFT BRAND PANEL */}
         <div
           className="lok-authbrand"
-          style={{ width: '44%', flex: 'none', background: 'var(--accent,#101113)', color: '#EAF0F8', padding: '34px 46px 30px', display: 'flex', flexDirection: 'column', position: 'relative', overflow: 'hidden' }}
+          style={{ width: '44%', flex: 'none', background: 'var(--accent,#000000)', color: '#EAF0F8', padding: '34px 46px 30px', display: 'flex', flexDirection: 'column', position: 'relative', overflow: 'hidden' }}
         >
           <div style={{ position: 'absolute', top: -90, right: -70, width: 300, height: 300, borderRadius: '50%', background: 'rgba(255,255,255,.06)' }} />
           <div style={{ position: 'absolute', bottom: -140, left: -60, width: 360, height: 360, borderRadius: '50%', background: 'rgba(255,255,255,.05)' }} />
@@ -379,8 +379,8 @@ export default function AuthFlow() {
                 </div>
 
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 7 }}>
-                  <label style={{ fontSize: 12.5, fontWeight: 700, color: '#2A2B2E' }}>Password</label>
-                  <span onClick={goView('forgot')} className="lok-link" style={{ cursor: 'pointer', fontSize: 12, fontWeight: 700, color: 'var(--accent,#101113)' }}>Forgot password?</span>
+                  <label style={{ fontSize: 12.5, fontWeight: 700, color: '#1E1E1E' }}>Password</label>
+                  <span onClick={goView('forgot')} className="lok-link" style={{ cursor: 'pointer', fontSize: 12, fontWeight: 700, color: 'var(--accent,#000000)' }}>Forgot password?</span>
                 </div>
                 <div className="lok-in" style={{ ...fieldWrap, marginBottom: 22 }}>
                   <svg width={17} height={17} viewBox="0 0 24 24" fill="none" stroke="#9A9A94" strokeWidth={2} strokeLinecap="round"><rect x="4" y="10" width="16" height="10" rx="2.5" /><path d="M8 10V7a4 4 0 0 1 8 0v3" /></svg>
@@ -396,7 +396,7 @@ export default function AuthFlow() {
                   <div style={{ flex: 1, height: 1, background: '#D8D8D4' }} />
                 </div>
 
-                <button className="lok-btn" onClick={doGoogle} style={{ width: '100%', border: '1.5px solid #D8D8D4', background: '#FFFFFF', color: '#17181A', fontFamily: 'inherit', fontWeight: 700, fontSize: 14, padding: 13, borderRadius: 0, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 11 }}>
+                <button className="lok-btn" onClick={doGoogle} style={{ width: '100%', border: '1.5px solid #D8D8D4', background: '#FFFFFF', color: '#000000', fontFamily: 'inherit', fontWeight: 700, fontSize: 14, padding: 13, borderRadius: 0, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 11 }}>
                   <svg width={18} height={18} viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9 3.6l6.7-6.7C35.6 2.4 30.2 0 24 0 14.6 0 6.5 5.4 2.6 13.2l7.8 6.1C12.3 13.2 17.7 9.5 24 9.5z" /><path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.7c-.5 3-2.2 5.5-4.7 7.2l7.3 5.7C43.9 37.9 46.5 31.7 46.5 24.5z" /><path fill="#FBBC05" d="M10.4 28.3c-.5-1.4-.8-3-.8-4.3s.3-2.9.8-4.3l-7.8-6.1C.9 16.8 0 20.3 0 24s.9 7.2 2.6 10.4l7.8-6.1z" /><path fill="#34A853" d="M24 48c6.2 0 11.4-2 15.2-5.6l-7.3-5.7c-2 1.4-4.7 2.3-7.9 2.3-6.3 0-11.7-3.7-13.6-9.1l-7.8 6.1C6.5 42.6 14.6 48 24 48z" /></svg>
                   Continue with Google
                 </button>
@@ -442,8 +442,8 @@ export default function AuthFlow() {
                 <button className="lok-btn" onClick={doSignup} style={primaryBtn}>{btn('signup', 'Create account')}</button>
                 <div style={{ fontSize: 11, color: '#8B8B86', fontWeight: 500, textAlign: 'center', marginTop: 10, lineHeight: 1.5 }}>
                   By creating an account you agree to LOKITA's{' '}
-                  <a href="/terms" target="_blank" rel="noreferrer" style={{ color: 'var(--accent,#101113)', fontWeight: 700 }}>Terms</a> and{' '}
-                  <a href="/privacy" target="_blank" rel="noreferrer" style={{ color: 'var(--accent,#101113)', fontWeight: 700 }}>Privacy Policy</a>.
+                  <a href="/terms" target="_blank" rel="noreferrer" style={{ color: 'var(--accent,#000000)', fontWeight: 700 }}>Terms</a> and{' '}
+                  <a href="/privacy" target="_blank" rel="noreferrer" style={{ color: 'var(--accent,#000000)', fontWeight: 700 }}>Privacy Policy</a>.
                 </div>
 
                 <div style={{ fontSize: 11.5, color: '#9A927F', textAlign: 'center', marginTop: 14, lineHeight: 1.5 }}>By creating an account you agree to Lokita's <a href="#">Community Rules</a> &amp; dorm verification.</div>
@@ -457,7 +457,7 @@ export default function AuthFlow() {
                 <span onClick={goView('login')} className="lok-link" style={{ cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12.5, fontWeight: 700, color: '#5F6063', marginBottom: 22 }}>
                   <svg width={15} height={15} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6" /></svg>Back to log in
                 </span>
-                <div style={{ width: 52, height: 52, borderRadius: 0, background: '#EEF3FA', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--accent,#101113)', marginBottom: 18 }}>
+                <div style={{ width: 52, height: 52, borderRadius: 0, background: '#EEF3FA', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--accent,#000000)', marginBottom: 18 }}>
                   <svg width={24} height={24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round"><rect x="4" y="10" width="16" height="10" rx="2.5" /><path d="M8 10V7a4 4 0 0 1 8 0v3" /></svg>
                 </div>
                 <h2 style={{ fontFamily: "'Bricolage Grotesque',sans-serif", fontWeight: 800, fontSize: 27, letterSpacing: '-.02em', margin: '0 0 8px' }}>Forgot password?</h2>
@@ -480,9 +480,9 @@ export default function AuthFlow() {
                 </div>
                 <h2 style={{ fontFamily: "'Bricolage Grotesque',sans-serif", fontWeight: 800, fontSize: 26, letterSpacing: '-.02em', margin: '0 0 10px' }}>Check your inbox</h2>
                 <p style={{ fontSize: 14, color: '#5F6063', lineHeight: 1.65, margin: '0 0 8px' }}>We sent a password reset link to</p>
-                <div style={{ fontWeight: 700, fontSize: 15, color: '#17181A', marginBottom: 22, wordBreak: 'break-all' }}>{f.fEmail || 'you@jiu.ac'}</div>
+                <div style={{ fontWeight: 700, fontSize: 15, color: '#000000', marginBottom: 22, wordBreak: 'break-all' }}>{f.fEmail || 'you@jiu.ac'}</div>
                 <div style={{ background: '#FFFFFF', border: '1px solid #D8D8D4', borderRadius: 0, padding: '14px 16px', fontSize: 12.5, color: '#5F6063', lineHeight: 1.55, marginBottom: 24, textAlign: 'left' }}>The link expires in 30 minutes. Didn't get it? Check spam, or <span onClick={doReset} className="lok-link" style={linkStyle}>resend</span>.</div>
-                <button className="lok-btn" onClick={goView('login')} style={{ ...primaryBtn, boxShadow: '0 10px 24px -10px rgba(16,17,19,.8)' }}>Back to log in</button>
+                <button className="lok-btn" onClick={goView('login')} style={{ ...primaryBtn, boxShadow: '0 10px 24px -10px rgba(0,0,0,.8)' }}>Back to log in</button>
               </div>
             )}
           </div>

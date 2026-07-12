@@ -25,7 +25,7 @@ const metaField = (label: string, value: string) =>
   value ? (
     <div>
       <div style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 9.5, color: '#9A9A94', letterSpacing: '.06em', marginBottom: 3 }}>{label}</div>
-      <div style={{ fontWeight: 700, fontSize: 13.5, color: '#17181A' }}>{value}</div>
+      <div style={{ fontWeight: 700, fontSize: 13.5, color: '#000000' }}>{value}</div>
     </div>
   ) : null
 
@@ -80,7 +80,7 @@ export default function MemberProfileView() {
         {backBtn}
         <div style={{ background: '#FFFFFF', border: '1px dashed #C9C9C5', borderRadius: 0, padding: '52px 32px', textAlign: 'center', color: '#8B8B86', marginTop: 18 }}>
           <div style={{ fontSize: 34, marginBottom: 12 }}>🫥</div>
-          <div style={{ fontFamily: "'Bricolage Grotesque',sans-serif", fontWeight: 800, fontSize: 19, color: '#17181A' }}>This member no longer exists</div>
+          <div style={{ fontFamily: "'Bricolage Grotesque',sans-serif", fontWeight: 800, fontSize: 19, color: '#000000' }}>This member no longer exists</div>
         </div>
       </div>
     )
@@ -93,7 +93,7 @@ export default function MemberProfileView() {
       {/* identity */}
       <div style={{ background: '#FFFFFF', border: '1px solid #D8D8D4', borderRadius: 0, padding: '26px 28px', display: 'flex', gap: 22, alignItems: 'flex-start', marginBottom: 14, flexWrap: 'wrap' }}>
         <div style={{ position: 'relative', flex: 'none' }}>
-          <div style={{ width: 88, height: 88, borderRadius: 0, background: '#DBE1EA', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#2A2B2E', fontWeight: 800, fontSize: 34, fontFamily: "'Bricolage Grotesque',sans-serif", overflow: 'hidden' }}>
+          <div style={{ width: 88, height: 88, borderRadius: 0, background: '#DBE1EA', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#1E1E1E', fontWeight: 800, fontSize: 34, fontFamily: "'Bricolage Grotesque',sans-serif", overflow: 'hidden' }}>
             {info?.photo ? <img src={info.photo} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : (info?.name || s.memberName || '?').charAt(0).toUpperCase()}
           </div>
           <span title={isOnline ? 'Online now' : 'Offline'} style={{ position: 'absolute', bottom: -3, right: -3, width: 18, height: 18, borderRadius: '50%', background: isOnline ? '#3DBB6E' : '#C9C2B2', border: '3px solid #FFFFFF' }} />
@@ -102,7 +102,7 @@ export default function MemberProfileView() {
           <div style={{ display: 'flex', alignItems: 'center', gap: 9, flexWrap: 'wrap' }}>
             <h1 style={{ fontFamily: "'Bricolage Grotesque',sans-serif", fontSize: 26, fontWeight: 800, letterSpacing: '-.02em', margin: 0 }}>{info?.name || s.memberName || 'Member'}</h1>
             {info?.verified && (
-              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12, fontWeight: 800, color: '#F6F0E3', background: 'var(--accent,#101113)', padding: '6px 11px', borderRadius: 0 }}>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12, fontWeight: 800, color: '#F6F0E3', background: 'var(--accent,#000000)', padding: '6px 11px', borderRadius: 0 }}>
                 <Verified size={13} checkColor="#F6F0E3" /> Dorm-Verified
               </span>
             )}
@@ -116,7 +116,7 @@ export default function MemberProfileView() {
           </div>
         </div>
         {!isMe && (
-          <button onClick={() => id && openRequestChat(id)} className="lok-btn" style={{ flex: 'none', border: 'none', background: 'var(--accent,#101113)', color: '#F7F3EA', fontFamily: 'inherit', fontWeight: 700, fontSize: 13.5, padding: '12px 18px', borderRadius: 0, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, boxShadow: '0 6px 16px -6px rgba(16,17,19,.6)' }}>
+          <button onClick={() => id && openRequestChat(id)} className="lok-btn" style={{ flex: 'none', border: 'none', background: 'var(--accent,#000000)', color: '#F7F3EA', fontFamily: 'inherit', fontWeight: 700, fontSize: 13.5, padding: '12px 18px', borderRadius: 0, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, boxShadow: '0 6px 16px -6px rgba(0,0,0,.6)' }}>
             <MessageBubble size={15} />
             Message
           </button>
@@ -126,10 +126,10 @@ export default function MemberProfileView() {
       {/* stats */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(120px,1fr))', gap: 14, marginBottom: 22 }}>
         {[
-          { value: stats ? String(stats.selling) : '…', label: 'Selling now', color: 'var(--accent,#101113)' },
+          { value: stats ? String(stats.selling) : '…', label: 'Selling now', color: 'var(--accent,#000000)' },
           { value: stats ? String(stats.sold) : '…', label: 'Items sold', color: '#1E9E5A' },
           { value: rating, label: 'Rating', color: '#9A6A12' },
-          { value: reviews ? String(reviews.length) : '…', label: 'Reviews', color: '#17181A' },
+          { value: reviews ? String(reviews.length) : '…', label: 'Reviews', color: '#000000' },
         ].map((st) => (
           <div key={st.label} style={{ background: '#FFFFFF', border: '1px solid #D8D8D4', borderRadius: 0, padding: '16px 18px', textAlign: 'center' }}>
             <div style={{ fontFamily: "'Bricolage Grotesque',sans-serif", fontWeight: 800, fontSize: 24, color: st.color }}>{st.value}</div>
@@ -140,7 +140,7 @@ export default function MemberProfileView() {
 
       {/* trust note */}
       <div style={{ background: '#F6F0E3', border: '1px solid #E2D3AF', borderRadius: 0, padding: '13px 16px', display: 'flex', gap: 11, alignItems: 'center', marginBottom: 24 }}>
-        <span style={{ color: 'var(--accent,#101113)', flex: 'none', display: 'flex' }}><ShieldCheck size={19} /></span>
+        <span style={{ color: 'var(--accent,#000000)', flex: 'none', display: 'flex' }}><ShieldCheck size={19} /></span>
         <span style={{ fontSize: 12.5, color: '#4A5A50', fontWeight: 600 }}>All trades are paid in-app and exchanged via the campus Security Post — no risky meetups.</span>
       </div>
 
@@ -150,7 +150,7 @@ export default function MemberProfileView() {
       </div>
       {items === null ? (
         <div style={{ padding: 24, textAlign: 'center' }}>
-          <span className="lok-spin" style={{ width: 22, height: 22, border: '3px solid #D8D8D4', borderTopColor: 'var(--accent,#101113)', borderRadius: '50%', display: 'inline-block' }} />
+          <span className="lok-spin" style={{ width: 22, height: 22, border: '3px solid #D8D8D4', borderTopColor: 'var(--accent,#000000)', borderRadius: '50%', display: 'inline-block' }} />
         </div>
       ) : items.length === 0 ? (
         <div style={{ background: '#F5F5F3', border: '1px dashed #C9C9C5', borderRadius: 0, padding: 24, textAlign: 'center', color: '#8B8B86', fontSize: 13, marginBottom: 28 }}>Nothing listed right now.</div>
@@ -168,7 +168,7 @@ export default function MemberProfileView() {
       </div>
       {reviews === null ? (
         <div style={{ padding: 20, textAlign: 'center' }}>
-          <span className="lok-spin" style={{ width: 20, height: 20, border: '3px solid #D8D8D4', borderTopColor: 'var(--accent,#101113)', borderRadius: '50%', display: 'inline-block' }} />
+          <span className="lok-spin" style={{ width: 20, height: 20, border: '3px solid #D8D8D4', borderTopColor: 'var(--accent,#000000)', borderRadius: '50%', display: 'inline-block' }} />
         </div>
       ) : reviews.length === 0 ? (
         <div style={{ background: '#F5F5F3', border: '1px dashed #C9C9C5', borderRadius: 0, padding: 22, textAlign: 'center', color: '#8B8B86', fontSize: 13, marginBottom: 30 }}>
@@ -179,7 +179,7 @@ export default function MemberProfileView() {
           {reviews.map((r) => (
             <div key={r.id} style={{ background: '#FFFFFF', border: '1px solid #D8D8D4', borderRadius: 0, padding: '14px 16px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
-                <div style={{ width: 34, height: 34, borderRadius: '50%', background: '#ECECEA', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 13, color: '#2A2B2E', flex: 'none', fontFamily: "'Bricolage Grotesque',sans-serif" }}>{r.reviewer_name.charAt(0)}</div>
+                <div style={{ width: 34, height: 34, borderRadius: '50%', background: '#ECECEA', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 13, color: '#1E1E1E', flex: 'none', fontFamily: "'Bricolage Grotesque',sans-serif" }}>{r.reviewer_name.charAt(0)}</div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontWeight: 700, fontSize: 13.5 }}>{r.reviewer_name}</div>
                   <div style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 10, color: '#9A9A94' }}>{timeAgo(r.created_at)}</div>

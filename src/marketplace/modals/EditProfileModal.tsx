@@ -11,7 +11,7 @@ const fieldBase: React.CSSProperties = {
   fontSize: 13.5,
   fontFamily: 'inherit',
   fontWeight: 500,
-  color: '#17181A',
+  color: '#000000',
 }
 const cap: React.CSSProperties = {
   fontFamily: "'Spline Sans Mono',monospace",
@@ -28,7 +28,7 @@ export default function EditProfileModal() {
 
   return (
     <Overlay onClose={closeEdit}>
-      <div onClick={stop} style={{ background: '#FFFFFF', borderRadius: 0, padding: '30px 32px', width: '100%', maxWidth: 500, animation: 'lok-pop .26s cubic-bezier(.2,.8,.3,1) both', boxShadow: '0 40px 90px -20px rgba(18,19,21,.5)', maxHeight: '88vh', overflowY: 'auto' }}>
+      <div onClick={stop} style={{ background: '#FFFFFF', borderRadius: 0, padding: '30px 32px', width: '100%', maxWidth: 500, animation: 'lok-pop .26s cubic-bezier(.2,.8,.3,1) both', boxShadow: '0 40px 90px -20px rgba(0,0,0,.5)', maxHeight: '88vh', overflowY: 'auto' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
           <h2 style={{ fontFamily: "'Bricolage Grotesque',sans-serif", fontSize: 22, fontWeight: 800, margin: 0 }}>Edit profile</h2>
           <button onClick={closeEdit} className="lok-navi" style={{ border: '1px solid #D8D8D4', background: '#F5F5F3', width: 34, height: 34, borderRadius: 0, fontSize: 15, cursor: 'pointer', color: '#4A4B4E' }}>✕</button>
@@ -40,11 +40,11 @@ export default function EditProfileModal() {
         )}
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 18 }}>
-          <div style={{ width: 66, height: 66, borderRadius: 0, background: 'var(--accent,#101113)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#F7F3EA', fontWeight: 800, fontSize: 26, fontFamily: "'Bricolage Grotesque',sans-serif", overflow: 'hidden', flex: 'none' }}>
+          <div style={{ width: 66, height: 66, borderRadius: 0, background: 'var(--accent,#000000)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#F7F3EA', fontWeight: 800, fontSize: 26, fontFamily: "'Bricolage Grotesque',sans-serif", overflow: 'hidden', flex: 'none' }}>
             {state.photo ? <img src={state.photo} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : profileInitial}
           </div>
           <div>
-            <button onClick={pickPhoto} className="lok-btn" style={{ border: '1px solid #C9C9C5', background: '#F5F5F3', color: '#17181A', fontFamily: 'inherit', fontWeight: 700, fontSize: 13, padding: '9px 14px', borderRadius: 0, cursor: 'pointer' }}>Change photo</button>
+            <button onClick={pickPhoto} className="lok-btn" style={{ border: '1px solid #C9C9C5', background: '#F5F5F3', color: '#000000', fontFamily: 'inherit', fontWeight: 700, fontSize: 13, padding: '9px 14px', borderRadius: 0, cursor: 'pointer' }}>Change photo</button>
             <div style={{ fontSize: 11, color: '#9A9A94', fontWeight: 500, marginTop: 6 }}>JPG or PNG · shown on all your listings</div>
           </div>
         </div>
@@ -113,8 +113,8 @@ export default function EditProfileModal() {
         </div>
 
         <div style={{ display: 'flex', gap: 11, marginTop: 20 }}>
-          <button onClick={closeEdit} className="lok-btn" style={{ flex: 'none', border: '1px solid #C9C9C5', background: '#F5F5F3', color: '#17181A', fontFamily: 'inherit', fontWeight: 700, fontSize: 14, padding: '13px 20px', borderRadius: 0, cursor: 'pointer' }}>Cancel</button>
-          <button onClick={savePf} disabled={state.pfSaving} className="lok-btn" style={{ flex: 1, border: 'none', background: 'var(--accent,#101113)', color: '#F7F3EA', fontFamily: 'inherit', fontWeight: 700, fontSize: 14, padding: 13, borderRadius: 0, cursor: 'pointer', boxShadow: '0 8px 20px -8px rgba(16,17,19,.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+          <button onClick={closeEdit} className="lok-btn" style={{ flex: 'none', border: '1px solid #C9C9C5', background: '#F5F5F3', color: '#000000', fontFamily: 'inherit', fontWeight: 700, fontSize: 14, padding: '13px 20px', borderRadius: 0, cursor: 'pointer' }}>Cancel</button>
+          <button onClick={savePf} disabled={state.pfSaving} className="lok-btn" style={{ flex: 1, border: 'none', background: 'var(--accent,#000000)', color: '#F7F3EA', fontFamily: 'inherit', fontWeight: 700, fontSize: 14, padding: 13, borderRadius: 0, cursor: 'pointer', boxShadow: '0 8px 20px -8px rgba(0,0,0,.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
             {state.pfSaving ? <span className="lok-spin" style={{ width: 15, height: 15, border: '2px solid rgba(247,243,234,.4)', borderTopColor: '#F7F3EA', borderRadius: '50%', display: 'inline-block' }} /> : 'Save changes'}
           </button>
         </div>

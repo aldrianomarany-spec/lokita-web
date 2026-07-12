@@ -76,7 +76,7 @@ export default function Sidebar() {
         })}
       </div>
 
-      <div style={{ marginTop: 'auto', background: 'var(--accent,#101113)', borderRadius: 0, padding: 17, color: '#EAF3EE', position: 'relative', overflow: 'hidden' }}>
+      <div style={{ marginTop: 'auto', background: 'var(--accent,#000000)', borderRadius: 0, padding: 17, color: '#EAF3EE', position: 'relative', overflow: 'hidden' }}>
         <div style={{ position: 'absolute', top: -20, right: -20, width: 80, height: 80, borderRadius: '50%', background: 'rgba(255,255,255,.07)' }} />
         {MASCOT_URL && <img src={MASCOT_URL} alt="" aria-hidden className="lok-mascot" style={{ position: 'absolute', right: -8, bottom: -12, width: 74, opacity: 0.95, transform: 'rotate(6deg)' }} />}
         <div style={{ display: 'flex', alignItems: 'center', gap: 7, fontSize: 13.5, fontWeight: 800, marginBottom: 7, color: '#fff' }}>
