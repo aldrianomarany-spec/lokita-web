@@ -1394,8 +1394,11 @@ export async function adminDeleteBanner(id: string): Promise<void> {
 
 // realtime: homepage carousels update the moment the admin publishes
 export function subscribeBanners(onChange: () => void): () => void {
+  // unique topic per subscriber — the Ticker and the homepage hero both
+  // listen, and Supabase throws if two callers attach callbacks to the
+  // same channel topic after it has subscribed
   const ch = supabase
-    .channel('banners')
+    .channel('banners-' + Math.random().toString(36).slice(2))
     .on('postgres_changes', { event: '*', schema: 'public', table: 'banners' }, onChange)
     .subscribe()
   return () => {
