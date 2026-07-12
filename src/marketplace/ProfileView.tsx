@@ -13,7 +13,7 @@ const timeAgo = (iso: string) => {
 const metaField = (label: string, value: string) => (
   <div>
     <div style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 9.5, color: '#9A9A94', letterSpacing: '.06em', marginBottom: 3 }}>{label}</div>
-    <div style={{ fontWeight: 700, fontSize: 13.5, color: '#17181A' }}>{value || '—'}</div>
+    <div style={{ fontWeight: 700, fontSize: 13.5, color: '#000000' }}>{value || '—'}</div>
   </div>
 )
 
@@ -45,7 +45,7 @@ function SmallCard({ title, price, badge, badgeBg, badgeFg, dim, photoUrl, onCli
       </div>
       <div style={{ padding: '11px 13px 13px' }}>
         <div style={{ fontWeight: 700, fontSize: 13.5, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{title}</div>
-        <div style={{ fontFamily: "'Bricolage Grotesque',sans-serif", fontWeight: 800, fontSize: 15, color: '#17181A', marginTop: 3 }}>{price}</div>
+        <div style={{ fontFamily: "'Bricolage Grotesque',sans-serif", fontWeight: 800, fontSize: 15, color: '#000000', marginTop: 3 }}>{price}</div>
       </div>
     </div>
   )
@@ -80,7 +80,7 @@ function AccountPrivacyCard() {
     }
   }
 
-  const pwField: React.CSSProperties = { flex: '1 1 180px', background: '#F5F5F3', border: '1.5px solid #D8D8D4', borderRadius: 0, padding: '12px 14px', fontSize: 13, fontFamily: 'inherit', fontWeight: 500, color: '#17181A' }
+  const pwField: React.CSSProperties = { flex: '1 1 180px', background: '#F5F5F3', border: '1.5px solid #D8D8D4', borderRadius: 0, padding: '12px 14px', fontSize: 13, fontFamily: 'inherit', fontWeight: 500, color: '#000000' }
 
   return (
     <div style={{ background: '#FFFFFF', border: '1px solid #D8D8D4', borderRadius: 0, padding: '20px 22px', marginBottom: 32 }}>
@@ -105,7 +105,7 @@ function AccountPrivacyCard() {
           onClick={savePw}
           disabled={pwState !== 'idle'}
           className="lok-btn"
-          style={{ flex: 'none', border: 'none', background: pwState === 'done' ? '#3DBB6E' : 'var(--accent,#101113)', color: '#F7F3EA', fontFamily: 'inherit', fontWeight: 700, fontSize: 13, padding: '12px 20px', borderRadius: 0, cursor: pwState === 'idle' ? 'pointer' : 'default', transition: 'background .2s ease' }}
+          style={{ flex: 'none', border: 'none', background: pwState === 'done' ? '#3DBB6E' : 'var(--accent,#000000)', color: '#F7F3EA', fontFamily: 'inherit', fontWeight: 700, fontSize: 13, padding: '12px 20px', borderRadius: 0, cursor: pwState === 'idle' ? 'pointer' : 'default', transition: 'background .2s ease' }}
         >
           {pwState === 'saving' ? 'Saving…' : pwState === 'done' ? 'Password changed ✓' : 'Change password'}
         </button>
@@ -169,7 +169,7 @@ export default function ProfileView() {
   if (s.profileLoading) {
     return (
       <div style={{ height: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <span className="lok-spin" style={{ width: 26, height: 26, border: '3px solid #D8D8D4', borderTopColor: 'var(--accent,#101113)', borderRadius: '50%', display: 'inline-block' }} />
+        <span className="lok-spin" style={{ width: 26, height: 26, border: '3px solid #D8D8D4', borderTopColor: 'var(--accent,#000000)', borderRadius: '50%', display: 'inline-block' }} />
       </div>
     )
   }
@@ -184,10 +184,10 @@ export default function ProfileView() {
   const stats = s.stats
   const ratingLabel = stats && stats.avgRating != null ? stats.avgRating.toFixed(1) : '—'
   const statTiles = [
-    { value: String(stats?.selling ?? 0), label: 'Selling', color: 'var(--accent,#101113)' },
+    { value: String(stats?.selling ?? 0), label: 'Selling', color: 'var(--accent,#000000)' },
     { value: String(stats?.sold ?? 0), label: 'Sold', color: '#1E9E5A' },
-    { value: String(stats?.buying ?? 0), label: 'Buying', color: '#17181A' },
-    { value: ratingLabel, label: `${stats?.reviewCount ?? 0} reviews`, color: '#17181A' },
+    { value: String(stats?.buying ?? 0), label: 'Buying', color: '#000000' },
+    { value: ratingLabel, label: `${stats?.reviewCount ?? 0} reviews`, color: '#000000' },
   ]
   const activeListings = (listings || []).filter((l) => l.status === 'active')
   const soldListings = (listings || []).filter((l) => l.status === 'sold')
@@ -198,10 +198,10 @@ export default function ProfileView() {
       {/* identity */}
       <div style={{ background: '#FFFFFF', border: '1px solid #D8D8D4', borderRadius: 0, padding: '26px 28px', display: 'flex', gap: 24, alignItems: 'flex-start', marginBottom: 14 }}>
         <div style={{ position: 'relative', flex: 'none' }}>
-          <div style={{ width: 96, height: 96, borderRadius: 0, background: 'var(--accent,#101113)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#F7F3EA', fontWeight: 800, fontSize: 38, fontFamily: "'Bricolage Grotesque',sans-serif", overflow: 'hidden' }}>
+          <div style={{ width: 96, height: 96, borderRadius: 0, background: 'var(--accent,#000000)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#F7F3EA', fontWeight: 800, fontSize: 38, fontFamily: "'Bricolage Grotesque',sans-serif", overflow: 'hidden' }}>
             {avatarUrl ? <img src={avatarUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : profileInitial}
           </div>
-          <button onClick={pickPhoto} className="lok-btn" title="Change photo" disabled={s.photoUploading} style={{ position: 'absolute', bottom: -7, right: -7, width: 34, height: 34, borderRadius: 0, border: '2.5px solid #FFFFFF', background: '#17181A', color: '#F7F3EA', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+          <button onClick={pickPhoto} className="lok-btn" title="Change photo" disabled={s.photoUploading} style={{ position: 'absolute', bottom: -7, right: -7, width: 34, height: 34, borderRadius: 0, border: '2.5px solid #FFFFFF', background: '#000000', color: '#F7F3EA', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
             {s.photoUploading ? <span className="lok-spin" style={{ width: 14, height: 14, border: '2px solid rgba(247,243,234,.4)', borderTopColor: '#F7F3EA', borderRadius: '50%', display: 'inline-block' }} /> : <Camera />}
           </button>
         </div>
@@ -219,13 +219,13 @@ export default function ProfileView() {
             {metaField('CLASS STANDING', p.standing)}
           </div>
         </div>
-        <button onClick={openEdit} className="lok-btn" style={{ flex: 'none', border: '1px solid #C9C9C5', background: '#F5F5F3', color: '#17181A', fontFamily: 'inherit', fontWeight: 700, fontSize: 13.5, padding: '11px 16px', borderRadius: 0, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 7 }}>
+        <button onClick={openEdit} className="lok-btn" style={{ flex: 'none', border: '1px solid #C9C9C5', background: '#F5F5F3', color: '#000000', fontFamily: 'inherit', fontWeight: 700, fontSize: 13.5, padding: '11px 16px', borderRadius: 0, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 7 }}>
           <Edit /> Edit profile
         </button>
       </div>
 
       {/* verification banner */}
-      <div style={{ background: 'var(--accent,#101113)', borderRadius: 0, padding: '16px 20px', display: 'flex', alignItems: 'center', gap: 14, marginBottom: 20, position: 'relative', overflow: 'hidden' }}>
+      <div style={{ background: 'var(--accent,#000000)', borderRadius: 0, padding: '16px 20px', display: 'flex', alignItems: 'center', gap: 14, marginBottom: 20, position: 'relative', overflow: 'hidden' }}>
         <div style={{ position: 'absolute', top: -30, right: 40, width: 110, height: 110, borderRadius: '50%', background: 'rgba(255,255,255,.06)' }} />
         <div style={{ width: 42, height: 42, borderRadius: 0, background: 'rgba(255,255,255,.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', flex: 'none' }}>
           <ShieldCheck size={22} />
@@ -247,10 +247,10 @@ export default function ProfileView() {
               onClick={() => idFileRef.current?.click()}
               disabled={idUploading}
               className="lok-btn"
-              style={{ flex: 'none', position: 'relative', border: 'none', background: '#FFFFFF', color: 'var(--accent,#101113)', fontFamily: 'inherit', fontWeight: 800, fontSize: 13, padding: '11px 16px', borderRadius: 0, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}
+              style={{ flex: 'none', position: 'relative', border: 'none', background: '#FFFFFF', color: 'var(--accent,#000000)', fontFamily: 'inherit', fontWeight: 800, fontSize: 13, padding: '11px 16px', borderRadius: 0, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}
             >
               {idUploading ? (
-                <span className="lok-spin" style={{ width: 14, height: 14, border: '2px solid #C9D6E8', borderTopColor: 'var(--accent,#101113)', borderRadius: '50%', display: 'inline-block' }} />
+                <span className="lok-spin" style={{ width: 14, height: 14, border: '2px solid #C9D6E8', borderTopColor: 'var(--accent,#000000)', borderRadius: '50%', display: 'inline-block' }} />
               ) : (
                 'Upload student ID'
               )}
@@ -264,7 +264,7 @@ export default function ProfileView() {
         <div style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 10, color: '#9A9A94', letterSpacing: '.06em', marginBottom: 8 }}>RATING</div>
         {stats && stats.reviewCount > 0 ? (
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 10 }}>
-            <div style={{ fontFamily: "'Bricolage Grotesque',sans-serif", fontSize: 36, fontWeight: 800, lineHeight: 1, color: '#17181A' }}>{ratingLabel}</div>
+            <div style={{ fontFamily: "'Bricolage Grotesque',sans-serif", fontSize: 36, fontWeight: 800, lineHeight: 1, color: '#000000' }}>{ratingLabel}</div>
             <div style={{ fontSize: 16, color: '#E7A81E', letterSpacing: 2 }}>{'★'.repeat(Math.round(stats.avgRating || 0))}{'☆'.repeat(5 - Math.round(stats.avgRating || 0))}</div>
             <div style={{ fontSize: 12.5, color: '#5F6063', fontWeight: 600 }}>from {stats.reviewCount} review{stats.reviewCount > 1 ? 's' : ''}</div>
           </div>
@@ -315,7 +315,7 @@ export default function ProfileView() {
       ) : (
         <div style={{ ...emptyBox, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14 }}>
           <div>You have no listings yet.</div>
-          <button onClick={openSell} className="lok-btn" style={{ border: 'none', background: 'var(--accent,#101113)', color: '#F7F3EA', fontFamily: 'inherit', fontWeight: 700, fontSize: 13.5, padding: '11px 18px', borderRadius: 0, cursor: 'pointer' }}>Post your first item</button>
+          <button onClick={openSell} className="lok-btn" style={{ border: 'none', background: 'var(--accent,#000000)', color: '#F7F3EA', fontFamily: 'inherit', fontWeight: 700, fontSize: 13.5, padding: '11px 18px', borderRadius: 0, cursor: 'pointer' }}>Post your first item</button>
         </div>
       )}
 
@@ -329,7 +329,7 @@ export default function ProfileView() {
           {reviews.map((r) => (
             <div key={r.id} style={{ background: '#FFFFFF', border: '1px solid #D8D8D4', borderRadius: 0, padding: '18px 20px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 11 }}>
-                <div style={{ width: 42, height: 42, borderRadius: '50%', background: '#ECECEA', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, color: '#2A2B2E', flex: 'none', fontFamily: "'Bricolage Grotesque',sans-serif" }}>{r.reviewer_name.charAt(0)}</div>
+                <div style={{ width: 42, height: 42, borderRadius: '50%', background: '#ECECEA', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, color: '#1E1E1E', flex: 'none', fontFamily: "'Bricolage Grotesque',sans-serif" }}>{r.reviewer_name.charAt(0)}</div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontWeight: 700, fontSize: 14.5 }}>{r.reviewer_name}</div>
                   <div style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 11, color: '#9A9A94', marginTop: 2 }}>{timeAgo(r.created_at)}</div>

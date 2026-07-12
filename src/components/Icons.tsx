@@ -165,7 +165,7 @@ export const WhatsApp = ({
 export const Verified = ({
   size = 14,
   checkColor = '#FFFFFF',
-  color = 'var(--accent, #101113)',
+  color = 'var(--accent, #000000)',
   style,
 }: IconProps & { checkColor?: string; color?: string }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill={color} style={{ flex: 'none', ...style }}>

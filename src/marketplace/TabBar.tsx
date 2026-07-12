@@ -25,7 +25,7 @@ export default function TabBar() {
 
   return (
     <nav
-      style={{ position: 'fixed', left: 0, right: 0, bottom: 0, zIndex: 45, background: '#101113', borderTop: '1px solid #2E2F33', display: 'flex', alignItems: 'flex-end', paddingBottom: 'env(safe-area-inset-bottom)', boxShadow: '0 -6px 20px -12px rgba(18,19,21,.25)' }}
+      style={{ position: 'fixed', left: 0, right: 0, bottom: 0, zIndex: 45, background: '#000000', borderTop: '1px solid #222222', display: 'flex', alignItems: 'flex-end', paddingBottom: 'env(safe-area-inset-bottom)', boxShadow: '0 -6px 20px -12px rgba(0,0,0,.25)' }}
     >
       {item('Home', '🏠', s.view === 'browse', goHome)}
       {item('Requests', '🙋', s.view === 'requests', openRequests)}
@@ -35,7 +35,7 @@ export default function TabBar() {
           onClick={openSell}
           aria-label="Post an item"
           className="lok-btn"
-          style={{ border: 'none', width: 50, height: 50, borderRadius: '50%', background: '#C8A96A', color: '#101113', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', marginTop: -22, boxShadow: '0 0 0 5px #101113' }}
+          style={{ border: 'none', width: 50, height: 50, borderRadius: '50%', background: '#C8A96A', color: '#000000', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', marginTop: -22, boxShadow: '0 0 0 5px #000000' }}
         >
           <Plus size={22} />
         </button>

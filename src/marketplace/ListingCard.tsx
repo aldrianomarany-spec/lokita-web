@@ -5,7 +5,7 @@ import { MapPin, Star, Verified } from '../components/Icons'
 
 // corner tag: FEATURED (accent) or GRAD BUNDLE (olive) — set by the feed mapper
 function tagColors(tag: string): { bg: string; fg: string } | null {
-  if (tag === 'FEATURED') return { bg: '#E7EEF7', fg: '#101113' }
+  if (tag === 'FEATURED') return { bg: '#E7EEF7', fg: '#000000' }
   if (tag === 'GRAD BUNDLE') return { bg: '#EFEFDD', fg: '#7E8154' }
   return null
 }
@@ -47,7 +47,7 @@ export default function ListingCard({ it, index }: { it: EnrichedItem; index: nu
         >
           <Star fill={isSaved ? '#E7A81E' : 'none'} size={21} />
         </button>
-        <span style={{ position: 'absolute', bottom: 10, left: 11, display: 'flex', alignItems: 'center', gap: 5, fontFamily: "'Spline Sans Mono',monospace", fontSize: 10, fontWeight: 500, color: '#2A2B2E', background: 'rgba(251,248,241,.92)', backdropFilter: 'blur(4px)', padding: '4px 8px', borderRadius: 0 }}>
+        <span style={{ position: 'absolute', bottom: 10, left: 11, display: 'flex', alignItems: 'center', gap: 5, fontFamily: "'Spline Sans Mono',monospace", fontSize: 10, fontWeight: 500, color: '#1E1E1E', background: 'rgba(251,248,241,.92)', backdropFilter: 'blur(4px)', padding: '4px 8px', borderRadius: 0 }}>
           <MapPin size={10} />
           {it.proxTag}
         </span>
@@ -55,10 +55,10 @@ export default function ListingCard({ it, index }: { it: EnrichedItem; index: nu
       <div style={{ padding: '14px 15px 15px' }}>
         <div style={{ fontWeight: 700, fontSize: 15, lineHeight: 1.3, marginBottom: 6, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{it.title}</div>
         <div style={{ display: 'flex', alignItems: 'baseline', gap: 7, marginBottom: 12 }}>
-          <span style={{ fontFamily: "'Bricolage Grotesque',sans-serif", fontWeight: 800, fontSize: 19, color: '#17181A' }}>{it.price}</span>
+          <span style={{ fontFamily: "'Bricolage Grotesque',sans-serif", fontWeight: 800, fontSize: 19, color: '#000000' }}>{it.price}</span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, paddingTop: 11, borderTop: '1px solid #E6E6E3' }}>
-          <div style={{ width: 24, height: 24, borderRadius: '50%', background: t.tint, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 11, color: '#2A2B2E', flex: 'none' }}>{it.sellerInitial}</div>
+          <div style={{ width: 24, height: 24, borderRadius: '50%', background: t.tint, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 11, color: '#1E1E1E', flex: 'none' }}>{it.sellerInitial}</div>
           <span style={{ fontSize: 12, fontWeight: 600, color: '#5F6063', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', flex: 1 }}>{it.seller}</span>
           {it.sellerVerified && <Verified size={13} />}
         </div>

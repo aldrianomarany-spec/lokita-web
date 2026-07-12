@@ -14,7 +14,7 @@ const timeShort = (iso: string) => {
 
 function Avatar({ photo, initial, size }: { photo: string | null; initial: string; size: number }) {
   return (
-    <div style={{ width: size, height: size, borderRadius: '50%', background: '#DBE1EA', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, color: '#2A2B2E', flex: 'none', fontFamily: "'Bricolage Grotesque',sans-serif", overflow: 'hidden' }}>
+    <div style={{ width: size, height: size, borderRadius: '50%', background: '#DBE1EA', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, color: '#1E1E1E', flex: 'none', fontFamily: "'Bricolage Grotesque',sans-serif", overflow: 'hidden' }}>
       {photo ? <img src={photo} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : initial}
     </div>
   )
@@ -51,13 +51,13 @@ export default function MessagesView() {
 
       {s.convsLoading && s.convs.length === 0 ? (
         <div style={{ height: '40vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <span className="lok-spin" style={{ width: 26, height: 26, border: '3px solid #D8D8D4', borderTopColor: 'var(--accent,#101113)', borderRadius: '50%', display: 'inline-block' }} />
+          <span className="lok-spin" style={{ width: 26, height: 26, border: '3px solid #D8D8D4', borderTopColor: 'var(--accent,#000000)', borderRadius: '50%', display: 'inline-block' }} />
         </div>
       ) : s.convs.length === 0 ? (
         <div style={{ background: '#FFFFFF', border: '1px dashed #C9C9C5', borderRadius: 0, padding: '52px 32px', textAlign: 'center', color: '#8B8B86', maxWidth: 520, margin: '20px auto 0' }}>
           <div style={{ fontSize: 34, marginBottom: 12 }}>💬</div>
-          <div style={{ fontFamily: "'Bricolage Grotesque',sans-serif", fontWeight: 800, fontSize: 19, color: '#17181A', marginBottom: 8 }}>No conversations yet</div>
-          <div style={{ fontSize: 13.5, lineHeight: 1.6 }}>Start browsing items and tap <b style={{ color: '#17181A' }}>Message seller</b> on a listing to begin a chat. Your conversations will appear here.</div>
+          <div style={{ fontFamily: "'Bricolage Grotesque',sans-serif", fontWeight: 800, fontSize: 19, color: '#000000', marginBottom: 8 }}>No conversations yet</div>
+          <div style={{ fontSize: 13.5, lineHeight: 1.6 }}>Start browsing items and tap <b style={{ color: '#000000' }}>Message seller</b> on a listing to begin a chat. Your conversations will appear here.</div>
         </div>
       ) : (
         <div style={{ flex: 1, display: 'flex', gap: 16, minHeight: 0 }}>
@@ -118,14 +118,14 @@ export default function MessagesView() {
                   <div style={{ fontWeight: 700, fontSize: 13.5, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{active.item_title}</div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 3 }}>
                     {active.item_price != null && (
-                      <span style={{ fontFamily: "'Bricolage Grotesque',sans-serif", fontWeight: 800, fontSize: 14, color: 'var(--accent,#101113)' }}>Rp {Number(active.item_price).toLocaleString('id-ID')}</span>
+                      <span style={{ fontFamily: "'Bricolage Grotesque',sans-serif", fontWeight: 800, fontSize: 14, color: 'var(--accent,#000000)' }}>Rp {Number(active.item_price).toLocaleString('id-ID')}</span>
                     )}
                     {active.item_status && active.item_status !== 'active' && (
                       <span style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 9, fontWeight: 600, color: '#9A6A12', background: '#FBF2DD', padding: '2px 7px', borderRadius: 0 }}>{active.item_status.toUpperCase()}</span>
                     )}
                   </div>
                 </div>
-                <span style={{ flex: 'none', fontSize: 12, fontWeight: 700, color: 'var(--accent,#101113)' }}>View item ›</span>
+                <span style={{ flex: 'none', fontSize: 12, fontWeight: 700, color: 'var(--accent,#000000)' }}>View item ›</span>
               </div>
             )}
             <div style={{ flex: 1, overflowY: 'auto', padding: '20px 22px', display: 'flex', flexDirection: 'column', gap: 10, background: '#F5F5F3' }}>
@@ -135,7 +135,7 @@ export default function MessagesView() {
               {s.msgs.map((m) => {
                 const mine = m.sender_id === uid
                 return (
-                  <div key={m.id} style={{ alignSelf: mine ? 'flex-end' : 'flex-start', maxWidth: '64%', background: mine ? 'var(--accent,#101113)' : '#FFFFFF', color: mine ? '#F7F3EA' : '#17181A', fontSize: 13.5, lineHeight: 1.45, padding: '10px 14px', borderRadius: mine ? '16px 16px 4px 16px' : '16px 16px 16px 4px', fontWeight: 500, boxShadow: '0 1px 2px rgba(18,19,21,.05)' }}>{m.content}</div>
+                  <div key={m.id} style={{ alignSelf: mine ? 'flex-end' : 'flex-start', maxWidth: '64%', background: mine ? 'var(--accent,#000000)' : '#FFFFFF', color: mine ? '#F7F3EA' : '#000000', fontSize: 13.5, lineHeight: 1.45, padding: '10px 14px', borderRadius: mine ? '16px 16px 4px 16px' : '16px 16px 16px 4px', fontWeight: 500, boxShadow: '0 1px 2px rgba(0,0,0,.05)' }}>{m.content}</div>
                 )
               })}
             </div>
@@ -148,9 +148,9 @@ export default function MessagesView() {
                   if (e.key === 'Enter') sendMsg()
                 }}
                 placeholder="Type a message…"
-                style={{ flex: 1, background: '#F5F5F3', border: '1.5px solid #D8D8D4', borderRadius: 0, padding: '12px 15px', fontSize: 13.5, fontFamily: 'inherit', fontWeight: 500, color: '#17181A' }}
+                style={{ flex: 1, background: '#F5F5F3', border: '1.5px solid #D8D8D4', borderRadius: 0, padding: '12px 15px', fontSize: 13.5, fontFamily: 'inherit', fontWeight: 500, color: '#000000' }}
               />
-              <button onClick={() => sendMsg()} className="lok-btn" style={{ border: 'none', background: 'var(--accent,#101113)', color: '#F7F3EA', fontFamily: 'inherit', fontWeight: 700, fontSize: 13.5, padding: '12px 20px', borderRadius: 0, cursor: 'pointer' }}>Send</button>
+              <button onClick={() => sendMsg()} className="lok-btn" style={{ border: 'none', background: 'var(--accent,#000000)', color: '#F7F3EA', fontFamily: 'inherit', fontWeight: 700, fontSize: 13.5, padding: '12px 20px', borderRadius: 0, cursor: 'pointer' }}>Send</button>
             </div>
           </div>
           )}

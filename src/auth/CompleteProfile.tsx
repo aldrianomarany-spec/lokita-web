@@ -39,7 +39,7 @@ const field: React.CSSProperties = {
   fontSize: 13.5,
   fontFamily: 'inherit',
   fontWeight: 500,
-  color: '#17181A',
+  color: '#000000',
 }
 
 const BUILDINGS: { v: BuildingCode; label: string }[] = [
@@ -146,7 +146,7 @@ export default function CompleteProfile() {
 
   return (
     <div style={rootStyle}>
-      <div style={{ width: '100%', maxWidth: 480, background: '#FFFFFF', border: '1px solid #D8D8D4', borderRadius: 0, padding: '30px 30px 28px', boxShadow: '0 30px 70px -30px rgba(18,19,21,.4)', animation: 'lok-rise-lg .4s ease both' }}>
+      <div style={{ width: '100%', maxWidth: 480, background: '#FFFFFF', border: '1px solid #D8D8D4', borderRadius: 0, padding: '30px 30px 28px', boxShadow: '0 30px 70px -30px rgba(0,0,0,.4)', animation: 'lok-rise-lg .4s ease both' }}>
         <div style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 11, color: '#9A927F', letterSpacing: '.08em', marginBottom: 8 }}>
           {name ? `WELCOME, ${name.toUpperCase()}` : 'ALMOST THERE'}
         </div>
@@ -220,7 +220,7 @@ export default function CompleteProfile() {
         <button
           onClick={submit}
           className="lok-btn"
-          style={{ width: '100%', border: 'none', background: 'var(--accent,#101113)', color: '#F5F1E8', fontFamily: 'inherit', fontWeight: 700, fontSize: 15, padding: 14, borderRadius: 0, cursor: 'pointer', boxShadow: '0 10px 24px -10px rgba(16,17,19,.8)', marginTop: 20, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 9 }}
+          style={{ width: '100%', border: 'none', background: 'var(--accent,#000000)', color: '#F5F1E8', fontFamily: 'inherit', fontWeight: 700, fontSize: 15, padding: 14, borderRadius: 0, cursor: 'pointer', boxShadow: '0 10px 24px -10px rgba(0,0,0,.8)', marginTop: 20, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 9 }}
         >
           {saving ? (
             <span className="lok-spin" style={{ width: 16, height: 16, border: '2px solid rgba(245,241,232,.4)', borderTopColor: '#F5F1E8', borderRadius: '50%', display: 'inline-block' }} />

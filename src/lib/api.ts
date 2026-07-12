@@ -1334,8 +1334,10 @@ export interface BannerRow {
   title: string
   subtitle: string | null
   cta_label: string | null
+  image_url: string | null
   target_type: 'category' | 'listing' | 'requests' | 'sell' | 'none'
   target_value: string | null
+  placement?: 'hero' | 'ticker' // pre-0023 rows have none -> treated as hero
   sort: number
   is_active: boolean
   created_at: string
@@ -1362,7 +1364,20 @@ export async function fetchAdminBanners(): Promise<BannerRow[]> {
   return (data as BannerRow[]) || []
 }
 
-export async function adminCreateBanner(b: Pick<BannerRow, 'title' | 'subtitle' | 'cta_label' | 'target_type' | 'target_value'>): Promise<void> {
+// Banner photo -> public bucket, under the admin's own folder (storage RLS
+// allows owner-folder writes; the bucket is public-read).
+export async function uploadBannerImage(rawFile: File): Promise<string> {
+  const user = await getUser()
+  if (!user) throw new Error('Not signed in')
+  const file = await compressImage(rawFile)
+  const ext = (file.name.split('.').pop() || 'jpg').toLowerCase()
+  const path = `${user.id}/banners/${Date.now()}.${ext}`
+  const { error } = await supabase.storage.from('listing-photos').upload(path, file, { upsert: true })
+  if (error) throw error
+  return supabase.storage.from('listing-photos').getPublicUrl(path).data.publicUrl
+}
+
+export async function adminCreateBanner(b: Pick<BannerRow, 'title' | 'subtitle' | 'cta_label' | 'target_type' | 'target_value'> & { image_url?: string | null; placement?: 'hero' | 'ticker' }): Promise<void> {
   const { error } = await supabase.from('banners').insert(b)
   if (error) throw error
 }

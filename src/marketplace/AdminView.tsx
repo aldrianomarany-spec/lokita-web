@@ -9,6 +9,7 @@ import {
   adminCreateBanner,
   adminSetBannerActive,
   adminDeleteBanner,
+  uploadBannerImage,
   adminSetListingStatus,
   adminSetFeatured,
   adminSetVerification,
@@ -35,9 +36,9 @@ const STATUS_CHIP: Record<string, { bg: string; fg: string }> = {
 
 function SmallBtn({ label, onClick, tone = 'plain', busy }: { label: string; onClick: () => void; tone?: 'plain' | 'danger' | 'accent'; busy?: boolean }) {
   const styles: Record<string, React.CSSProperties> = {
-    plain: { border: '1px solid #C9C9C5', background: '#F5F5F3', color: '#2A2B2E' },
+    plain: { border: '1px solid #C9C9C5', background: '#F5F5F3', color: '#1E1E1E' },
     danger: { border: '1px solid #E4C4B8', background: '#FBEEE9', color: '#C0492A' },
-    accent: { border: 'none', background: 'var(--accent,#101113)', color: '#F7F3EA' },
+    accent: { border: 'none', background: 'var(--accent,#000000)', color: '#F7F3EA' },
   }
   return (
     <button
@@ -51,6 +52,25 @@ function SmallBtn({ label, onClick, tone = 'plain', busy }: { label: string; onC
   )
 }
 
+function BannerList({ items, busyId, act, refresh }: { items: BannerRow[]; busyId: string | null; act: (id: string, fn: () => Promise<void>) => Promise<void>; refresh: () => void }) {
+  if (!items.length) return null
+  return (
+    <div style={{ marginTop: 12, borderTop: '1px solid #E6E6E3' }}>
+      {items.map((b) => (
+        <div key={b.id} style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', padding: '10px 2px', borderBottom: '1px solid #E6E6E3', opacity: b.is_active ? 1 : 0.55 }}>
+          {b.image_url && <img src={b.image_url} alt="" style={{ width: 44, height: 30, objectFit: 'cover', flex: 'none', border: '1px solid #E6E6E3' }} />}
+          <div style={{ flex: '1 1 200px', minWidth: 0 }}>
+            <div style={{ fontWeight: 700, fontSize: 13, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{b.title}</div>
+            <div style={{ fontSize: 11, color: '#8B8B86', fontWeight: 600 }}>{b.target_type === 'none' ? 'not clickable' : `→ ${b.target_type}${b.target_value ? ' · ' + b.target_value : ''}`}</div>
+          </div>
+          <SmallBtn label={b.is_active ? 'Hide' : 'Show'} busy={busyId === b.id} onClick={() => act(b.id, async () => { await adminSetBannerActive(b.id, !b.is_active); refresh() })} />
+          <SmallBtn label="Delete" tone="danger" busy={busyId === b.id} onClick={() => act(b.id, async () => { await adminDeleteBanner(b.id); refresh() })} />
+        </div>
+      ))}
+    </div>
+  )
+}
+
 export default function AdminView() {
   const { state, refreshReports, openMember } = useM()
   const isAdmin = !state.guest && state.profile.role === 'admin'
@@ -60,8 +80,11 @@ export default function AdminView() {
   const [members, setMembers] = useState<AdminMemberRow[] | null>(null)
   const [reports, setReports] = useState<AdminReportRow[] | null>(null)
   const [bannersA, setBannersA] = useState<BannerRow[] | null>(null)
-  const [bForm, setBForm] = useState({ title: '', subtitle: '', cta: '', target: 'none', value: '' })
+  const [bForm, setBForm] = useState({ title: '', subtitle: '', cta: '', target: 'none', value: '', placement: 'hero' })
   const [bSaving, setBSaving] = useState(false)
+  const [bImage, setBImage] = useState<File | null>(null)
+  const [tForm, setTForm] = useState({ title: '', target: 'none', value: '' })
+  const [tSaving, setTSaving] = useState(false)
   const [err, setErr] = useState<string | null>(null)
   const [busyId, setBusyId] = useState<string | null>(null)
 
@@ -100,7 +123,7 @@ export default function AdminView() {
     return (
       <div style={{ ...card, borderStyle: 'dashed', padding: '52px 32px', textAlign: 'center', color: '#8B8B86', maxWidth: 520, margin: '40px auto 0' }}>
         <div style={{ fontSize: 34, marginBottom: 12 }}>🛡️</div>
-        <div style={{ fontFamily: "'Bricolage Grotesque',sans-serif", fontWeight: 800, fontSize: 19, color: '#17181A', marginBottom: 8 }}>Admins only</div>
+        <div style={{ fontFamily: "'Bricolage Grotesque',sans-serif", fontWeight: 800, fontSize: 19, color: '#000000', marginBottom: 8 }}>Admins only</div>
         <div style={{ fontSize: 13.5, lineHeight: 1.6 }}>This area is for the LOKITA team. If that's you, ask for admin access.</div>
       </div>
     )
@@ -137,7 +160,7 @@ export default function AdminView() {
             <div style={{ ...mono, fontSize: 9.5, marginTop: 4 }}>{t.label}</div>
           </div>
         ))}
-        <div style={{ flex: '2 1 240px', background: '#17181A', borderRadius: 0, padding: '16px 18px', color: '#F7F3EA' }}>
+        <div style={{ flex: '2 1 240px', background: '#000000', borderRadius: 0, padding: '16px 18px', color: '#F7F3EA' }}>
           <div style={{ fontFamily: "'Bricolage Grotesque',sans-serif", fontSize: 26, fontWeight: 800, letterSpacing: '-.02em', color: '#8FB4E3' }}>
             {stats ? rp(stats.feeCollected) : '…'}
           </div>
@@ -155,7 +178,7 @@ export default function AdminView() {
       <div style={{ ...card, overflow: 'hidden', marginBottom: 26 }}>
         {reports === null ? (
           <div style={{ padding: 28, textAlign: 'center' }}>
-            <span className="lok-spin" style={{ width: 22, height: 22, border: '3px solid #D8D8D4', borderTopColor: 'var(--accent,#101113)', borderRadius: '50%', display: 'inline-block' }} />
+            <span className="lok-spin" style={{ width: 22, height: 22, border: '3px solid #D8D8D4', borderTopColor: 'var(--accent,#000000)', borderRadius: '50%', display: 'inline-block' }} />
           </div>
         ) : reports.length === 0 ? (
           <div style={{ padding: '30px 20px', textAlign: 'center', color: '#8B8B86', fontSize: 13 }}>No reports — all quiet. 🎉</div>
@@ -203,16 +226,16 @@ export default function AdminView() {
         )}
       </div>
 
-      {/* promotion banners — the homepage black slot */}
-      <div style={{ ...mono, marginBottom: 10 }}>PROMOTION BANNERS · HOMEPAGE SLOT</div>
+      {/* promotion banners — the big black homepage slot */}
+      <div style={{ ...mono, marginBottom: 10 }}>PROMOTION BANNERS · BIG BLACK SLOT</div>
       <div style={{ ...card, overflow: 'hidden', marginBottom: 26, padding: '14px 16px' }}>
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 8 }}>
-          <input className="lok-field" value={bForm.title} onChange={(e) => setBForm({ ...bForm, title: e.target.value })} placeholder="Headline (e.g. Graduation clearout week)" style={{ flex: '2 1 240px', background: '#F5F5F3', border: '1px solid #D8D8D4', borderRadius: 0, padding: '10px 12px', fontSize: 12.5, fontFamily: 'inherit', color: '#17181A' }} />
-          <input className="lok-field" value={bForm.subtitle} onChange={(e) => setBForm({ ...bForm, subtitle: e.target.value })} placeholder="Subtitle (optional)" style={{ flex: '2 1 220px', background: '#F5F5F3', border: '1px solid #D8D8D4', borderRadius: 0, padding: '10px 12px', fontSize: 12.5, fontFamily: 'inherit', color: '#17181A' }} />
+          <input className="lok-field" value={bForm.title} onChange={(e) => setBForm({ ...bForm, title: e.target.value })} placeholder="Headline (e.g. Graduation clearout week)" style={{ flex: '2 1 240px', background: '#F5F5F3', border: '1px solid #D8D8D4', borderRadius: 0, padding: '10px 12px', fontSize: 12.5, fontFamily: 'inherit', color: '#000000' }} />
+          <input className="lok-field" value={bForm.subtitle} onChange={(e) => setBForm({ ...bForm, subtitle: e.target.value })} placeholder="Subtitle (optional)" style={{ flex: '2 1 220px', background: '#F5F5F3', border: '1px solid #D8D8D4', borderRadius: 0, padding: '10px 12px', fontSize: 12.5, fontFamily: 'inherit', color: '#000000' }} />
         </div>
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
-          <input className="lok-field" value={bForm.cta} onChange={(e) => setBForm({ ...bForm, cta: e.target.value })} placeholder="Button label (e.g. Shop bundles)" style={{ flex: '1 1 170px', background: '#F5F5F3', border: '1px solid #D8D8D4', borderRadius: 0, padding: '10px 12px', fontSize: 12.5, fontFamily: 'inherit', color: '#17181A' }} />
-          <select className="lok-field" value={bForm.target} onChange={(e) => setBForm({ ...bForm, target: e.target.value })} title="Where the button goes" style={{ flex: 'none', background: '#F5F5F3', border: '1px solid #D8D8D4', borderRadius: 0, padding: '10px 12px', fontSize: 12.5, fontFamily: 'inherit', color: '#17181A' }}>
+          <input className="lok-field" value={bForm.cta} onChange={(e) => setBForm({ ...bForm, cta: e.target.value })} placeholder="Button label (e.g. Shop bundles)" style={{ flex: '1 1 170px', background: '#F5F5F3', border: '1px solid #D8D8D4', borderRadius: 0, padding: '10px 12px', fontSize: 12.5, fontFamily: 'inherit', color: '#000000' }} />
+          <select className="lok-field" value={bForm.target} onChange={(e) => setBForm({ ...bForm, target: e.target.value })} title="Where the button goes" style={{ flex: 'none', background: '#F5F5F3', border: '1px solid #D8D8D4', borderRadius: 0, padding: '10px 12px', fontSize: 12.5, fontFamily: 'inherit', color: '#000000' }}>
             <option value="none">No button</option>
             <option value="category">Open a category</option>
             <option value="listing">Open a listing</option>
@@ -220,8 +243,12 @@ export default function AdminView() {
             <option value="sell">Open the Sell form</option>
           </select>
           {(bForm.target === 'category' || bForm.target === 'listing') && (
-            <input className="lok-field" value={bForm.value} onChange={(e) => setBForm({ ...bForm, value: e.target.value })} placeholder={bForm.target === 'category' ? 'Category (e.g. Bundles)' : 'Listing id'} style={{ flex: '1 1 140px', background: '#F5F5F3', border: '1px solid #D8D8D4', borderRadius: 0, padding: '10px 12px', fontSize: 12.5, fontFamily: 'inherit', color: '#17181A' }} />
+            <input className="lok-field" value={bForm.value} onChange={(e) => setBForm({ ...bForm, value: e.target.value })} placeholder={bForm.target === 'category' ? 'Category (e.g. Bundles)' : 'Listing id'} style={{ flex: '1 1 140px', background: '#F5F5F3', border: '1px solid #D8D8D4', borderRadius: 0, padding: '10px 12px', fontSize: 12.5, fontFamily: 'inherit', color: '#000000' }} />
           )}
+          <label style={{ display: 'flex', alignItems: 'center', gap: 7, border: '1px dashed #C9C9C5', background: '#F5F5F3', padding: '9px 12px', fontSize: 11.5, fontWeight: 700, color: bImage ? '#000000' : '#8B8B86', cursor: 'pointer', flex: 'none' }}>
+            🖼️ {bImage ? bImage.name.slice(0, 18) : 'Add image (optional)'}
+            <input type="file" accept="image/*" onChange={(e) => setBImage(e.target.files?.[0] || null)} style={{ display: 'none' }} />
+          </label>
           <SmallBtn
             label={bSaving ? 'Publishing…' : 'Publish banner'}
             tone="accent"
@@ -230,8 +257,10 @@ export default function AdminView() {
               if (!bForm.title.trim() || bSaving) return
               setBSaving(true)
               try {
-                await adminCreateBanner({ title: bForm.title.trim(), subtitle: bForm.subtitle.trim() || null, cta_label: bForm.cta.trim() || null, target_type: bForm.target as BannerRow['target_type'], target_value: bForm.value.trim() || null })
-                setBForm({ title: '', subtitle: '', cta: '', target: 'none', value: '' })
+                const image_url = bImage ? await uploadBannerImage(bImage) : null
+                await adminCreateBanner({ title: bForm.title.trim(), subtitle: bForm.subtitle.trim() || null, cta_label: bForm.cta.trim() || null, target_type: bForm.target as BannerRow['target_type'], target_value: bForm.value.trim() || null, image_url, placement: 'hero' })
+                setBForm({ title: '', subtitle: '', cta: '', target: 'none', value: '', placement: 'hero' })
+                setBImage(null)
                 fetchAdminBanners().then(setBannersA).catch(() => {})
               } catch (e) {
                 alert('Could not publish: ' + (e instanceof Error ? e.message : 'run migration 0021 first?'))
@@ -241,20 +270,47 @@ export default function AdminView() {
             }}
           />
         </div>
-        {bannersA && bannersA.length > 0 && (
-          <div style={{ marginTop: 12, borderTop: '1px solid #E6E6E3' }}>
-            {bannersA.map((b) => (
-              <div key={b.id} style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', padding: '10px 2px', borderBottom: '1px solid #E6E6E3', opacity: b.is_active ? 1 : 0.55 }}>
-                <div style={{ flex: '1 1 200px', minWidth: 0 }}>
-                  <div style={{ fontWeight: 700, fontSize: 13, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{b.title}</div>
-                  <div style={{ fontSize: 11, color: '#8B8B86', fontWeight: 600 }}>{b.cta_label ? `${b.cta_label} → ${b.target_type}${b.target_value ? ' · ' + b.target_value : ''}` : 'no button'}</div>
-                </div>
-                <SmallBtn label={b.is_active ? 'Hide' : 'Show'} busy={busyId === b.id} onClick={() => act(b.id, async () => { await adminSetBannerActive(b.id, !b.is_active); fetchAdminBanners().then(setBannersA).catch(() => {}) })} />
-                <SmallBtn label="Delete" tone="danger" busy={busyId === b.id} onClick={() => act(b.id, async () => { await adminDeleteBanner(b.id); fetchAdminBanners().then(setBannersA).catch(() => {}) })} />
-              </div>
-            ))}
-          </div>
-        )}
+        <BannerList items={(bannersA || []).filter((b) => b.placement !== 'ticker')} busyId={busyId} act={act} refresh={() => fetchAdminBanners().then(setBannersA).catch(() => {})} />
+      </div>
+
+      {/* announcement ticker — the moving blue strip, its own section */}
+      <div style={{ ...mono, marginBottom: 10 }}>🔵 ANNOUNCEMENT TICKER · MOVING BLUE STRIP</div>
+      <div style={{ ...card, overflow: 'hidden', marginBottom: 26, padding: '14px 16px' }}>
+        <div style={{ fontSize: 12, color: '#8B8B86', fontWeight: 500, marginBottom: 10, lineHeight: 1.5 }}>
+          Short announcements that scroll across the top of every page. Keep them one sentence — several items chain together.
+        </div>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+          <input className="lok-field" value={tForm.title} onChange={(e) => setTForm({ ...tForm, title: e.target.value })} placeholder="Announcement (e.g. Welcome to LOKITA — trade safely via the Security Post)" style={{ flex: '2 1 300px', background: '#F5F5F3', border: '1px solid #D8D8D4', borderRadius: 0, padding: '10px 12px', fontSize: 12.5, fontFamily: 'inherit', color: '#000000' }} />
+          <select className="lok-field" value={tForm.target} onChange={(e) => setTForm({ ...tForm, target: e.target.value })} title="Where a tap goes" style={{ flex: 'none', background: '#F5F5F3', border: '1px solid #D8D8D4', borderRadius: 0, padding: '10px 12px', fontSize: 12.5, fontFamily: 'inherit', color: '#000000' }}>
+            <option value="none">Not clickable</option>
+            <option value="category">Opens a category</option>
+            <option value="listing">Opens a listing</option>
+            <option value="requests">Opens Requests</option>
+            <option value="sell">Opens the Sell form</option>
+          </select>
+          {(tForm.target === 'category' || tForm.target === 'listing') && (
+            <input className="lok-field" value={tForm.value} onChange={(e) => setTForm({ ...tForm, value: e.target.value })} placeholder={tForm.target === 'category' ? 'Category (e.g. Bundles)' : 'Listing id'} style={{ flex: '1 1 140px', background: '#F5F5F3', border: '1px solid #D8D8D4', borderRadius: 0, padding: '10px 12px', fontSize: 12.5, fontFamily: 'inherit', color: '#000000' }} />
+          )}
+          <SmallBtn
+            label={tSaving ? 'Publishing…' : 'Add to ticker'}
+            tone="accent"
+            busy={tSaving}
+            onClick={async () => {
+              if (!tForm.title.trim() || tSaving) return
+              setTSaving(true)
+              try {
+                await adminCreateBanner({ title: tForm.title.trim(), subtitle: null, cta_label: null, target_type: tForm.target as BannerRow['target_type'], target_value: tForm.value.trim() || null, placement: 'ticker' })
+                setTForm({ title: '', target: 'none', value: '' })
+                fetchAdminBanners().then(setBannersA).catch(() => {})
+              } catch (e) {
+                alert('Could not publish: ' + (e instanceof Error ? e.message : 'run migration 0023 first?'))
+              } finally {
+                setTSaving(false)
+              }
+            }}
+          />
+        </div>
+        <BannerList items={(bannersA || []).filter((b) => b.placement === 'ticker')} busyId={busyId} act={act} refresh={() => fetchAdminBanners().then(setBannersA).catch(() => {})} />
       </div>
 
       {/* listings moderation */}
@@ -262,7 +318,7 @@ export default function AdminView() {
       <div style={{ ...card, overflow: 'hidden', marginBottom: 26 }}>
         {listings === null ? (
           <div style={{ padding: 28, textAlign: 'center' }}>
-            <span className="lok-spin" style={{ width: 22, height: 22, border: '3px solid #D8D8D4', borderTopColor: 'var(--accent,#101113)', borderRadius: '50%', display: 'inline-block' }} />
+            <span className="lok-spin" style={{ width: 22, height: 22, border: '3px solid #D8D8D4', borderTopColor: 'var(--accent,#000000)', borderRadius: '50%', display: 'inline-block' }} />
           </div>
         ) : listings.length === 0 ? (
           <div style={{ padding: '30px 20px', textAlign: 'center', color: '#8B8B86', fontSize: 13 }}>No listings yet.</div>
@@ -303,14 +359,14 @@ export default function AdminView() {
       <div style={{ ...card, overflow: 'hidden', marginBottom: 30 }}>
         {members === null ? (
           <div style={{ padding: 28, textAlign: 'center' }}>
-            <span className="lok-spin" style={{ width: 22, height: 22, border: '3px solid #D8D8D4', borderTopColor: 'var(--accent,#101113)', borderRadius: '50%', display: 'inline-block' }} />
+            <span className="lok-spin" style={{ width: 22, height: 22, border: '3px solid #D8D8D4', borderTopColor: 'var(--accent,#000000)', borderRadius: '50%', display: 'inline-block' }} />
           </div>
         ) : members.length === 0 ? (
           <div style={{ padding: '30px 20px', textAlign: 'center', color: '#8B8B86', fontSize: 13 }}>No members yet.</div>
         ) : (
           members.map((m) => (
             <div key={m.id} style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap', padding: '12px 16px', borderBottom: '1px solid #E6E6E3' }}>
-              <div style={{ width: 36, height: 36, borderRadius: '50%', background: '#DBE1EA', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 14, color: '#2A2B2E', flex: 'none', fontFamily: "'Bricolage Grotesque',sans-serif" }}>
+              <div style={{ width: 36, height: 36, borderRadius: '50%', background: '#DBE1EA', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 14, color: '#1E1E1E', flex: 'none', fontFamily: "'Bricolage Grotesque',sans-serif" }}>
                 {(m.name.charAt(0) || '?').toUpperCase()}
               </div>
               <div style={{ flex: '1 1 200px', minWidth: 0 }}>

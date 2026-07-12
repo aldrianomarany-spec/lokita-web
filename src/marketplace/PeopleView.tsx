@@ -39,12 +39,12 @@ export default function PeopleView() {
 
       {members === null ? (
         <div style={{ height: '30vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <span className="lok-spin" style={{ width: 24, height: 24, border: '3px solid #D8D8D4', borderTopColor: 'var(--accent,#101113)', borderRadius: '50%', display: 'inline-block' }} />
+          <span className="lok-spin" style={{ width: 24, height: 24, border: '3px solid #D8D8D4', borderTopColor: 'var(--accent,#000000)', borderRadius: '50%', display: 'inline-block' }} />
         </div>
       ) : sorted.length === 0 ? (
         <div style={{ background: '#FFFFFF', border: '1px dashed #C9C9C5', borderRadius: 0, padding: '52px 32px', textAlign: 'center', color: '#8B8B86' }}>
           <div style={{ fontSize: 34, marginBottom: 12 }}>👋</div>
-          <div style={{ fontFamily: "'Bricolage Grotesque',sans-serif", fontWeight: 800, fontSize: 19, color: '#17181A', marginBottom: 8 }}>No members yet</div>
+          <div style={{ fontFamily: "'Bricolage Grotesque',sans-serif", fontWeight: 800, fontSize: 19, color: '#000000', marginBottom: 8 }}>No members yet</div>
           <div style={{ fontSize: 13.5, lineHeight: 1.6 }}>Invite your dorm-mates — everyone who signs up appears here.</div>
         </div>
       ) : (
@@ -55,7 +55,7 @@ export default function PeopleView() {
             return (
               <div key={m.id} style={{ background: '#FFFFFF', border: '1px solid #D8D8D4', borderRadius: 0, padding: '13px 16px', display: 'flex', alignItems: 'center', gap: 13 }}>
                 <div style={{ position: 'relative', flex: 'none' }}>
-                  <div style={{ width: 46, height: 46, borderRadius: '50%', background: '#DBE1EA', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 17, color: '#2A2B2E', fontFamily: "'Bricolage Grotesque',sans-serif", overflow: 'hidden' }}>
+                  <div style={{ width: 46, height: 46, borderRadius: '50%', background: '#DBE1EA', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 17, color: '#1E1E1E', fontFamily: "'Bricolage Grotesque',sans-serif", overflow: 'hidden' }}>
                     {m.photo ? <img src={m.photo} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : (m.name.charAt(0) || '?').toUpperCase()}
                   </div>
                   <span
@@ -79,7 +79,7 @@ export default function PeopleView() {
                   <button
                     onClick={() => openMember(m.id, m.name)}
                     className="lok-btn"
-                    style={{ border: '1px solid #C9C9C5', background: '#F5F5F3', color: '#17181A', fontFamily: 'inherit', fontWeight: 700, fontSize: 12.5, padding: '9px 13px', borderRadius: 0, cursor: 'pointer' }}
+                    style={{ border: '1px solid #C9C9C5', background: '#F5F5F3', color: '#000000', fontFamily: 'inherit', fontWeight: 700, fontSize: 12.5, padding: '9px 13px', borderRadius: 0, cursor: 'pointer' }}
                   >
                     Profile
                   </button>
@@ -88,7 +88,7 @@ export default function PeopleView() {
                       onClick={() => openRequestChat(m.id)}
                       className="lok-btn"
                       title={`Message ${m.name}`}
-                      style={{ border: 'none', background: 'var(--accent,#101113)', color: '#F7F3EA', fontFamily: 'inherit', fontWeight: 700, fontSize: 12.5, padding: '9px 13px', borderRadius: 0, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}
+                      style={{ border: 'none', background: 'var(--accent,#000000)', color: '#F7F3EA', fontFamily: 'inherit', fontWeight: 700, fontSize: 12.5, padding: '9px 13px', borderRadius: 0, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}
                     >
                       <MessageBubble size={14} />
                       Message

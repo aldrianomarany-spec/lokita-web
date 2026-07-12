@@ -7,7 +7,7 @@ import { BRAND_LOGO_URL } from '../brand'
 
 const navBtn: React.CSSProperties = {
   position: 'relative',
-  border: '1px solid #2E2F33',
+  border: '1px solid #222222',
   width: 42,
   height: 42,
   borderRadius: 0,
@@ -47,7 +47,7 @@ const Avatar = ({ photo, initial, size, radius, fontSize }: { photo: string | nu
       width: size,
       height: size,
       borderRadius: radius,
-      background: 'var(--accent,#101113)',
+      background: 'var(--accent,#000000)',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
@@ -96,7 +96,7 @@ export default function TopBar() {
       style={{
         height: 70,
         flex: 'none',
-        background: '#101113',
+        background: '#000000',
         borderBottom: 'none',
         display: 'flex',
         alignItems: 'center',
@@ -126,14 +126,14 @@ export default function TopBar() {
             className="lok-btn"
             onClick={() => setBldgOpen((v) => !v)}
             title="Filter the marketplace by building"
-            style={{ cursor: 'pointer', border: '1px solid #2E2F33', display: 'flex', alignItems: 'center', gap: 9, fontFamily: 'inherit', fontWeight: 500, fontSize: 13, color: '#F5F5F3', background: '#1B1C1F', padding: '9px 13px', borderRadius: 0 }}
+            style={{ cursor: 'pointer', border: '1px solid #222222', display: 'flex', alignItems: 'center', gap: 9, fontFamily: 'inherit', fontWeight: 500, fontSize: 13, color: '#F5F5F3', background: '#141414', padding: '9px 13px', borderRadius: 0 }}
           >
             <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#C8A96A' }} />
             {s.bldg === 'All' ? 'All buildings' : s.bldg}
             <span style={{ fontFamily: "'Spline Sans Mono',monospace", fontWeight: 500, fontSize: 10, color: '#9A9A94' }}>JIU · CIKARANG ▾</span>
           </button>
           {bldgOpen && (
-            <div style={{ position: 'absolute', top: 46, left: 0, width: 230, background: '#FFFFFF', border: '1px solid #D8D8D4', borderRadius: 0, boxShadow: '0 20px 44px -16px rgba(18,19,21,.35)', padding: 8, zIndex: 70, animation: 'lok-pop .16s ease both' }}>
+            <div style={{ position: 'absolute', top: 46, left: 0, width: 230, background: '#FFFFFF', border: '1px solid #D8D8D4', borderRadius: 0, boxShadow: '0 20px 44px -16px rgba(0,0,0,.35)', padding: 8, zIndex: 70, animation: 'lok-pop .16s ease both' }}>
               {['All', ...BUILDINGS].map((b) => {
                 const active = s.bldg === b
                 return (
@@ -178,7 +178,7 @@ export default function TopBar() {
             setQuery(e.target.value)
           }}
           placeholder={isPhone ? 'Search…' : 'Search your dorm — desk, mini fridge, textbooks…'}
-          style={{ flex: 1, minWidth: 0, border: 'none', background: 'none', outline: 'none', fontFamily: 'inherit', fontSize: 14, fontWeight: 500, color: '#17181A' }}
+          style={{ flex: 1, minWidth: 0, border: 'none', background: 'none', outline: 'none', fontFamily: 'inherit', fontSize: 14, fontWeight: 500, color: '#000000' }}
         />
         {s.query && (
           <span onClick={clearQuery} style={{ cursor: 'pointer', color: '#9A9A94', fontSize: 13, fontWeight: 700 }}>
@@ -193,8 +193,8 @@ export default function TopBar() {
           {!isPhone && (
             <span style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 10, color: '#8B8B86', letterSpacing: '.08em', marginRight: 4 }}>BROWSING AS GUEST</span>
           )}
-          <button className="lok-btn" onClick={goLogin} style={{ border: '1px solid #2E2F33', background: '#1B1C1F', color: '#F5F5F3', fontFamily: 'inherit', fontWeight: 700, fontSize: 13.5, padding: '10px 15px', borderRadius: 0, cursor: 'pointer' }}>Log in</button>
-          <button className="lok-btn" onClick={goSignup} style={{ border: 'none', background: '#C8A96A', color: '#101113', fontFamily: 'inherit', fontWeight: 700, fontSize: 13.5, padding: '10px 16px', borderRadius: 0, cursor: 'pointer' }}>Sign up — it's free</button>
+          <button className="lok-btn" onClick={goLogin} style={{ border: '1px solid #222222', background: '#141414', color: '#F5F5F3', fontFamily: 'inherit', fontWeight: 700, fontSize: 13.5, padding: '10px 15px', borderRadius: 0, cursor: 'pointer' }}>Log in</button>
+          <button className="lok-btn" onClick={goSignup} style={{ border: 'none', background: '#C8A96A', color: '#000000', fontFamily: 'inherit', fontWeight: 700, fontSize: 13.5, padding: '10px 16px', borderRadius: 0, cursor: 'pointer' }}>Sign up — it's free</button>
         </div>
       ) : (
       <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: isPhone ? 8 : 12, flex: 'none' }}>
@@ -211,12 +211,12 @@ export default function TopBar() {
           </>
         )}
 
-        <button className="lok-navi" onClick={openMessages} title="Messages" style={{ ...navBtn, background: msgActive ? '#C8A96A' : '#1B1C1F', color: msgActive ? '#101113' : '#D8D8D4' }}>
+        <button className="lok-navi" onClick={openMessages} title="Messages" style={{ ...navBtn, background: msgActive ? '#C8A96A' : '#141414', color: msgActive ? '#000000' : '#D8D8D4' }}>
           <MessageBubble />
           {unreadCount > 0 && badge(unreadCount)}
         </button>
 
-        <button className="lok-navi" onClick={openNotifs} title="Notifications" style={{ ...navBtn, background: notifActive ? '#C8A96A' : '#1B1C1F', color: notifActive ? '#101113' : '#D8D8D4' }}>
+        <button className="lok-navi" onClick={openNotifs} title="Notifications" style={{ ...navBtn, background: notifActive ? '#C8A96A' : '#141414', color: notifActive ? '#000000' : '#D8D8D4' }}>
           <Bell />
           {notifBadge > 0 && badge(notifBadge)}
         </button>
@@ -232,7 +232,7 @@ export default function TopBar() {
       {/* profile dropdown */}
       {!guest && s.menuOpen && (
         <div
-          style={{ position: 'absolute', top: 64, right: 22, width: 264, background: '#FFFFFF', border: '1px solid #D8D8D4', borderRadius: 0, boxShadow: '0 24px 50px -18px rgba(18,19,21,.4)', padding: 16, zIndex: 60, animation: 'lok-pop .18s ease both' }}
+          style={{ position: 'absolute', top: 64, right: 22, width: 264, background: '#FFFFFF', border: '1px solid #D8D8D4', borderRadius: 0, boxShadow: '0 24px 50px -18px rgba(0,0,0,.4)', padding: 16, zIndex: 60, animation: 'lok-pop .18s ease both' }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, paddingBottom: 13, borderBottom: '1px solid #E6E6E3' }}>
             <Avatar photo={s.photo} initial={profileInitial} size={46} radius="50%" fontSize={19} />
@@ -268,7 +268,7 @@ export default function TopBar() {
                 patch({ menuOpen: false })
                 m.act()
               }}
-              style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 11, fontWeight: 600, fontSize: 13.5, padding: '10px 10px', borderRadius: 0, color: '#2A2B2E' }}
+              style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 11, fontWeight: 600, fontSize: 13.5, padding: '10px 10px', borderRadius: 0, color: '#1E1E1E' }}
             >
               {m.icon} {m.label}
             </div>
