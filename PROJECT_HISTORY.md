@@ -92,6 +92,13 @@ Everything needed to continue is in these two files + the git commit history
     banner manager. Look tags for instant restore: `look-warm-editorial`,
     `look-grid-market`, `look-noir-gold`.
 
+16. **Jet black + banner system completed**: pure #000 chrome; banners gained images
+    (migration 0022, admin-uploaded, compressed, fills the hero's right half), an
+    always-present gold CTA button, and a **moving blue announcement ticker** (migration
+    0023 `placement` column — admins choose "Big black banner" or "Moving blue ticker"
+    per banner; the ticker marquees above the top bar on every view, pauses on hover,
+    items clickable, realtime).
+
 ### 4. Deployment
 - **GitHub** `aldrianomarany-spec/lokita-web` — work branch `lokita-web-v2`,
   **production deploys from `main`** (merge via GitHub's green PR button).

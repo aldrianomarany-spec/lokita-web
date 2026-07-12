@@ -2,6 +2,7 @@ import { MarketplaceProvider, useM } from './context'
 import { ACCENT, ACCENT_DEEP } from '../theme'
 import { useIsPhone } from './useIsMobile'
 import TopBar from './TopBar'
+import Ticker from './Ticker'
 import TabBar from './TabBar'
 import Sidebar from './Sidebar'
 import BrowseView from './BrowseView'
@@ -40,6 +41,7 @@ function Shell() {
     <div style={rootStyle}>
       <input id="lok-photo-input" type="file" accept="image/*" onChange={onPhoto} style={{ display: 'none' }} />
 
+      <Ticker />
       <TopBar />
 
       {/* restricted-account notice — writes are blocked by DB policy */}

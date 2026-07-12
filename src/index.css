@@ -323,3 +323,18 @@ body {
   font-family: ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace !important;
 }
 /* ===== end GRID MARKET skin ================================================ */
+
+
+/* moving announcement ticker (banner placement='ticker') */
+@keyframes lok-marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+.lok-ticker-track {
+  display: flex;
+  width: max-content;
+  animation: lok-marquee var(--ticker-speed, 28s) linear infinite;
+}
+.lok-ticker:hover .lok-ticker-track {
+  animation-play-state: paused;
+}

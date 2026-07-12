@@ -61,7 +61,7 @@ export default function AdminView() {
   const [members, setMembers] = useState<AdminMemberRow[] | null>(null)
   const [reports, setReports] = useState<AdminReportRow[] | null>(null)
   const [bannersA, setBannersA] = useState<BannerRow[] | null>(null)
-  const [bForm, setBForm] = useState({ title: '', subtitle: '', cta: '', target: 'none', value: '' })
+  const [bForm, setBForm] = useState({ title: '', subtitle: '', cta: '', target: 'none', value: '', placement: 'hero' })
   const [bSaving, setBSaving] = useState(false)
   const [bImage, setBImage] = useState<File | null>(null)
   const [err, setErr] = useState<string | null>(null)
@@ -214,6 +214,10 @@ export default function AdminView() {
         </div>
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
           <input className="lok-field" value={bForm.cta} onChange={(e) => setBForm({ ...bForm, cta: e.target.value })} placeholder="Button label (e.g. Shop bundles)" style={{ flex: '1 1 170px', background: '#F5F5F3', border: '1px solid #D8D8D4', borderRadius: 0, padding: '10px 12px', fontSize: 12.5, fontFamily: 'inherit', color: '#000000' }} />
+          <select className="lok-field" value={bForm.placement} onChange={(e) => setBForm({ ...bForm, placement: e.target.value })} title="Where the banner appears" style={{ flex: 'none', background: '#F5F5F3', border: '1px solid #D8D8D4', borderRadius: 0, padding: '10px 12px', fontSize: 12.5, fontFamily: 'inherit', color: '#000000' }}>
+            <option value="hero">Big black banner</option>
+            <option value="ticker">Moving blue ticker</option>
+          </select>
           <select className="lok-field" value={bForm.target} onChange={(e) => setBForm({ ...bForm, target: e.target.value })} title="Where the button goes" style={{ flex: 'none', background: '#F5F5F3', border: '1px solid #D8D8D4', borderRadius: 0, padding: '10px 12px', fontSize: 12.5, fontFamily: 'inherit', color: '#000000' }}>
             <option value="none">No button</option>
             <option value="category">Open a category</option>
@@ -237,8 +241,8 @@ export default function AdminView() {
               setBSaving(true)
               try {
                 const image_url = bImage ? await uploadBannerImage(bImage) : null
-                await adminCreateBanner({ title: bForm.title.trim(), subtitle: bForm.subtitle.trim() || null, cta_label: bForm.cta.trim() || null, target_type: bForm.target as BannerRow['target_type'], target_value: bForm.value.trim() || null, image_url })
-                setBForm({ title: '', subtitle: '', cta: '', target: 'none', value: '' })
+                await adminCreateBanner({ title: bForm.title.trim(), subtitle: bForm.subtitle.trim() || null, cta_label: bForm.cta.trim() || null, target_type: bForm.target as BannerRow['target_type'], target_value: bForm.value.trim() || null, image_url, placement: bForm.placement as 'hero' | 'ticker' })
+                setBForm({ title: '', subtitle: '', cta: '', target: 'none', value: '', placement: 'hero' })
                 setBImage(null)
                 fetchAdminBanners().then(setBannersA).catch(() => {})
               } catch (e) {
@@ -256,7 +260,7 @@ export default function AdminView() {
                 {b.image_url && <img src={b.image_url} alt="" style={{ width: 44, height: 30, objectFit: 'cover', flex: 'none', border: '1px solid #E6E6E3' }} />}
                 <div style={{ flex: '1 1 200px', minWidth: 0 }}>
                   <div style={{ fontWeight: 700, fontSize: 13, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{b.title}</div>
-                  <div style={{ fontSize: 11, color: '#8B8B86', fontWeight: 600 }}>{b.cta_label ? `${b.cta_label} → ${b.target_type}${b.target_value ? ' · ' + b.target_value : ''}` : 'no button'}</div>
+                  <div style={{ fontSize: 11, color: '#8B8B86', fontWeight: 600 }}>{b.placement === 'ticker' ? '🔵 ticker · ' : '⬛ hero · '}{b.cta_label ? `${b.cta_label} → ${b.target_type}${b.target_value ? ' · ' + b.target_value : ''}` : 'no button'}</div>
                 </div>
                 <SmallBtn label={b.is_active ? 'Hide' : 'Show'} busy={busyId === b.id} onClick={() => act(b.id, async () => { await adminSetBannerActive(b.id, !b.is_active); fetchAdminBanners().then(setBannersA).catch(() => {}) })} />
                 <SmallBtn label="Delete" tone="danger" busy={busyId === b.id} onClick={() => act(b.id, async () => { await adminDeleteBanner(b.id); fetchAdminBanners().then(setBannersA).catch(() => {}) })} />

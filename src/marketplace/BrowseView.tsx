@@ -97,7 +97,7 @@ export default function BrowseView() {
   const [slide, setSlide] = useState(0)
   useEffect(() => {
     let live = true
-    const load = () => fetchBanners().then((b) => live && setBanners(b))
+    const load = () => fetchBanners().then((b) => live && setBanners(b.filter((x) => x.placement !== 'ticker')))
     load()
     const unsub = subscribeBanners(load)
     return () => {

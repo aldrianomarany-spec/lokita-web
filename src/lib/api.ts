@@ -1337,6 +1337,7 @@ export interface BannerRow {
   image_url: string | null
   target_type: 'category' | 'listing' | 'requests' | 'sell' | 'none'
   target_value: string | null
+  placement?: 'hero' | 'ticker' // pre-0023 rows have none -> treated as hero
   sort: number
   is_active: boolean
   created_at: string
@@ -1376,7 +1377,7 @@ export async function uploadBannerImage(rawFile: File): Promise<string> {
   return supabase.storage.from('listing-photos').getPublicUrl(path).data.publicUrl
 }
 
-export async function adminCreateBanner(b: Pick<BannerRow, 'title' | 'subtitle' | 'cta_label' | 'target_type' | 'target_value'> & { image_url?: string | null }): Promise<void> {
+export async function adminCreateBanner(b: Pick<BannerRow, 'title' | 'subtitle' | 'cta_label' | 'target_type' | 'target_value'> & { image_url?: string | null; placement?: 'hero' | 'ticker' }): Promise<void> {
   const { error } = await supabase.from('banners').insert(b)
   if (error) throw error
 }
