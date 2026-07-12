@@ -18,7 +18,7 @@ export default function Sidebar() {
         <button
           onClick={openRequests}
           className="lok-navi"
-          style={{ width: '100%', border: 'none', cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left', display: 'flex', alignItems: 'center', gap: 12, fontWeight: 600, fontSize: 14, padding: '10px 12px', borderRadius: 0, background: s.view === 'requests' ? '#E9EDFC' : 'transparent', color: s.view === 'requests' ? '#2441B8' : '#3A3B3E', marginBottom: 2 }}
+          style={{ width: '100%', border: 'none', cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left', display: 'flex', alignItems: 'center', gap: 12, fontWeight: 600, fontSize: 14, padding: '10px 12px', borderRadius: 0, background: s.view === 'requests' ? '#F6F0E3' : 'transparent', color: s.view === 'requests' ? '#8A6C34' : '#3A3B3E', marginBottom: 2 }}
         >
           <span style={{ width: 26, height: 26, borderRadius: 0, background: '#E7EEF7', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, flex: 'none' }}>🙋</span>
           <span style={{ flex: 1 }}>Requests</span>
@@ -28,7 +28,7 @@ export default function Sidebar() {
           <button
             onClick={openPeople}
             className="lok-navi"
-            style={{ width: '100%', border: 'none', cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left', display: 'flex', alignItems: 'center', gap: 12, fontWeight: 600, fontSize: 14, padding: '10px 12px', borderRadius: 0, background: s.view === 'people' ? '#E9EDFC' : 'transparent', color: s.view === 'people' ? '#2441B8' : '#3A3B3E', marginBottom: 2 }}
+            style={{ width: '100%', border: 'none', cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left', display: 'flex', alignItems: 'center', gap: 12, fontWeight: 600, fontSize: 14, padding: '10px 12px', borderRadius: 0, background: s.view === 'people' ? '#F6F0E3' : 'transparent', color: s.view === 'people' ? '#8A6C34' : '#3A3B3E', marginBottom: 2 }}
           >
             <span style={{ width: 26, height: 26, borderRadius: 0, background: '#E7F1EA', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, flex: 'none' }}>👋</span>
             <span style={{ flex: 1 }}>People</span>
@@ -43,7 +43,7 @@ export default function Sidebar() {
           <button
             onClick={openAdmin}
             className="lok-navi"
-            style={{ width: '100%', border: 'none', cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left', display: 'flex', alignItems: 'center', gap: 12, fontWeight: 600, fontSize: 14, padding: '10px 12px', borderRadius: 0, background: s.view === 'admin' ? '#E9EDFC' : 'transparent', color: s.view === 'admin' ? '#2441B8' : '#3A3B3E', marginBottom: 2 }}
+            style={{ width: '100%', border: 'none', cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left', display: 'flex', alignItems: 'center', gap: 12, fontWeight: 600, fontSize: 14, padding: '10px 12px', borderRadius: 0, background: s.view === 'admin' ? '#F6F0E3' : 'transparent', color: s.view === 'admin' ? '#8A6C34' : '#3A3B3E', marginBottom: 2 }}
           >
             <span style={{ width: 26, height: 26, borderRadius: 0, background: '#F1E4E0', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, flex: 'none' }}>🛡️</span>
             <span style={{ flex: 1 }}>Admin</span>
@@ -66,7 +66,7 @@ export default function Sidebar() {
               key={label}
               onClick={() => selectCat(label)}
               className="lok-navi"
-              style={{ width: '100%', border: 'none', cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left', display: 'flex', alignItems: 'center', gap: 12, fontWeight: 600, fontSize: 14, padding: '10px 12px', borderRadius: 0, background: active ? '#E9EDFC' : 'transparent', color: active ? '#2441B8' : '#3A3B3E', marginBottom: 2 }}
+              style={{ width: '100%', border: 'none', cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left', display: 'flex', alignItems: 'center', gap: 12, fontWeight: 600, fontSize: 14, padding: '10px 12px', borderRadius: 0, background: active ? '#F6F0E3' : 'transparent', color: active ? '#8A6C34' : '#3A3B3E', marginBottom: 2 }}
             >
               <span style={{ width: 26, height: 26, borderRadius: 0, background: CAT_DOT[label], display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, flex: 'none' }}>{CAT_META[label]}</span>
               <span style={{ flex: 1 }}>{label}</span>
@@ -76,7 +76,7 @@ export default function Sidebar() {
         })}
       </div>
 
-      <div style={{ marginTop: 'auto', background: 'var(--accent,#2A5FA8)', borderRadius: 0, padding: 17, color: '#EAF3EE', position: 'relative', overflow: 'hidden' }}>
+      <div style={{ marginTop: 'auto', background: 'var(--accent,#101113)', borderRadius: 0, padding: 17, color: '#EAF3EE', position: 'relative', overflow: 'hidden' }}>
         <div style={{ position: 'absolute', top: -20, right: -20, width: 80, height: 80, borderRadius: '50%', background: 'rgba(255,255,255,.07)' }} />
         {MASCOT_URL && <img src={MASCOT_URL} alt="" aria-hidden className="lok-mascot" style={{ position: 'absolute', right: -8, bottom: -12, width: 74, opacity: 0.95, transform: 'rotate(6deg)' }} />}
         <div style={{ display: 'flex', alignItems: 'center', gap: 7, fontSize: 13.5, fontWeight: 800, marginBottom: 7, color: '#fff' }}>

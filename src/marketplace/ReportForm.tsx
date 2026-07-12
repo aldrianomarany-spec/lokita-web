@@ -57,7 +57,7 @@ export default function ReportForm({ targetType, targetId, label }: { targetType
               key={r}
               onClick={() => setReason(r)}
               className="lok-btn"
-              style={{ cursor: 'pointer', fontFamily: 'inherit', fontSize: 11.5, fontWeight: 700, padding: '6px 11px', borderRadius: 0, border: `1.5px solid ${on ? 'var(--accent,#2A5FA8)' : '#C9C9C5'}`, background: on ? '#E9EDFC' : '#FFFFFF', color: on ? '#2441B8' : '#4A4B4E' }}
+              style={{ cursor: 'pointer', fontFamily: 'inherit', fontSize: 11.5, fontWeight: 700, padding: '6px 11px', borderRadius: 0, border: `1.5px solid ${on ? 'var(--accent,#101113)' : '#C9C9C5'}`, background: on ? '#F6F0E3' : '#FFFFFF', color: on ? '#8A6C34' : '#4A4B4E' }}
             >
               {r}
             </button>

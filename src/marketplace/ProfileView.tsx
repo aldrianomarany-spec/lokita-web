@@ -21,8 +21,8 @@ const metaField = (label: string, value: string) => (
 function VerifyBadge({ status }: { status?: string }) {
   if (status === 'verified') {
     return (
-      <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, fontWeight: 800, color: '#2441B8', background: '#E9EDFC', border: '1px solid #C7D2F2', padding: '6px 11px', borderRadius: 0 }}>
-        <Verified size={14} checkColor="#E9EDFC" /> Dorm-Verified Student
+      <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, fontWeight: 800, color: '#8A6C34', background: '#F6F0E3', border: '1px solid #E2D3AF', padding: '6px 11px', borderRadius: 0 }}>
+        <Verified size={14} checkColor="#F6F0E3" /> Dorm-Verified Student
       </span>
     )
   }
@@ -90,7 +90,7 @@ function AccountPrivacyCard() {
           <div style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 10, color: '#9A9A94', letterSpacing: '.06em', marginBottom: 7 }}>👁️ OTHER MEMBERS SEE</div>
           <div style={{ fontSize: 12.5, color: '#4A4B4E', lineHeight: 1.7, fontWeight: 500 }}>your name & photo · building + floor · batch & standing · rating, reviews & listings</div>
         </div>
-        <div style={{ flex: '1 1 260px', background: '#E9EDFC', border: '1px solid #C7D2F2', borderRadius: 0, padding: '13px 15px' }}>
+        <div style={{ flex: '1 1 260px', background: '#F6F0E3', border: '1px solid #E2D3AF', borderRadius: 0, padding: '13px 15px' }}>
           <div style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 10, color: '#4A8067', letterSpacing: '.06em', marginBottom: 7 }}>🔒 ONLY YOU SEE</div>
           <div style={{ fontSize: 12.5, color: '#3E4F45', lineHeight: 1.7, fontWeight: 500 }}>WhatsApp number · student ID · email · room number — never shown to other members. All contact happens in-app.</div>
         </div>
@@ -105,7 +105,7 @@ function AccountPrivacyCard() {
           onClick={savePw}
           disabled={pwState !== 'idle'}
           className="lok-btn"
-          style={{ flex: 'none', border: 'none', background: pwState === 'done' ? '#3DBB6E' : 'var(--accent,#2A5FA8)', color: '#F7F3EA', fontFamily: 'inherit', fontWeight: 700, fontSize: 13, padding: '12px 20px', borderRadius: 0, cursor: pwState === 'idle' ? 'pointer' : 'default', transition: 'background .2s ease' }}
+          style={{ flex: 'none', border: 'none', background: pwState === 'done' ? '#3DBB6E' : 'var(--accent,#101113)', color: '#F7F3EA', fontFamily: 'inherit', fontWeight: 700, fontSize: 13, padding: '12px 20px', borderRadius: 0, cursor: pwState === 'idle' ? 'pointer' : 'default', transition: 'background .2s ease' }}
         >
           {pwState === 'saving' ? 'Saving…' : pwState === 'done' ? 'Password changed ✓' : 'Change password'}
         </button>
@@ -169,7 +169,7 @@ export default function ProfileView() {
   if (s.profileLoading) {
     return (
       <div style={{ height: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <span className="lok-spin" style={{ width: 26, height: 26, border: '3px solid #D8D8D4', borderTopColor: 'var(--accent,#2A5FA8)', borderRadius: '50%', display: 'inline-block' }} />
+        <span className="lok-spin" style={{ width: 26, height: 26, border: '3px solid #D8D8D4', borderTopColor: 'var(--accent,#101113)', borderRadius: '50%', display: 'inline-block' }} />
       </div>
     )
   }
@@ -184,7 +184,7 @@ export default function ProfileView() {
   const stats = s.stats
   const ratingLabel = stats && stats.avgRating != null ? stats.avgRating.toFixed(1) : '—'
   const statTiles = [
-    { value: String(stats?.selling ?? 0), label: 'Selling', color: 'var(--accent,#2A5FA8)' },
+    { value: String(stats?.selling ?? 0), label: 'Selling', color: 'var(--accent,#101113)' },
     { value: String(stats?.sold ?? 0), label: 'Sold', color: '#1E9E5A' },
     { value: String(stats?.buying ?? 0), label: 'Buying', color: '#17181A' },
     { value: ratingLabel, label: `${stats?.reviewCount ?? 0} reviews`, color: '#17181A' },
@@ -198,7 +198,7 @@ export default function ProfileView() {
       {/* identity */}
       <div style={{ background: '#FFFFFF', border: '1px solid #D8D8D4', borderRadius: 0, padding: '26px 28px', display: 'flex', gap: 24, alignItems: 'flex-start', marginBottom: 14 }}>
         <div style={{ position: 'relative', flex: 'none' }}>
-          <div style={{ width: 96, height: 96, borderRadius: 0, background: 'var(--accent,#2A5FA8)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#F7F3EA', fontWeight: 800, fontSize: 38, fontFamily: "'Bricolage Grotesque',sans-serif", overflow: 'hidden' }}>
+          <div style={{ width: 96, height: 96, borderRadius: 0, background: 'var(--accent,#101113)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#F7F3EA', fontWeight: 800, fontSize: 38, fontFamily: "'Bricolage Grotesque',sans-serif", overflow: 'hidden' }}>
             {avatarUrl ? <img src={avatarUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : profileInitial}
           </div>
           <button onClick={pickPhoto} className="lok-btn" title="Change photo" disabled={s.photoUploading} style={{ position: 'absolute', bottom: -7, right: -7, width: 34, height: 34, borderRadius: 0, border: '2.5px solid #FFFFFF', background: '#17181A', color: '#F7F3EA', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
@@ -225,7 +225,7 @@ export default function ProfileView() {
       </div>
 
       {/* verification banner */}
-      <div style={{ background: 'var(--accent,#2A5FA8)', borderRadius: 0, padding: '16px 20px', display: 'flex', alignItems: 'center', gap: 14, marginBottom: 20, position: 'relative', overflow: 'hidden' }}>
+      <div style={{ background: 'var(--accent,#101113)', borderRadius: 0, padding: '16px 20px', display: 'flex', alignItems: 'center', gap: 14, marginBottom: 20, position: 'relative', overflow: 'hidden' }}>
         <div style={{ position: 'absolute', top: -30, right: 40, width: 110, height: 110, borderRadius: '50%', background: 'rgba(255,255,255,.06)' }} />
         <div style={{ width: 42, height: 42, borderRadius: 0, background: 'rgba(255,255,255,.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', flex: 'none' }}>
           <ShieldCheck size={22} />
@@ -247,10 +247,10 @@ export default function ProfileView() {
               onClick={() => idFileRef.current?.click()}
               disabled={idUploading}
               className="lok-btn"
-              style={{ flex: 'none', position: 'relative', border: 'none', background: '#FFFFFF', color: 'var(--accent,#2A5FA8)', fontFamily: 'inherit', fontWeight: 800, fontSize: 13, padding: '11px 16px', borderRadius: 0, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}
+              style={{ flex: 'none', position: 'relative', border: 'none', background: '#FFFFFF', color: 'var(--accent,#101113)', fontFamily: 'inherit', fontWeight: 800, fontSize: 13, padding: '11px 16px', borderRadius: 0, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}
             >
               {idUploading ? (
-                <span className="lok-spin" style={{ width: 14, height: 14, border: '2px solid #C9D6E8', borderTopColor: 'var(--accent,#2A5FA8)', borderRadius: '50%', display: 'inline-block' }} />
+                <span className="lok-spin" style={{ width: 14, height: 14, border: '2px solid #C9D6E8', borderTopColor: 'var(--accent,#101113)', borderRadius: '50%', display: 'inline-block' }} />
               ) : (
                 'Upload student ID'
               )}
@@ -291,7 +291,7 @@ export default function ProfileView() {
       {wishlist && wishlist.length > 0 ? (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(200px,1fr))', gap: 16, marginBottom: 32 }}>
           {wishlist.map((it) => (
-            <SmallCard key={it.id} title={it.title} price={rupiah(it.price)} badge="SAVED" badgeBg="#E9EDFC" badgeFg="#2441B8" photoUrl={it.photoUrl} onClick={() => openItem(dbListingToItem(it))} />
+            <SmallCard key={it.id} title={it.title} price={rupiah(it.price)} badge="SAVED" badgeBg="#F6F0E3" badgeFg="#8A6C34" photoUrl={it.photoUrl} onClick={() => openItem(dbListingToItem(it))} />
           ))}
         </div>
       ) : (
@@ -315,7 +315,7 @@ export default function ProfileView() {
       ) : (
         <div style={{ ...emptyBox, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14 }}>
           <div>You have no listings yet.</div>
-          <button onClick={openSell} className="lok-btn" style={{ border: 'none', background: 'var(--accent,#2A5FA8)', color: '#F7F3EA', fontFamily: 'inherit', fontWeight: 700, fontSize: 13.5, padding: '11px 18px', borderRadius: 0, cursor: 'pointer' }}>Post your first item</button>
+          <button onClick={openSell} className="lok-btn" style={{ border: 'none', background: 'var(--accent,#101113)', color: '#F7F3EA', fontFamily: 'inherit', fontWeight: 700, fontSize: 13.5, padding: '11px 18px', borderRadius: 0, cursor: 'pointer' }}>Post your first item</button>
         </div>
       )}
 

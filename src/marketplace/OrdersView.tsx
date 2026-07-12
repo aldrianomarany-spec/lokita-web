@@ -9,7 +9,7 @@ const when = (iso: string | null) => (iso && !isNaN(new Date(iso).getTime()) ? n
 const STATUS_META: Record<OrderStatus, { label: string; bg: string; fg: string }> = {
   pending: { label: 'Awaiting seller confirmation', bg: '#FBF2DD', fg: '#9A6A12' },
   paid: { label: 'Accepted · awaiting drop-off', bg: '#EFEFDD', fg: '#7E8154' },
-  dropped_off: { label: 'Ready for pickup', bg: '#E7EEF7', fg: '#2A5FA8' },
+  dropped_off: { label: 'Ready for pickup', bg: '#E7EEF7', fg: '#101113' },
   completed: { label: 'Completed', bg: '#E7F1EA', fg: '#1E9E5A' },
   cancelled: { label: 'Cancelled', bg: '#EFE7D9', fg: '#8B8B86' },
 }
@@ -62,7 +62,7 @@ function OrderCard({ o }: { o: OrderRow }) {
           </div>
         </div>
         <div style={{ textAlign: 'right', flex: 'none' }}>
-          <div style={{ fontFamily: "'Bricolage Grotesque',sans-serif", fontWeight: 800, fontSize: 18, color: 'var(--accent,#2A5FA8)' }}>{rupiah(o.listing_price)}</div>
+          <div style={{ fontFamily: "'Bricolage Grotesque',sans-serif", fontWeight: 800, fontSize: 18, color: 'var(--accent,#101113)' }}>{rupiah(o.listing_price)}</div>
           <span style={{ display: 'inline-block', marginTop: 5, fontFamily: "'Spline Sans Mono',monospace", fontSize: 10, fontWeight: 600, color: sm.fg, background: sm.bg, padding: '3px 8px', borderRadius: 0 }}>{sm.label}</span>
         </div>
       </div>
@@ -139,7 +139,7 @@ function OrderCard({ o }: { o: OrderRow }) {
 }
 
 const chip: React.CSSProperties = { fontFamily: "'Spline Sans Mono',monospace", fontSize: 10, color: '#2A2B2E', background: '#ECECEA', padding: '5px 10px', borderRadius: 0 }
-const primaryBtn: React.CSSProperties = { border: 'none', background: 'var(--accent,#2A5FA8)', color: '#F7F3EA', fontFamily: 'inherit', fontWeight: 700, fontSize: 13, padding: '10px 16px', borderRadius: 0, cursor: 'pointer' }
+const primaryBtn: React.CSSProperties = { border: 'none', background: 'var(--accent,#101113)', color: '#F7F3EA', fontFamily: 'inherit', fontWeight: 700, fontSize: 13, padding: '10px 16px', borderRadius: 0, cursor: 'pointer' }
 const ghostBtn: React.CSSProperties = { border: '1px solid #C9C9C5', background: '#F5F5F3', color: '#17181A', fontFamily: 'inherit', fontWeight: 700, fontSize: 13, padding: '10px 16px', borderRadius: 0, cursor: 'pointer' }
 
 export default function OrdersView() {
@@ -157,7 +157,7 @@ export default function OrdersView() {
 
       {s.ordersLoading ? (
         <div style={{ height: '40vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <span className="lok-spin" style={{ width: 26, height: 26, border: '3px solid #D8D8D4', borderTopColor: 'var(--accent,#2A5FA8)', borderRadius: '50%', display: 'inline-block' }} />
+          <span className="lok-spin" style={{ width: 26, height: 26, border: '3px solid #D8D8D4', borderTopColor: 'var(--accent,#101113)', borderRadius: '50%', display: 'inline-block' }} />
         </div>
       ) : s.ordersError ? (
         <div style={{ background: '#FBEEE9', border: '1px solid #E4C4B8', borderRadius: 0, padding: 24, color: '#B23A1B', fontWeight: 600, textAlign: 'center' }}>Couldn't load orders: {s.ordersError}</div>

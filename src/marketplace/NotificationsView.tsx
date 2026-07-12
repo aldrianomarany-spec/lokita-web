@@ -80,7 +80,7 @@ export default function NotificationsView() {
 
       {s.notifsLoading && s.notifs.length === 0 ? (
         <div style={{ height: '30vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <span className="lok-spin" style={{ width: 24, height: 24, border: '3px solid #D8D8D4', borderTopColor: 'var(--accent,#2A5FA8)', borderRadius: '50%', display: 'inline-block' }} />
+          <span className="lok-spin" style={{ width: 24, height: 24, border: '3px solid #D8D8D4', borderTopColor: 'var(--accent,#101113)', borderRadius: '50%', display: 'inline-block' }} />
         </div>
       ) : filtered.length > 0 ? (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>

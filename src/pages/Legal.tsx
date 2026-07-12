@@ -18,15 +18,15 @@ function Shell({ title, label, children }: { title: string; label: string; child
   return (
     <div style={wrap}>
       <div style={card}>
-        <Link to="/" style={{ fontSize: 13, fontWeight: 700, color: 'var(--accent,#2A5FA8)', textDecoration: 'none' }}>‹ Back to LOKITA</Link>
+        <Link to="/" style={{ fontSize: 13, fontWeight: 700, color: 'var(--accent,#101113)', textDecoration: 'none' }}>‹ Back to LOKITA</Link>
         <div style={{ ...mono, marginTop: 20 }}>{label}</div>
         <h1 style={h1}>{title}</h1>
         <div style={{ ...mono, fontSize: 10, marginBottom: 8 }}>LAST UPDATED · {UPDATED.toUpperCase()}</div>
         {children}
         <div style={{ marginTop: 34, paddingTop: 18, borderTop: '1px dashed #C9C9C5', fontSize: 13, color: '#8B8B86' }}>
           Questions? Contact the LOKITA team: <b style={{ color: '#17181A' }}>{CONTACT}</b> ·{' '}
-          <Link to="/terms" style={{ color: 'var(--accent,#2A5FA8)' }}>Terms</Link> ·{' '}
-          <Link to="/privacy" style={{ color: 'var(--accent,#2A5FA8)' }}>Privacy</Link>
+          <Link to="/terms" style={{ color: 'var(--accent,#101113)' }}>Terms</Link> ·{' '}
+          <Link to="/privacy" style={{ color: 'var(--accent,#101113)' }}>Privacy</Link>
         </div>
       </div>
     </div>
