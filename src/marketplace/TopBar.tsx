@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useM } from './context'
 import { useIsPhone } from './useIsMobile'
-import { Search, Plus, Star, MessageBubble, Bell, Verified } from '../components/Icons'
+import { Search, MessageBubble, Bell, Verified } from '../components/Icons'
 import { BUILDINGS } from '../theme'
 import { BRAND_LOGO_URL } from '../brand'
 
@@ -198,24 +198,17 @@ export default function TopBar() {
         </div>
       ) : (
       <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: isPhone ? 8 : 12, flex: 'none' }}>
-        {/* Post: full button on desktop; on phone it's a floating button (see Shell) */}
+        {/* Grid Market top nav: Sell / Saved as text links (like the mock);
+            phones keep the tab bar + category-strip equivalents */}
         {!isPhone && (
-          <button
-            className="lok-btn"
-            onClick={openSell}
-            style={{ border: 'none', background: 'var(--accent,#2A5FA8)', color: '#F7F3EA', fontFamily: 'inherit', fontWeight: 700, fontSize: 14, padding: '11px 18px', borderRadius: 0, cursor: 'pointer', boxShadow: '0 6px 16px -6px rgba(53,85,230,.7)', display: 'flex', alignItems: 'center', gap: 8 }}
-          >
-            <Plus />
-            Post an item
-          </button>
-        )}
-
-        {/* Saved: on phone it lives as a chip in the category bar */}
-        {!isPhone && (
-          <button className="lok-navi" onClick={toggleSavedView} title="Saved" style={{ ...navBtn, background: s.savedOnly ? '#FBF2DD' : '#F5F5F3', color: s.savedOnly ? '#E7A81E' : '#4A4B4E' }}>
-            <Star fill={s.savedOnly ? '#E7A81E' : 'none'} size={20} />
-            {savedCount > 0 && badge(savedCount)}
-          </button>
+          <>
+            <button className="lok-navi" onClick={openSell} style={{ border: 'none', background: 'none', cursor: 'pointer', fontFamily: "'Archivo',sans-serif", fontWeight: 500, fontSize: 13, color: '#17181A', padding: '8px 4px' }}>
+              Sell
+            </button>
+            <button className="lok-navi" onClick={toggleSavedView} style={{ border: 'none', background: 'none', cursor: 'pointer', fontFamily: "'Archivo',sans-serif", fontWeight: s.savedOnly ? 700 : 500, fontSize: 13, color: s.savedOnly ? 'var(--accent,#3555E6)' : '#17181A', padding: '8px 4px' }}>
+              Saved{savedCount > 0 ? ` (${savedCount})` : ''}
+            </button>
+          </>
         )}
 
         <button className="lok-navi" onClick={openMessages} title="Messages" style={{ ...navBtn, background: msgActive ? '#E9EDFC' : '#F5F5F3', color: msgActive ? '#2441B8' : '#4A4B4E' }}>
