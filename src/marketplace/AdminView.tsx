@@ -17,6 +17,9 @@ import {
   adminSetBanned,
   adminDeleteUser,
   fetchTickerSettings,
+  fetchAdminBoosts,
+  adminResolveBoost,
+  type BoostRow,
   adminSetTickerSettings,
   type TickerSettings,
   adminSetReportStatus,
@@ -125,6 +128,8 @@ function BannerList({ items, busyId, act, refresh }: { items: BannerRow[]; busyI
   )
 }
 
+const CTA_PRESETS = ['Shop now', 'See details', 'Check it out', 'Shop bundles', 'Sell yours', 'Learn more', 'Grab yours']
+
 export default function AdminView() {
   const { state, refreshReports, openMember } = useM()
   const isAdmin = !state.guest && state.profile.role === 'admin'
@@ -141,6 +146,7 @@ export default function AdminView() {
   const [tForm, setTForm] = useState({ title: '', target: 'none', value: '' })
   const [tSaving, setTSaving] = useState(false)
   const [tickerCfg, setTickerCfg] = useState<TickerSettings | null>(null)
+  const [boosts, setBoosts] = useState<BoostRow[] | null>(null)
   const [err, setErr] = useState<string | null>(null)
   const [busyId, setBusyId] = useState<string | null>(null)
   // inline student-ID viewer (signed URL from the private verification bucket)
@@ -177,6 +183,7 @@ export default function AdminView() {
       const [s, l, m, r] = await Promise.all([fetchAdminStats(), fetchAdminListings(), fetchAdminMembers(), fetchAdminReports()])
       fetchAdminBanners().then(setBannersA).catch(() => setBannersA([]))
       fetchTickerSettings().then(setTickerCfg).catch(() => setTickerCfg(null))
+      fetchAdminBoosts().then(setBoosts).catch(() => setBoosts(null))
       fetchAdminTrends().then(setTrends).catch(() => setTrends(null)) // errors → hide the analytics section
       setStats(s)
       setListings(l)
@@ -344,6 +351,46 @@ export default function AdminView() {
         )}
       </div>
 
+      {/* boost requests — sellers paying for the FEATURED slot (manual payment confirm) */}
+      {boosts !== null && (
+        <>
+          <div style={{ ...mono, marginBottom: 10 }}>
+            🚀 BOOST REQUESTS {boosts.filter((b) => b.status === 'pending').length > 0 ? `· ${boosts.filter((b) => b.status === 'pending').length} PENDING` : ''}
+          </div>
+          <div style={{ ...card, overflow: 'hidden', marginBottom: 26 }}>
+            {boosts.length === 0 ? (
+              <div style={{ padding: '18px 20px', color: '#8B8B86', fontSize: 12.5 }}>
+                No boost requests yet. When a seller taps 🚀 Boost on their listing, it lands here — confirm their payment in chat, then Approve to give them the FEATURED slot.
+              </div>
+            ) : (
+              [...boosts]
+                .sort((a, b) => (a.status === 'pending' ? 0 : 1) - (b.status === 'pending' ? 0 : 1))
+                .map((b) => (
+                  <div key={b.id} style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap', padding: '12px 16px', borderBottom: '1px solid #E6E6E3', opacity: b.status === 'pending' ? 1 : 0.55 }}>
+                    <span style={{ flex: 'none', fontSize: 16 }}>🚀</span>
+                    <div style={{ flex: '1 1 220px', minWidth: 0 }}>
+                      <div style={{ fontWeight: 700, fontSize: 13.5, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{b.listing_title}</div>
+                      <div style={{ fontSize: 11.5, color: '#8B8B86', fontWeight: 600, marginTop: 2 }}>
+                        {b.seller_name} · {b.days} days · Rp {b.amount.toLocaleString('id-ID')}
+                      </div>
+                    </div>
+                    {b.status === 'pending' ? (
+                      <div style={{ display: 'flex', gap: 7, flex: 'none' }}>
+                        <SmallBtn label="Approve ✓ (paid)" tone="accent" busy={busyId === b.id} onClick={() => act(b.id, async () => { await adminResolveBoost(b, true); fetchAdminBoosts().then(setBoosts).catch(() => {}) })} />
+                        <SmallBtn label="Reject ✗" tone="danger" busy={busyId === b.id} onClick={() => act(b.id, async () => { await adminResolveBoost(b, false); fetchAdminBoosts().then(setBoosts).catch(() => {}) })} />
+                      </div>
+                    ) : (
+                      <span style={{ ...mono, fontSize: 9, color: b.status === 'approved' ? '#3D7A54' : '#B23A1B', background: b.status === 'approved' ? '#E8F2F7' : '#FBEEE9', padding: '4px 9px', flex: 'none' }}>
+                        {b.status.toUpperCase()}
+                      </span>
+                    )}
+                  </div>
+                ))
+            )}
+          </div>
+        </>
+      )}
+
       {/* promotion banners — the big black homepage slot */}
       <div style={{ ...mono, marginBottom: 10 }}>PROMOTION BANNERS · BIG BLACK SLOT</div>
       <div style={{ ...card, overflow: 'hidden', marginBottom: 26, padding: '14px 16px' }}>
@@ -352,7 +399,20 @@ export default function AdminView() {
           <input className="lok-field" value={bForm.subtitle} onChange={(e) => setBForm({ ...bForm, subtitle: e.target.value })} placeholder="Subtitle (optional)" style={{ flex: '2 1 220px', background: '#F5F5F3', border: '1px solid #D8D8D4', borderRadius: 0, padding: '10px 12px', fontSize: 12.5, fontFamily: 'inherit', color: '#000000' }} />
         </div>
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
-          <input className="lok-field" value={bForm.cta} onChange={(e) => setBForm({ ...bForm, cta: e.target.value })} placeholder="Button label (e.g. Shop bundles)" style={{ flex: '1 1 170px', background: '#F5F5F3', border: '1px solid #D8D8D4', borderRadius: 0, padding: '10px 12px', fontSize: 12.5, fontFamily: 'inherit', color: '#000000' }} />
+          <select
+            className="lok-field"
+            value={CTA_PRESETS.includes(bForm.cta) || bForm.cta === '' ? bForm.cta : '__custom'}
+            onChange={(e) => setBForm({ ...bForm, cta: e.target.value === '__custom' ? ' ' : e.target.value })}
+            title="Button label"
+            style={{ flex: 'none', background: '#F5F5F3', border: '1px solid #D8D8D4', borderRadius: 0, padding: '10px 12px', fontSize: 12.5, fontFamily: 'inherit', color: '#000000' }}
+          >
+            <option value="">Button: default (See details)</option>
+            {CTA_PRESETS.map((c) => <option key={c} value={c}>Button: {c}</option>)}
+            <option value="__custom">Button: custom…</option>
+          </select>
+          {bForm.cta !== '' && !CTA_PRESETS.includes(bForm.cta) && (
+            <input className="lok-field" autoFocus value={bForm.cta.trimStart()} onChange={(e) => setBForm({ ...bForm, cta: e.target.value || ' ' })} placeholder="Custom button label" style={{ flex: '1 1 140px', background: '#F5F5F3', border: '1px solid #D8D8D4', borderRadius: 0, padding: '10px 12px', fontSize: 12.5, fontFamily: 'inherit', color: '#000000' }} />
+          )}
           <select className="lok-field" value={bForm.target} onChange={(e) => setBForm({ ...bForm, target: e.target.value })} title="Where the button goes" style={{ flex: 'none', background: '#F5F5F3', border: '1px solid #D8D8D4', borderRadius: 0, padding: '10px 12px', fontSize: 12.5, fontFamily: 'inherit', color: '#000000' }}>
             <option value="none">No button</option>
             <option value="category">Open a category</option>

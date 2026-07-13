@@ -3,7 +3,7 @@ import { MASCOT_URL } from '../brand'
 import { useLang } from '../i18n'
 
 export default function Sidebar() {
-  const { state, openRequests, openPeople, openAdmin, openSell, toggleSavedView } = useM()
+  const { state, openRequests, openPeople, openAdmin, openGuide, openSell, toggleSavedView } = useM()
   const { t } = useLang()
   const s = state
   const counts = s.categoryCounts
@@ -39,6 +39,15 @@ export default function Sidebar() {
             </span>
           </button>
         )}
+        <button
+          onClick={openGuide}
+          className="lok-navi"
+          style={{ width: '100%', border: 'none', cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left', display: 'flex', alignItems: 'center', gap: 12, fontWeight: 600, fontSize: 14, padding: '10px 12px', borderRadius: 0, background: s.view === 'guide' ? '#E8F2F7' : 'transparent', color: s.view === 'guide' ? '#2F6B85' : '#3A3B3E', marginBottom: 2 }}
+        >
+          <span style={{ width: 26, height: 26, borderRadius: 0, background: '#EDF5F9', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, flex: 'none' }}>📖</span>
+          <span style={{ flex: 1 }}>{t('Guide')}</span>
+          <span style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 9, color: '#ABABA6', fontWeight: 500 }}>{t('HOW-TO')}</span>
+        </button>
         {/* only rendered for role='admin' — RLS guards the data either way */}
         {!s.guest && s.profile.role === 'admin' && (
           <button

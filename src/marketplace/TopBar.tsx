@@ -5,6 +5,7 @@ import { Search, MessageBubble, Bell, Verified } from '../components/Icons'
 import { BUILDINGS } from '../theme'
 import { BRAND_LOGO_URL } from '../brand'
 import { useLang, LangToggle } from '../i18n'
+import DarkToggle from '../components/DarkToggle'
 
 const navBtn: React.CSSProperties = {
   position: 'relative',
@@ -189,8 +190,9 @@ export default function TopBar() {
         )}
       </div>
 
-      {/* language switch — EN | Bahasa Indonesia, remembered on this device */}
+      {/* language + dark mode — remembered on this device */}
       {!isPhone && <LangToggle dark />}
+      {!isPhone && <DarkToggle dark />}
 
       {/* actions — guests get a different, minimal interface */}
       {guest ? (
@@ -280,9 +282,12 @@ export default function TopBar() {
           ))}
           {/* phones have no room in the header — language switch lives here */}
           {isPhone && (
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 10px 2px', borderTop: '1px solid #E6E6E3', marginTop: 6 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, padding: '10px 10px 2px', borderTop: '1px solid #E6E6E3', marginTop: 6 }}>
               <span style={{ fontSize: 12.5, fontWeight: 600, color: '#5F6063' }}>🌐 {t('Language')}</span>
-              <LangToggle />
+              <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                <LangToggle />
+                <DarkToggle />
+              </div>
             </div>
           )}
         </div>

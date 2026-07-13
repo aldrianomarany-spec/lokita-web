@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useM } from './context'
 import type { NotifRow, NotifType } from '../lib/api'
 import { enableSystemAlerts, systemAlertsGranted, systemAlertsSupported } from '../lib/alerts'
+import { enablePush } from '../lib/push'
 import { useLang } from '../i18n'
 
 const s2 = (children: React.ReactNode) => (
@@ -76,7 +77,14 @@ export default function NotificationsView() {
       {systemAlertsSupported() && !alertsOn && (
         <button
           className="lok-btn"
-          onClick={() => enableSystemAlerts().then(setAlertsOn)}
+          onClick={() =>
+            enableSystemAlerts().then((ok) => {
+              setAlertsOn(ok)
+              // also register true Web Push (rings even when the site is closed);
+              // silently skipped until the VAPID key is configured
+              if (ok) enablePush()
+            })
+          }
           style={{ width: '100%', border: '1px solid #519BB8', background: '#EDF5F9', color: '#27607A', fontFamily: 'inherit', fontWeight: 700, fontSize: 13, padding: '12px 14px', borderRadius: 0, cursor: 'pointer', marginBottom: 16, textAlign: 'left' }}
         >
           🔔 {t('Enable popup alerts — get pinged even when LOKITA is in another tab.')}

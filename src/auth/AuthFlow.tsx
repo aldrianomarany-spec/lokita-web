@@ -4,6 +4,7 @@ import { ACCENT, ACCENT_DEEP } from '../theme'
 import { BRAND_LOGO_URL, MASCOT_URL } from '../brand'
 import { useLang, LangToggle } from '../i18n'
 import Footer from '../components/Footer'
+import DarkToggle from '../components/DarkToggle'
 import {
   signInWithEmail,
   signUpWithEmail,
@@ -327,8 +328,9 @@ export default function AuthFlow() {
 
       {/* language switch — pinned top-right over the light form panel so a
           visitor can pick EN/ID before logging in (splash sits above it) */}
-      <div style={{ position: 'absolute', top: 18, right: 22, zIndex: 40 }}>
+      <div style={{ position: 'absolute', top: 18, right: 22, zIndex: 40, display: 'flex', gap: 8, alignItems: 'center' }}>
         <LangToggle />
+        <DarkToggle />
       </div>
 
       {/* ================= AUTH (split) ================= */}

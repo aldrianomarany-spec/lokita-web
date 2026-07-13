@@ -79,7 +79,7 @@ function GridCard({ it, saved, onOpen, onSave }: { it: EnrichedItem; saved: bool
 }
 
 export default function BrowseView() {
-  const { state, enrichedItems, selectCond, selectSort, resetFilters, openSell, selectCat, toggleSavedView, selectBldg, openRequests, openPeople, openItem, toggleSaveItem, goSignup, openListingById } = useM()
+  const { state, enrichedItems, selectCond, selectSort, resetFilters, openSell, selectCat, toggleSavedView, selectBldg, openRequests, openPeople, openGuide, openItem, toggleSaveItem, goSignup, openListingById } = useM()
   const s = state
   const isNarrow = useIsNarrow()
   const { t } = useLang()
@@ -152,6 +152,7 @@ export default function BrowseView() {
           <button onClick={openRequests} style={{ ...chip(false), flex: 'none' }}>🙋 {t('Requests')}</button>
           {!s.guest && <button onClick={openPeople} style={{ ...chip(false), flex: 'none' }}>👋 {t('People')}</button>}
           <button onClick={toggleSavedView} style={{ ...chip(s.savedOnly), flex: 'none' }}>★ {t('Saved')}</button>
+          <button onClick={openGuide} style={{ ...chip(false), flex: 'none' }}>📖 {t('Guide')}</button>
           {CATEGORIES.map((label: Category) => {
             const active = s.cat === label && !s.savedOnly
             const count = label === 'All' ? totalCount : counts[label] || 0

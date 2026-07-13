@@ -14,6 +14,7 @@ import NotificationsView from './NotificationsView'
 import ProfileView from './ProfileView'
 import OrdersView from './OrdersView'
 import AdminView from './AdminView'
+import GuideView from './GuideView'
 import DetailModal from './modals/DetailModal'
 import SellModal from './modals/SellModal'
 import EditProfileModal from './modals/EditProfileModal'
@@ -66,6 +67,7 @@ function Shell() {
           {s.view === 'orders' && <OrdersView />}
           {s.view === 'profile' && <ProfileView />}
           {s.view === 'admin' && <AdminView />}
+          {s.view === 'guide' && <GuideView />}
           <Footer />
         </main>
       </div>

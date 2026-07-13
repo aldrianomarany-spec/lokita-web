@@ -10,11 +10,6 @@ export default function Ticker() {
   const { state, selectCat, openListingById, openRequests, openSell, goSignup } = useM()
   const [items, setItems] = useState<BannerRow[]>([])
   const [cfg, setCfg] = useState<TickerSettings>({ speed: 'normal', clickable: true })
-  // hover/touch pauses the scroll so items are easy to read and click.
-  // Done in React state (inline animationPlayState) — the pure-CSS :hover
-  // rule proved unreliable across browsers/overlays.
-  const [paused, setPaused] = useState(false)
-  const touchTimer = useRef<number | null>(null)
   // seamless loop: the track is 2 identical halves and slides -50%; each half
   // must be at least as wide as the strip, so short announcement sets are
   // repeated k times. Measured, so it always loops perfectly.
@@ -73,16 +68,9 @@ export default function Ticker() {
     <div
       ref={boxRef}
       className="lok-ticker"
-      onMouseEnter={() => setPaused(true)}
-      onMouseLeave={() => setPaused(false)}
-      onTouchStart={() => {
-        setPaused(true)
-        if (touchTimer.current) window.clearTimeout(touchTimer.current)
-        touchTimer.current = window.setTimeout(() => setPaused(false), 4000)
-      }}
       style={{ flex: 'none', background: '#519BB8', color: '#FFFFFF', overflow: 'hidden', fontFamily: "'Spline Sans Mono',monospace", fontSize: 12, fontWeight: 600, letterSpacing: '.02em', padding: '7px 0', zIndex: 41 }}
     >
-      <div className="lok-ticker-track" style={{ ['--ticker-speed' as string]: `${dur}s`, animationPlayState: paused ? 'paused' : 'running' } as React.CSSProperties}>
+      <div className="lok-ticker-track" style={{ ['--ticker-speed' as string]: `${dur}s` } as React.CSSProperties}>
         {/* first half: one measured set + (k-1) fillers; second half: identical */}
         <span ref={setRef} style={{ display: 'inline-flex' }}>{row(0)}</span>
         {Array.from({ length: reps - 1 }, (_, i) => row(i + 1))}

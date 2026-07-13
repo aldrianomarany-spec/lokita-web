@@ -221,6 +221,23 @@ Also shipped (steel-blue batch, 2026-07-13, migration 0026):
 - Banner/ticker target pickers are dropdowns (category list, active-listing
   list) — no more typing listing ids.
 
+Also shipped (pro batch, 2026-07-13, migration 0027):
+- **True Web Push**: public/sw.js + src/lib/push.ts (subscribes with
+  VITE_VAPID_PUBLIC_KEY, saves to push_subscriptions) + api/push/send.js
+  (Vercel fn, web-push, fired by a Supabase Database Webhook on
+  notifications INSERT, guarded by PUSH_WEBHOOK_SECRET). Owner setup steps
+  in docs/PUSH_SETUP.md — until configured everything fails soft.
+- **Featured boosts**: 🚀 Boost on own listing (3d Rp3.000 / 7d Rp5.000) →
+  boost_requests → Control Room BOOST REQUESTS queue → Approve sets
+  is_featured + featured_until; expire_featured() sweeps on app start.
+  Payment is confirmed manually in chat until Midtrans.
+- **Dark mode (beta)**: inversion-based (index.css html[data-theme='dark'],
+  images re-inverted), 🌙 toggle next to the language switch, localStorage.
+- **Guidebook**: GuideView.tsx (view 'guide'), 📖 in sidebar + phone strip;
+  bilingual buying/selling steps + feature glossary + house rules.
+- Ticker never pauses (decoration behaviour per owner request); banner
+  button labels come from CTA presets dropdown (+ custom).
+
 Remaining / nice-to-have:
 - **Real Midtrans QRIS** — deliberately last; blocked on the owner signing up for
   Midtrans. api/qris scaffolding exists; currently prototype/static-QR mode.

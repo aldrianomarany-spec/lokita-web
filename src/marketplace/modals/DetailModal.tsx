@@ -9,12 +9,13 @@ import ReportForm from '../ReportForm'
 import { ChevronRight, MapPin, MessageBubble, ShieldCheck, Star, Verified } from '../../components/Icons'
 
 export default function DetailModal() {
-  const { state, closeDetail, chatSeller, openCheckout, openMember, deleteMyListing, toggleSaveItem, goSignup, sendOffer } = useM()
+  const { state, closeDetail, chatSeller, openCheckout, openMember, deleteMyListing, toggleSaveItem, goSignup, sendOffer, boostListing } = useM()
   const [deleting, setDeleting] = useState(false)
   const [photoIdx, setPhotoIdx] = useState(0)
   const [copied, setCopied] = useState(false)
   const [offerOpen, setOfferOpen] = useState(false)
   const [offerVal, setOfferVal] = useState('')
+  const [boostState, setBoostState] = useState<'idle' | 'busy' | 'sent'>('idle')
   const isPhone = useIsPhone()
   const { t } = useLang()
   const guest = state.guest
@@ -201,9 +202,44 @@ export default function DetailModal() {
                 <div style={{ textAlign: 'center', fontSize: 12, color: '#8B8B86', fontWeight: 500 }}>{t("You're browsing as a guest. Create an account to trade with")} {sel.seller}.</div>
               </>
             ) : isOwner ? (
-              <button className="lok-btn" onClick={onDelete} disabled={deleting} style={{ border: '1px solid #E4C4B8', background: '#FBEEE9', color: '#C0492A', fontFamily: 'inherit', fontWeight: 700, fontSize: 14.5, padding: 14, borderRadius: 0, cursor: 'pointer' }}>
-                {deleting ? t('Removing…') : t('Remove listing')}
-              </button>
+              <>
+                {/* featured boost — request the gold slot; admin confirms payment manually */}
+                <div style={{ border: '1px solid #BFDCE8', background: '#EDF5F9', padding: '12px 14px' }}>
+                  <div style={{ fontWeight: 800, fontSize: 13, marginBottom: 3 }}>🚀 {t('Boost this listing')}</div>
+                  <div style={{ fontSize: 12, color: '#27607A', lineHeight: 1.5, marginBottom: 9 }}>
+                    {t('Get the FEATURED spot at the top of the homepage. The LOKITA team confirms payment with you in chat, then your boost goes live.')}
+                  </div>
+                  {boostState === 'sent' ? (
+                    <div style={{ fontWeight: 700, fontSize: 12.5, color: '#1E9E5A' }}>✓ {t('Boost requested — the LOKITA team will chat you shortly.')}</div>
+                  ) : (
+                    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                      {([{ days: 3 as const, amount: 3000 }, { days: 7 as const, amount: 5000 }]).map((o) => (
+                        <button
+                          key={o.days}
+                          className="lok-btn"
+                          disabled={boostState === 'busy'}
+                          onClick={async () => {
+                            setBoostState('busy')
+                            try {
+                              await boostListing(o.days)
+                              setBoostState('sent')
+                            } catch (e) {
+                              setBoostState('idle')
+                              alert(t('Could not request the boost:') + ' ' + (e instanceof Error ? e.message : t('unknown error')))
+                            }
+                          }}
+                          style={{ border: '1px solid #519BB8', background: '#FFFFFF', color: '#27607A', fontFamily: 'inherit', fontWeight: 700, fontSize: 12.5, padding: '9px 14px', borderRadius: 0, cursor: 'pointer' }}
+                        >
+                          {o.days} {t('days')} · Rp {o.amount.toLocaleString('id-ID')}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                <button className="lok-btn" onClick={onDelete} disabled={deleting} style={{ border: '1px solid #E4C4B8', background: '#FBEEE9', color: '#C0492A', fontFamily: 'inherit', fontWeight: 700, fontSize: 14.5, padding: 14, borderRadius: 0, cursor: 'pointer' }}>
+                  {deleting ? t('Removing…') : t('Remove listing')}
+                </button>
+              </>
             ) : (
               <>
                 <button className="lok-btn" onClick={chatSeller} style={{ border: '1px solid #C9C9C5', background: '#F5F5F3', color: '#000000', fontFamily: 'inherit', fontWeight: 700, fontSize: 14, padding: 13, borderRadius: 0, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
