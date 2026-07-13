@@ -18,6 +18,7 @@ import DetailModal from './modals/DetailModal'
 import SellModal from './modals/SellModal'
 import EditProfileModal from './modals/EditProfileModal'
 import CheckoutModal from './modals/CheckoutModal'
+import Footer from '../components/Footer'
 import { useLang } from '../i18n'
 
 // brand accent (tweakable). Blue is the shipped default. CSS custom properties
@@ -65,6 +66,7 @@ function Shell() {
           {s.view === 'orders' && <OrdersView />}
           {s.view === 'profile' && <ProfileView />}
           {s.view === 'admin' && <AdminView />}
+          <Footer />
         </main>
       </div>
 

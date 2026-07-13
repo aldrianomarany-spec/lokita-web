@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useM } from './context'
 import { fetchBanners, subscribeBanners, type BannerRow } from '../lib/api'
 
@@ -9,6 +9,11 @@ import { fetchBanners, subscribeBanners, type BannerRow } from '../lib/api'
 export default function Ticker() {
   const { state, selectCat, openListingById, openRequests, openSell, goSignup } = useM()
   const [items, setItems] = useState<BannerRow[]>([])
+  // hover/touch pauses the scroll so items are easy to read and click.
+  // Done in React state (inline animationPlayState) — the pure-CSS :hover
+  // rule proved unreliable across browsers/overlays.
+  const [paused, setPaused] = useState(false)
+  const touchTimer = useRef<number | null>(null)
 
   useEffect(() => {
     let live = true
@@ -47,9 +52,16 @@ export default function Ticker() {
   return (
     <div
       className="lok-ticker"
+      onMouseEnter={() => setPaused(true)}
+      onMouseLeave={() => setPaused(false)}
+      onTouchStart={() => {
+        setPaused(true)
+        if (touchTimer.current) window.clearTimeout(touchTimer.current)
+        touchTimer.current = window.setTimeout(() => setPaused(false), 4000)
+      }}
       style={{ flex: 'none', background: '#3555E6', color: '#FFFFFF', overflow: 'hidden', fontFamily: "'Spline Sans Mono',monospace", fontSize: 12, fontWeight: 600, letterSpacing: '.02em', padding: '7px 0', zIndex: 41 }}
     >
-      <div className="lok-ticker-track" style={{ ['--ticker-speed' as string]: `${speed}s` } as React.CSSProperties}>
+      <div className="lok-ticker-track" style={{ ['--ticker-speed' as string]: `${speed}s`, animationPlayState: paused ? 'paused' : 'running' } as React.CSSProperties}>
         {row(false)}
         {row(true)}
       </div>

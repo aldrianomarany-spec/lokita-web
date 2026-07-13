@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { ACCENT, ACCENT_DEEP } from '../theme'
 import { BRAND_LOGO_URL, MASCOT_URL } from '../brand'
 import { useLang, LangToggle } from '../i18n'
+import Footer from '../components/Footer'
 import {
   signInWithEmail,
   signUpWithEmail,
@@ -375,7 +376,7 @@ export default function AuthFlow() {
         </div>
 
         {/* RIGHT FORM PANEL */}
-        <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 40, overflowY: 'auto' }}>
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 40, overflowY: 'auto' }}>
           <div style={{ width: '100%', maxWidth: 396 }}>
             {view === 'login' && (
               <div style={{ animation: 'lok-rise-lg .4s ease both' }}>
@@ -496,6 +497,9 @@ export default function AuthFlow() {
                 <button className="lok-btn" onClick={goView('login')} style={{ ...primaryBtn, boxShadow: '0 10px 24px -10px rgba(0,0,0,.8)' }}>{t('Back to log in')}</button>
               </div>
             )}
+          </div>
+          <div style={{ width: '100%', maxWidth: 396 }}>
+            <Footer />
           </div>
         </div>
       </div>

@@ -71,7 +71,7 @@ export default function DetailModal() {
         {/* image panel — full width on phone, left column on desktop */}
         <div style={{ width: isPhone ? '100%' : '47%', flex: 'none', background: tone.tint, position: 'relative', minHeight: isPhone ? 240 : 480, height: isPhone ? 240 : 'auto', overflow: 'hidden' }}>
           {hasPhoto ? (
-            <img src={mainPhoto!} alt={sel.title} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
+            <img src={mainPhoto!} alt={sel.title} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'contain' }} />
           ) : (
             <div style={{ position: 'absolute', inset: 0, backgroundImage: `repeating-linear-gradient(135deg,${tone.stripe} 0 14px,transparent 14px 28px)`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <span style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 12, color: tone.label, textAlign: 'center', padding: '0 24px' }}>{sel.photo}</span>
