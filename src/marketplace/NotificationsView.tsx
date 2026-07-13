@@ -77,7 +77,7 @@ export default function NotificationsView() {
         <button
           className="lok-btn"
           onClick={() => enableSystemAlerts().then(setAlertsOn)}
-          style={{ width: '100%', border: '1px solid #C8A96A', background: '#FBF5E9', color: '#6B5320', fontFamily: 'inherit', fontWeight: 700, fontSize: 13, padding: '12px 14px', borderRadius: 0, cursor: 'pointer', marginBottom: 16, textAlign: 'left' }}
+          style={{ width: '100%', border: '1px solid #519BB8', background: '#EDF5F9', color: '#27607A', fontFamily: 'inherit', fontWeight: 700, fontSize: 13, padding: '12px 14px', borderRadius: 0, cursor: 'pointer', marginBottom: 16, textAlign: 'left' }}
         >
           🔔 {t('Enable popup alerts — get pinged even when LOKITA is in another tab.')}
         </button>

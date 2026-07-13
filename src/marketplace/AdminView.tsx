@@ -16,6 +16,9 @@ import {
   adminSetVerification,
   adminSetBanned,
   adminDeleteUser,
+  fetchTickerSettings,
+  adminSetTickerSettings,
+  type TickerSettings,
   adminSetReportStatus,
   type AdminStats,
   type AdminListingRow,
@@ -26,13 +29,14 @@ import {
 } from '../lib/api'
 import { Verified } from '../components/Icons'
 import { getVerificationDocUrl } from '../lib/auth'
+import { SELL_CATEGORIES } from '../theme'
 
 const rp = (n: number) => 'Rp ' + Math.round(n).toLocaleString('id-ID')
 const mono: React.CSSProperties = { fontFamily: "'Spline Sans Mono',monospace", fontSize: 11, color: '#9A9A94', letterSpacing: '.08em' }
 const card: React.CSSProperties = { background: '#FFFFFF', border: '1px solid #D8D8D4', borderRadius: 0 }
 
 const STATUS_CHIP: Record<string, { bg: string; fg: string }> = {
-  active: { bg: '#F6F0E3', fg: '#8A6C34' },
+  active: { bg: '#E8F2F7', fg: '#2F6B85' },
   sold: { bg: '#FBF2DD', fg: '#9A6A12' },
   removed: { bg: '#FBEEE9', fg: '#B23A1B' },
   flagged: { bg: '#FBEEE9', fg: '#B23A1B' },
@@ -69,7 +73,7 @@ function TrendCard({ label, values, mondays, isMoney }: { label: string; values:
       <div style={{ display: 'flex', alignItems: 'flex-end', gap: 5, height: 58 }}>
         {values.map((v, i) => (
           <div key={i} title={`${mondays[i].getDate()}/${mondays[i].getMonth() + 1}: ${fmt(v)}`} style={{ flex: 1, display: 'flex', alignItems: 'flex-end', height: '100%' }}>
-            <div style={{ width: '100%', height: Math.max(2, Math.round((v / max) * 54)), background: i === 7 ? '#C8A96A' : '#000000' }} />
+            <div style={{ width: '100%', height: Math.max(2, Math.round((v / max) * 54)), background: i === 7 ? '#519BB8' : '#000000' }} />
           </div>
         ))}
       </div>
@@ -136,6 +140,7 @@ export default function AdminView() {
   const [bImage, setBImage] = useState<File | null>(null)
   const [tForm, setTForm] = useState({ title: '', target: 'none', value: '' })
   const [tSaving, setTSaving] = useState(false)
+  const [tickerCfg, setTickerCfg] = useState<TickerSettings | null>(null)
   const [err, setErr] = useState<string | null>(null)
   const [busyId, setBusyId] = useState<string | null>(null)
   // inline student-ID viewer (signed URL from the private verification bucket)
@@ -145,6 +150,17 @@ export default function AdminView() {
   const pendingVerif = (members || [])
     .filter((m) => m.verification_doc_url && m.verification_status !== 'verified')
     .sort((a, b) => (a.verification_status === 'pending' ? 0 : 1) - (b.verification_status === 'pending' ? 0 : 1))
+  const saveTickerCfg = async (next: TickerSettings) => {
+    const prev = tickerCfg
+    setTickerCfg(next) // optimistic — realtime pushes it to every open tab
+    try {
+      await adminSetTickerSettings(next)
+    } catch (e) {
+      setTickerCfg(prev)
+      alert('Could not save ticker settings: ' + (e instanceof Error ? e.message : 'run migration 0026 first?'))
+    }
+  }
+
   const viewDoc = async (m: AdminMemberRow) => {
     if (!m.verification_doc_url) return
     try {
@@ -160,6 +176,7 @@ export default function AdminView() {
     try {
       const [s, l, m, r] = await Promise.all([fetchAdminStats(), fetchAdminListings(), fetchAdminMembers(), fetchAdminReports()])
       fetchAdminBanners().then(setBannersA).catch(() => setBannersA([]))
+      fetchTickerSettings().then(setTickerCfg).catch(() => setTickerCfg(null))
       fetchAdminTrends().then(setTrends).catch(() => setTrends(null)) // errors → hide the analytics section
       setStats(s)
       setListings(l)
@@ -297,7 +314,7 @@ export default function AdminView() {
                       {r.reason} — reported by {r.reporter_name}
                     </div>
                   </div>
-                  <span style={{ ...mono, fontSize: 9, color: open ? '#B23A1B' : '#3D7A54', background: open ? '#FBEEE9' : '#F6F0E3', padding: '4px 9px', borderRadius: 0, flex: 'none' }}>
+                  <span style={{ ...mono, fontSize: 9, color: open ? '#B23A1B' : '#3D7A54', background: open ? '#FBEEE9' : '#E8F2F7', padding: '4px 9px', borderRadius: 0, flex: 'none' }}>
                     {open ? 'OPEN' : r.status === 'resolved' ? 'HANDLED' : 'DISMISSED'}
                   </span>
                   {open && (
@@ -343,8 +360,17 @@ export default function AdminView() {
             <option value="requests">Open Requests</option>
             <option value="sell">Open the Sell form</option>
           </select>
-          {(bForm.target === 'category' || bForm.target === 'listing') && (
-            <input className="lok-field" value={bForm.value} onChange={(e) => setBForm({ ...bForm, value: e.target.value })} placeholder={bForm.target === 'category' ? 'Category (e.g. Bundles)' : 'Listing id'} style={{ flex: '1 1 140px', background: '#F5F5F3', border: '1px solid #D8D8D4', borderRadius: 0, padding: '10px 12px', fontSize: 12.5, fontFamily: 'inherit', color: '#000000' }} />
+          {bForm.target === 'category' && (
+            <select className="lok-field" value={bForm.value} onChange={(e) => setBForm({ ...bForm, value: e.target.value })} style={{ flex: '1 1 140px', background: '#F5F5F3', border: '1px solid #D8D8D4', borderRadius: 0, padding: '10px 12px', fontSize: 12.5, fontFamily: 'inherit', color: '#000000' }}>
+              <option value="" disabled>Pick a category…</option>
+              {SELL_CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
+            </select>
+          )}
+          {bForm.target === 'listing' && (
+            <select className="lok-field" value={bForm.value} onChange={(e) => setBForm({ ...bForm, value: e.target.value })} style={{ flex: '1 1 200px', background: '#F5F5F3', border: '1px solid #D8D8D4', borderRadius: 0, padding: '10px 12px', fontSize: 12.5, fontFamily: 'inherit', color: '#000000' }}>
+              <option value="" disabled>Pick a listing…</option>
+              {(listings || []).filter((l) => l.status === 'active').map((l) => <option key={l.id} value={l.id}>{l.title} — Rp {Number(l.price).toLocaleString('id-ID')}</option>)}
+            </select>
           )}
           <label style={{ display: 'flex', alignItems: 'center', gap: 7, border: '1px dashed #C9C9C5', background: '#F5F5F3', padding: '9px 12px', fontSize: 11.5, fontWeight: 700, color: bImage ? '#000000' : '#8B8B86', cursor: 'pointer', flex: 'none' }}>
             🖼️ {bImage ? bImage.name.slice(0, 18) : 'Add image (optional)'}
@@ -380,6 +406,30 @@ export default function AdminView() {
         <div style={{ fontSize: 12, color: '#8B8B86', fontWeight: 500, marginBottom: 10, lineHeight: 1.5 }}>
           Short announcements that scroll across the top of every page. Keep them one sentence — several items chain together.
         </div>
+        {/* strip behaviour — saved to site_settings, live on every open tab (migration 0026) */}
+        <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap', alignItems: 'center', padding: '10px 12px', background: '#F5F5F3', border: '1px solid #E6E6E3', marginBottom: 12 }}>
+          <span style={{ ...mono, fontSize: 9.5 }}>SCROLL SPEED</span>
+          {(['slow', 'normal', 'fast'] as const).map((sp) => (
+            <button
+              key={sp}
+              onClick={() => tickerCfg && saveTickerCfg({ ...tickerCfg, speed: sp })}
+              disabled={!tickerCfg}
+              style={{ border: `1px solid ${tickerCfg?.speed === sp ? '#000000' : '#D8D8D4'}`, background: tickerCfg?.speed === sp ? '#000000' : '#FFFFFF', color: tickerCfg?.speed === sp ? '#FFFFFF' : '#3A3B3E', fontFamily: 'inherit', fontWeight: 700, fontSize: 11.5, padding: '6px 13px', borderRadius: 0, cursor: tickerCfg ? 'pointer' : 'default', textTransform: 'capitalize' }}
+            >
+              {sp}
+            </button>
+          ))}
+          <label style={{ display: 'flex', alignItems: 'center', gap: 7, fontSize: 12, fontWeight: 700, color: '#3A3B3E', cursor: tickerCfg ? 'pointer' : 'default', marginLeft: 'auto' }}>
+            <input
+              type="checkbox"
+              checked={tickerCfg ? !tickerCfg.clickable : false}
+              disabled={!tickerCfg}
+              onChange={(e) => tickerCfg && saveTickerCfg({ ...tickerCfg, clickable: !e.target.checked })}
+            />
+            Decoration only — items can't be clicked
+          </label>
+          {!tickerCfg && <span style={{ fontSize: 11, color: '#B23A1B', fontWeight: 600 }}>run migration 0026 to enable</span>}
+        </div>
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
           <input className="lok-field" value={tForm.title} onChange={(e) => setTForm({ ...tForm, title: e.target.value })} placeholder="Announcement (e.g. Welcome to LOKITA — trade safely via the Security Post)" style={{ flex: '2 1 300px', background: '#F5F5F3', border: '1px solid #D8D8D4', borderRadius: 0, padding: '10px 12px', fontSize: 12.5, fontFamily: 'inherit', color: '#000000' }} />
           <select className="lok-field" value={tForm.target} onChange={(e) => setTForm({ ...tForm, target: e.target.value })} title="Where a tap goes" style={{ flex: 'none', background: '#F5F5F3', border: '1px solid #D8D8D4', borderRadius: 0, padding: '10px 12px', fontSize: 12.5, fontFamily: 'inherit', color: '#000000' }}>
@@ -389,8 +439,17 @@ export default function AdminView() {
             <option value="requests">Opens Requests</option>
             <option value="sell">Opens the Sell form</option>
           </select>
-          {(tForm.target === 'category' || tForm.target === 'listing') && (
-            <input className="lok-field" value={tForm.value} onChange={(e) => setTForm({ ...tForm, value: e.target.value })} placeholder={tForm.target === 'category' ? 'Category (e.g. Bundles)' : 'Listing id'} style={{ flex: '1 1 140px', background: '#F5F5F3', border: '1px solid #D8D8D4', borderRadius: 0, padding: '10px 12px', fontSize: 12.5, fontFamily: 'inherit', color: '#000000' }} />
+          {tForm.target === 'category' && (
+            <select className="lok-field" value={tForm.value} onChange={(e) => setTForm({ ...tForm, value: e.target.value })} style={{ flex: '1 1 140px', background: '#F5F5F3', border: '1px solid #D8D8D4', borderRadius: 0, padding: '10px 12px', fontSize: 12.5, fontFamily: 'inherit', color: '#000000' }}>
+              <option value="" disabled>Pick a category…</option>
+              {SELL_CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
+            </select>
+          )}
+          {tForm.target === 'listing' && (
+            <select className="lok-field" value={tForm.value} onChange={(e) => setTForm({ ...tForm, value: e.target.value })} style={{ flex: '1 1 200px', background: '#F5F5F3', border: '1px solid #D8D8D4', borderRadius: 0, padding: '10px 12px', fontSize: 12.5, fontFamily: 'inherit', color: '#000000' }}>
+              <option value="" disabled>Pick a listing…</option>
+              {(listings || []).filter((l) => l.status === 'active').map((l) => <option key={l.id} value={l.id}>{l.title} — Rp {Number(l.price).toLocaleString('id-ID')}</option>)}
+            </select>
           )}
           <SmallBtn
             label={tSaving ? 'Publishing…' : 'Add to ticker'}
@@ -465,7 +524,7 @@ export default function AdminView() {
           <div style={{ padding: '18px 20px', color: '#8B8B86', fontSize: 12.5 }}>No IDs waiting for review. When a member uploads their student ID, it appears here for you to approve or reject.</div>
         ) : (
           pendingVerif.map((m) => (
-            <div key={m.id} style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap', padding: '12px 16px', borderBottom: '1px solid #E6E6E3', background: '#FBF5E9' }}>
+            <div key={m.id} style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap', padding: '12px 16px', borderBottom: '1px solid #E6E6E3', background: '#EDF5F9' }}>
               <div style={{ flex: '1 1 200px', minWidth: 0 }}>
                 <div style={{ fontWeight: 700, fontSize: 13.5, display: 'flex', alignItems: 'center', gap: 7 }}>
                   <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{m.name}</span>
@@ -516,7 +575,7 @@ export default function AdminView() {
                 <div style={{ fontWeight: 700, fontSize: 13.5, display: 'flex', alignItems: 'center', gap: 7 }}>
                   <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{m.name}</span>
                   {m.verification_status === 'verified' && <Verified size={13} />}
-                  {m.role === 'admin' && <span style={{ ...mono, fontSize: 8.5, color: '#8A6C34', background: '#F6F0E3', padding: '2px 6px', borderRadius: 0, flex: 'none' }}>ADMIN</span>}
+                  {m.role === 'admin' && <span style={{ ...mono, fontSize: 8.5, color: '#2F6B85', background: '#E8F2F7', padding: '2px 6px', borderRadius: 0, flex: 'none' }}>ADMIN</span>}
                   {m.is_banned && <span style={{ ...mono, fontSize: 8.5, color: '#B23A1B', background: '#FBEEE9', padding: '2px 6px', borderRadius: 0, flex: 'none' }}>BANNED</span>}
                 </div>
                 <div style={{ fontSize: 11.5, color: '#8B8B86', fontWeight: 600, marginTop: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{m.email || '—'}</div>

@@ -206,7 +206,7 @@ export default function MessagesView() {
             )}
             {/* queued product card — attaches to the next message sent */}
             {s.pendingAttach && (
-              <div style={{ margin: '10px 18px 0', display: 'flex', alignItems: 'center', gap: 9, background: '#FBF5E9', border: '1px solid #C8A96A', padding: '7px 10px' }}>
+              <div style={{ margin: '10px 18px 0', display: 'flex', alignItems: 'center', gap: 9, background: '#EDF5F9', border: '1px solid #519BB8', padding: '7px 10px' }}>
                 <div style={{ width: 30, height: 30, flex: 'none', background: '#ECECEA', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   {s.pendingAttach.photo ? <img src={s.pendingAttach.photo} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : '📦'}
                 </div>

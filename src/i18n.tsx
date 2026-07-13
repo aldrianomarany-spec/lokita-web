@@ -58,8 +58,8 @@ export function LangToggle({ dark }: { dark?: boolean }) {
         letterSpacing: '.04em',
         padding: '6px 9px',
         borderRadius: 0,
-        background: lang === l ? '#C8A96A' : 'transparent',
-        color: lang === l ? '#000000' : dark ? '#9A9A94' : '#8B8B86',
+        background: lang === l ? '#519BB8' : 'transparent',
+        color: lang === l ? '#FFFFFF' : dark ? '#9A9A94' : '#8B8B86',
       }}
     >
       {label}

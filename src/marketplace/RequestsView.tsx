@@ -150,7 +150,7 @@ export default function RequestsView() {
                   {r.description && <div style={{ fontSize: 13, color: '#4A4B4E', lineHeight: 1.55, marginTop: 7 }}>{r.description}</div>}
                   <div style={{ display: 'flex', gap: 7, flexWrap: 'wrap', marginTop: 9 }}>
                     {r.category && <span style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 10, color: '#1E1E1E', background: '#ECECEA', padding: '4px 9px', borderRadius: 0 }}>{t(r.category).toUpperCase()}</span>}
-                    {r.budget_max != null && <span style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 10, color: '#8A6C34', background: '#F6F0E3', padding: '4px 9px', borderRadius: 0 }}>{t('BUDGET')} · {rupiah(r.budget_max)}</span>}
+                    {r.budget_max != null && <span style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 10, color: '#2F6B85', background: '#E8F2F7', padding: '4px 9px', borderRadius: 0 }}>{t('BUDGET')} · {rupiah(r.budget_max)}</span>}
                   </div>
                 </div>
                 <div style={{ flex: 'none', display: 'flex', flexDirection: 'column', gap: 7 }}>

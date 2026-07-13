@@ -210,6 +210,17 @@ Also shipped (marketplace-app batch, 2026-07-13, migration 0025):
   (dial-code picker), batch select 2021–2026, ⭐ TOP SELLER badge (5+ sales,
   4.5★+), Control Room analytics (8-week bar charts via fetchAdminTrends).
 
+Also shipped (steel-blue batch, 2026-07-13, migration 0026):
+- **Theme = Steel Blue `#519BB8`** (`look-steel-blue` tag; previous look tagged
+  `look-noir-gold-v2`). ACCENT/ACCENT_DEEP in theme.ts + full palette sweep
+  (old gold #C8A96A and tints all remapped); black statements + paper stay.
+- **site_settings table** (key/value jsonb, everyone reads / admins write,
+  realtime): first knob is `ticker` `{speed: slow|normal|fast, clickable}` —
+  Control Room has speed chips + "decoration only" toggle; Ticker.tsx applies
+  it live in every open tab.
+- Banner/ticker target pickers are dropdowns (category list, active-listing
+  list) — no more typing listing ids.
+
 Remaining / nice-to-have:
 - **Real Midtrans QRIS** — deliberately last; blocked on the owner signing up for
   Midtrans. api/qris scaffolding exists; currently prototype/static-QR mode.
