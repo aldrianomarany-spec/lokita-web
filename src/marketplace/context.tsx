@@ -37,6 +37,8 @@ import {
   getOrCreateRequestConversation,
   sendMessage as apiSendMessage,
   markConversationRead,
+  deleteConversation,
+  fetchMarketStats,
   fetchNotifications,
   markAllNotificationsRead,
   markNotificationRead,
@@ -65,7 +67,7 @@ export const PAYMENT_MODE = ((import.meta.env.VITE_PAYMENT_MODE as string | unde
 // blank profile until the real one loads (fresh-install: nothing populated)
 const EMPTY_PROFILE: Profile = {
   name: '', studentId: '', whatsapp: '', building: '', room: '',
-  floor: '', batch: '', standing: '', since: '',
+  floor: '', batch: '', standing: '', major: '', since: '',
   verification_status: 'pending', profile_photo_url: null,
 }
 
@@ -149,6 +151,9 @@ export interface State {
   f: SellForm
   openReports: number // open-report count for the admin sidebar badge
   recents: string[] // recently viewed listing ids, newest first (this device only)
+  // product card queued to ride on the next chat message (Shopee-style)
+  pendingAttach: { id: string; title: string; price: string; photo: string | null } | null
+  marketStats: number | null // completed trades — public trust counter
 }
 
 // recently viewed lives in localStorage — no DB weight, wiped with browser data
@@ -181,6 +186,8 @@ const initialState: State = {
   feedError: null,
   categoryCounts: {},
   recents: readRecents(),
+  pendingAttach: null,
+  marketStats: null,
   orders: [],
   ordersLoading: false,
   ordersError: null,
@@ -255,6 +262,9 @@ export interface MarketplaceApi {
   toggleMenu: () => void
   openMessages: () => void
   openConversation: (id: string) => void
+  deleteThread: (conv: ConversationRow) => Promise<void>
+  cancelAttach: () => void
+  sendOffer: (amount: number) => Promise<void> | void
   setMsgDraft: (v: string) => void
   sendMsg: (text?: string) => void
   openNotifs: () => void
@@ -361,9 +371,12 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
     const unsub = subscribeListings(() => {
       const p = feedParamsRef.current
       loadFeed({ cat: p.cat, cond: p.cond, sort: p.sort, query: p.query, building: p.bldg }, p.viewerFloor ? p.viewerFloor.toLowerCase() : null)
+      // a sale flips a listing to sold — refresh the public trust counter too
+      fetchMarketStats().then((m) => m && patch({ marketStats: m.completed_trades }))
     })
+    fetchMarketStats().then((m) => m && patch({ marketStats: m.completed_trades }))
     return () => unsub()
-  }, [loadFeed])
+  }, [loadFeed, patch])
 
   // Deep link: /app?item=<id> (a shared listing link) opens that item on
   // arrival. The param is stripped right away so refresh/back doesn't re-open
@@ -476,23 +489,33 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
   }, [patch])
 
   // ---- messages + notifications (real, realtime) ----
+  // latest grouped conversations, readable from callbacks without re-subscribing
+  const convsRef = useRef<ConversationRow[]>([])
   const loadConversations = useCallback(async () => {
     patch({ convsLoading: true })
     try {
-      patch({ convs: await fetchConversations(), convsLoading: false })
+      const convs = await fetchConversations()
+      convsRef.current = convs
+      patch({ convs, convsLoading: false })
     } catch {
       patch({ convsLoading: false })
     }
   }, [patch])
 
+  // resolve a conversation id to its whole one-per-person group
+  const groupIdsFor = useCallback((convId: string): string[] => {
+    const g = convsRef.current.find((c) => c.id === convId || c.conv_ids.includes(convId))
+    return g ? g.conv_ids : [convId]
+  }, [])
+
   const loadMessages = useCallback(async (convId: string) => {
     patch({ msgsLoading: true })
     try {
-      patch({ msgs: await fetchMessages(convId), msgsLoading: false })
+      patch({ msgs: await fetchMessages(groupIdsFor(convId)), msgsLoading: false })
     } catch {
       patch({ msgsLoading: false })
     }
-  }, [patch])
+  }, [patch, groupIdsFor])
 
   const loadNotifications = useCallback(async () => {
     patch({ notifsLoading: true })
@@ -657,8 +680,18 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
       if (!sel || !sel.ownerId) return
       try {
         const cid = await getOrCreateConversation(sel.id, sel.ownerId)
-        patch({ sel: null, view: 'messages', activeConvId: cid, msgDraft: '', menuOpen: false })
-        await Promise.all([loadConversations(), loadMessages(cid)])
+        // queue the product card — it rides on the next message you send,
+        // so the seller always knows which item you're asking about
+        patch({
+          sel: null,
+          view: 'messages',
+          activeConvId: cid,
+          msgDraft: '',
+          menuOpen: false,
+          pendingAttach: { id: sel.id, title: sel.title, price: sel.price, photo: sel.photoUrl || null },
+        })
+        await loadConversations()
+        await loadMessages(cid)
       } catch (e) {
         alert('Could not open chat: ' + (e instanceof Error ? e.message : 'unknown error'))
       }
@@ -739,7 +772,36 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
     openConversation: (id) => {
       patch({ activeConvId: id, msgDraft: '' })
       loadMessages(id)
-      markConversationRead(id).then(() => loadConversations())
+      markConversationRead(groupIdsFor(id)).then(() => loadConversations())
+    },
+
+    deleteThread: async (conv) => {
+      try {
+        await deleteConversation(conv.conv_ids)
+        if (state.activeConvId && (conv.id === state.activeConvId || conv.conv_ids.includes(state.activeConvId))) {
+          patch({ activeConvId: null, msgs: [] })
+        }
+        await loadConversations()
+      } catch (e) {
+        alert('Could not delete the chat: ' + (e instanceof Error ? e.message : 'unknown error'))
+      }
+    },
+
+    cancelAttach: () => patch({ pendingAttach: null }),
+
+    sendOffer: async (amount) => {
+      if (state.guest) return goSignup()
+      const sel = state.sel
+      if (!sel || !sel.ownerId || !(amount > 0)) return
+      try {
+        const cid = await getOrCreateConversation(sel.id, sel.ownerId)
+        await apiSendMessage(cid, `💰 OFFER · Rp ${Math.round(amount).toLocaleString('id-ID')} — ${sel.title}`, sel.id)
+        patch({ sel: null, view: 'messages', activeConvId: cid, msgDraft: '', menuOpen: false, pendingAttach: null })
+        await loadConversations()
+        await loadMessages(cid)
+      } catch (e) {
+        alert('Could not send the offer: ' + (e instanceof Error ? e.message : 'unknown error'))
+      }
     },
     setMsgDraft: (v) => patch({ msgDraft: v }),
     sendMsg: async (text) => {
@@ -747,9 +809,11 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
       const fromDraft = text == null
       const d = (text ?? state.msgDraft).trim()
       if (!convId || !d) return
+      const attach = state.pendingAttach
       if (fromDraft) patch({ msgDraft: '' })
       try {
-        await apiSendMessage(convId, d)
+        await apiSendMessage(convId, d, attach?.id ?? null)
+        patch({ pendingAttach: null })
         await loadMessages(convId)
         loadConversations()
       } catch (e) {
@@ -796,7 +860,7 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
       if (n.type === 'new_message' && n.reference_id) {
         patch({ view: 'messages', activeConvId: n.reference_id, menuOpen: false, sel: null })
         loadMessages(n.reference_id)
-        markConversationRead(n.reference_id).then(() => loadConversations())
+        markConversationRead(groupIdsFor(n.reference_id)).then(() => loadConversations())
       } else if (n.type === 'order_update') {
         patch({ view: 'orders', menuOpen: false, sel: null })
       } else if (n.reference_id) {

@@ -1,6 +1,7 @@
 // Data-access layer: real Supabase queries + mappers between the DB row shapes
 // and the UI display shape the marketplace components already use.
 import { supabase } from './supabase'
+import { assertClean } from './moderation'
 import { compressImage } from './img'
 import { getUser, type Profile as DbProfile } from './auth'
 import type { Profile as UiProfile, EnrichedItem } from '../types'
@@ -49,6 +50,7 @@ export function dbToUiProfile(db: DbProfile): UiProfile & {
     room: db.room_number || '',
     batch: db.batch_year ? `Class of ${db.batch_year}` : '',
     standing: db.class_standing ? STANDING_LABEL[db.class_standing] || '' : '',
+    major: db.major || '',
     since: memberSince(db.created_at),
     verification_status: db.verification_status,
     profile_photo_url: db.profile_photo_url,
@@ -69,6 +71,7 @@ export function uiEditsToDb(pf: UiProfile): Partial<DbProfile> {
     room_number: pf.room.trim() || null,
     batch_year: digits ? Number(digits) : null,
     class_standing: (pf.standing ? pf.standing.toLowerCase() : null) as DbProfile['class_standing'],
+    major: pf.major?.trim() || null,
   }
 }
 
@@ -434,6 +437,7 @@ export interface NewListing {
 // (migration 0017) sets platform_fee and publishes at ask + fee, so the fee
 // can't be dodged by a modified client.
 export async function createListing(input: NewListing, photos: File[]): Promise<string> {
+  assertClean(input.title, input.description)
   const user = await getUser()
   if (!user) throw new Error('Not signed in')
   const { data, error } = await supabase
@@ -693,6 +697,7 @@ export interface ConversationRow {
   other_photo: string | null
   other_verified: boolean
   i_am_seller: boolean // which side of the trade the viewer is on (picks quick replies)
+  conv_ids: string[] // every conversation merged into this thread (one thread per person)
   last_content: string
   last_at: string
   unread: number
@@ -743,6 +748,7 @@ export async function fetchConversations(): Promise<ConversationRow[]> {
       other_photo: other?.profile_photo_url || null,
       other_verified: other?.verification_status === 'verified',
       i_am_seller: r.seller_id === uid,
+      conv_ids: [r.id],
       last_content: last?.content || '',
       last_at: last?.created_at || r.created_at,
       unread: ms.filter((m) => m.sender_id !== uid && !m.is_read).length,
@@ -753,7 +759,30 @@ export async function fetchConversations(): Promise<ConversationRow[]> {
     }
   })
   result.sort((a, b) => new Date(b.last_at).getTime() - new Date(a.last_at).getTime())
-  return result
+  // ONE thread per person (marketplace-app style): merge every conversation
+  // with the same counterparty. Newest-first, so the representative row keeps
+  // the freshest message; product context falls back to the newest
+  // conversation in the group that has a listing attached.
+  const grouped: ConversationRow[] = []
+  const byOther = new Map<string, ConversationRow>()
+  for (const c of result) {
+    const g = byOther.get(c.other_id)
+    if (!g) {
+      byOther.set(c.other_id, c)
+      grouped.push(c)
+    } else {
+      g.conv_ids.push(c.id)
+      g.unread += c.unread
+      if (!g.item_title && c.item_title) {
+        g.listing_id = c.listing_id
+        g.item_title = c.item_title
+        g.item_price = c.item_price
+        g.item_photo = c.item_photo
+        g.item_status = c.item_status
+      }
+    }
+  }
+  return grouped
 }
 
 export interface MessageRow {
@@ -763,16 +792,35 @@ export interface MessageRow {
   content: string
   is_read: boolean
   created_at: string
+  // product-card attachment (messages.listing_id, migration 0025)
+  listing_id?: string | null
+  item_title?: string | null
+  item_price?: number | null
+  item_photo?: string | null
 }
 
-export async function fetchMessages(conversationId: string): Promise<MessageRow[]> {
-  const { data, error } = await supabase
+type MsgJoinRow = MessageRow & { listing?: { title: string; price: number; listing_photos: { photo_url: string; sort_order: number }[] | null } | null }
+
+// one thread per person = messages from every conversation in the group
+export async function fetchMessages(conversationIds: string[]): Promise<MessageRow[]> {
+  if (!conversationIds.length) return []
+  let res = await supabase
     .from('messages')
-    .select('*')
-    .eq('conversation_id', conversationId)
+    .select('*, listing:listing_id(title, price, listing_photos(photo_url, sort_order))')
+    .in('conversation_id', conversationIds)
     .order('created_at', { ascending: true })
-  if (error) throw error
-  return (data as MessageRow[]) || []
+  if (res.error) {
+    // graceful before migration 0025 (no listing_id column yet)
+    res = await supabase.from('messages').select('*').in('conversation_id', conversationIds).order('created_at', { ascending: true })
+    if (res.error) throw res.error
+  }
+  return ((res.data as MsgJoinRow[]) || []).map((r) => ({
+    ...r,
+    item_title: r.listing?.title ?? null,
+    item_price: r.listing?.price ?? null,
+    item_photo: firstPhoto(r.listing?.listing_photos),
+    listing: undefined,
+  }))
 }
 
 // buyer messaging a seller about a listing — reuse the existing thread if any
@@ -780,11 +828,14 @@ export async function getOrCreateConversation(listingId: string, sellerId: strin
   const uid = await getUserId()
   if (!uid) throw new Error('Not signed in')
   if (sellerId === uid) throw new Error("That's your own listing.")
+  // one thread per person: reuse ANY conversation between this pair,
+  // regardless of listing — the product context rides on each message
   const { data: existing } = await supabase
     .from('conversations')
     .select('id')
-    .eq('listing_id', listingId)
-    .eq('buyer_id', uid)
+    .or(`and(buyer_id.eq.${uid},seller_id.eq.${sellerId}),and(buyer_id.eq.${sellerId},seller_id.eq.${uid})`)
+    .order('created_at', { ascending: false })
+    .limit(1)
     .maybeSingle()
   if (existing) return (existing as { id: string }).id
   const { data, error } = await supabase
@@ -796,19 +847,58 @@ export async function getOrCreateConversation(listingId: string, sellerId: strin
   return (data as { id: string }).id
 }
 
-export async function sendMessage(conversationId: string, content: string): Promise<void> {
+export async function sendMessage(conversationId: string, content: string, listingId?: string | null): Promise<void> {
   const uid = await getUserId()
   if (!uid) throw new Error('Not signed in')
   const trimmed = content.trim()
   if (!trimmed) return
-  const { error } = await supabase.from('messages').insert({ conversation_id: conversationId, sender_id: uid, content: trimmed })
+  assertClean(trimmed)
+  const row: Record<string, unknown> = { conversation_id: conversationId, sender_id: uid, content: trimmed }
+  if (listingId) row.listing_id = listingId
+  let { error } = await supabase.from('messages').insert(row)
+  if (error && listingId) {
+    // pre-0025 fallback: send without the product attachment
+    ;({ error } = await supabase.from('messages').insert({ conversation_id: conversationId, sender_id: uid, content: trimmed }))
+  }
   if (error) throw error
 }
 
-export async function markConversationRead(conversationId: string): Promise<void> {
+// delete a whole thread (all conversations with that person) — for both sides
+export async function deleteConversation(conversationIds: string[]): Promise<void> {
+  if (!conversationIds.length) return
+  const { error } = await supabase.from('conversations').delete().in('id', conversationIds)
+  if (error) throw error
+}
+
+export async function markConversationRead(conversationIds: string[]): Promise<void> {
   const uid = await getUserId()
-  if (!uid) return
-  await supabase.from('messages').update({ is_read: true }).eq('conversation_id', conversationId).neq('sender_id', uid).eq('is_read', false)
+  if (!uid || !conversationIds.length) return
+  await supabase.from('messages').update({ is_read: true }).in('conversation_id', conversationIds).neq('sender_id', uid).eq('is_read', false)
+}
+
+// public credibility counter (SECURITY DEFINER aggregate, migration 0025);
+// null before the migration runs — the UI hides the row
+export async function fetchMarketStats(): Promise<{ completed_trades: number } | null> {
+  try {
+    const { data, error } = await supabase.rpc('market_stats')
+    if (error) return null
+    return data as { completed_trades: number }
+  } catch {
+    return null
+  }
+}
+
+// lean rows for the Control Room analytics charts (admin RLS covers this)
+export interface AdminTrendRow {
+  created_at: string
+  updated_at: string | null
+  status: string
+  platform_fee: number | null
+}
+export async function fetchAdminTrends(): Promise<AdminTrendRow[]> {
+  const { data, error } = await supabase.from('listings').select('created_at, updated_at, status, platform_fee').limit(2000)
+  if (error) throw error
+  return (data as AdminTrendRow[]) || []
 }
 
 // ---- notifications ----
@@ -920,6 +1010,7 @@ export interface NewRequest {
 }
 
 export async function createRequest(input: NewRequest): Promise<void> {
+  assertClean(input.title, input.description)
   const uid = await getUserId()
   if (!uid) throw new Error('Not signed in')
   const { error } = await supabase.from('requests').insert({
@@ -1021,6 +1112,7 @@ export interface MemberProfileInfo {
   floor: string
   batch: string
   standing: string
+  major: string
   verified: boolean
   since: string
 }
@@ -1028,12 +1120,12 @@ export interface MemberProfileInfo {
 export async function fetchMemberProfile(id: string): Promise<MemberProfileInfo | null> {
   const { data, error } = await supabase
     .from('public_profiles')
-    .select('id, name, profile_photo_url, building, floor, batch_year, class_standing, verification_status, created_at')
+    .select('id, name, profile_photo_url, building, floor, batch_year, class_standing, major, verification_status, created_at')
     .eq('id', id)
     .maybeSingle()
   if (error) throw error
   if (!data) return null
-  const r = data as { id: string; name: string; profile_photo_url: string | null; building: string | null; floor: string | null; batch_year: number | null; class_standing: string | null; verification_status: string; created_at: string }
+  const r = data as { id: string; name: string; profile_photo_url: string | null; building: string | null; floor: string | null; batch_year: number | null; class_standing: string | null; major: string | null; verification_status: string; created_at: string }
   return {
     id: r.id,
     name: r.name || 'Student',
@@ -1042,6 +1134,7 @@ export async function fetchMemberProfile(id: string): Promise<MemberProfileInfo 
     floor: r.floor ? FLOOR_LABEL[r.floor] || '' : '',
     batch: r.batch_year ? `Class of ${r.batch_year}` : '',
     standing: r.class_standing ? STANDING_LABEL[r.class_standing] || '' : '',
+    major: r.major || '',
     verified: r.verification_status === 'verified',
     since: memberSince(r.created_at),
   }

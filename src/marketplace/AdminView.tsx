@@ -5,6 +5,7 @@ import {
   fetchAdminListings,
   fetchAdminMembers,
   fetchAdminReports,
+  fetchAdminTrends,
   fetchAdminBanners,
   adminCreateBanner,
   adminSetBannerActive,
@@ -20,6 +21,7 @@ import {
   type AdminListingRow,
   type AdminMemberRow,
   type AdminReportRow,
+  type AdminTrendRow,
   type BannerRow,
 } from '../lib/api'
 import { Verified } from '../components/Icons'
@@ -34,6 +36,52 @@ const STATUS_CHIP: Record<string, { bg: string; fg: string }> = {
   sold: { bg: '#FBF2DD', fg: '#9A6A12' },
   removed: { bg: '#FBEEE9', fg: '#B23A1B' },
   flagged: { bg: '#FBEEE9', fg: '#B23A1B' },
+}
+
+// ---- analytics: 8 weekly buckets (Monday-start), plain Date math ----
+const WEEK_MS = 7 * 24 * 60 * 60 * 1000
+function mondayOf(d: Date): Date {
+  const m = new Date(d.getFullYear(), d.getMonth(), d.getDate())
+  m.setDate(m.getDate() - ((m.getDay() + 6) % 7)) // getDay(): Sun=0 → Monday offset
+  return m
+}
+/** Monday dates of the last 8 weeks, oldest first, current week last. */
+function lastEightMondays(): Date[] {
+  const cur = mondayOf(new Date())
+  return Array.from({ length: 8 }, (_, i) => new Date(cur.getTime() - (7 - i) * WEEK_MS))
+}
+function bucketIndex(iso: string, mondays: Date[]): number {
+  const t = new Date(iso).getTime()
+  if (Number.isNaN(t)) return -1
+  const idx = Math.floor((t - mondays[0].getTime()) / WEEK_MS)
+  return idx >= 0 && idx < 8 ? idx : -1
+}
+
+function TrendCard({ label, values, mondays, isMoney }: { label: string; values: number[]; mondays: Date[]; isMoney?: boolean }) {
+  const max = Math.max(...values, 1)
+  const fmt = (n: number) => (isMoney ? Math.round(n).toLocaleString('id-ID') : String(n))
+  const total = values.reduce((a, b) => a + b, 0)
+  return (
+    <div style={{ ...card, flex: '1 1 240px', padding: '14px 16px' }}>
+      <div style={{ ...mono, fontSize: 9.5, marginBottom: 12 }}>
+        {label} · {fmt(total)}
+      </div>
+      <div style={{ display: 'flex', alignItems: 'flex-end', gap: 5, height: 58 }}>
+        {values.map((v, i) => (
+          <div key={i} title={`${mondays[i].getDate()}/${mondays[i].getMonth() + 1}: ${fmt(v)}`} style={{ flex: 1, display: 'flex', alignItems: 'flex-end', height: '100%' }}>
+            <div style={{ width: '100%', height: Math.max(2, Math.round((v / max) * 54)), background: i === 7 ? '#C8A96A' : '#000000' }} />
+          </div>
+        ))}
+      </div>
+      <div style={{ display: 'flex', gap: 5, marginTop: 5 }}>
+        {mondays.map((m, i) => (
+          <div key={i} style={{ flex: 1, textAlign: 'center', fontFamily: "'Spline Sans Mono',monospace", fontSize: 8.5, color: '#8B8B86', whiteSpace: 'nowrap' }}>
+            {m.getDate()}/{m.getMonth() + 1}
+          </div>
+        ))}
+      </div>
+    </div>
+  )
 }
 
 function SmallBtn({ label, onClick, tone = 'plain', busy }: { label: string; onClick: () => void; tone?: 'plain' | 'danger' | 'accent'; busy?: boolean }) {
@@ -82,6 +130,7 @@ export default function AdminView() {
   const [members, setMembers] = useState<AdminMemberRow[] | null>(null)
   const [reports, setReports] = useState<AdminReportRow[] | null>(null)
   const [bannersA, setBannersA] = useState<BannerRow[] | null>(null)
+  const [trends, setTrends] = useState<AdminTrendRow[] | null>(null) // null → section hidden
   const [bForm, setBForm] = useState({ title: '', subtitle: '', cta: '', target: 'none', value: '', placement: 'hero' })
   const [bSaving, setBSaving] = useState(false)
   const [bImage, setBImage] = useState<File | null>(null)
@@ -111,6 +160,7 @@ export default function AdminView() {
     try {
       const [s, l, m, r] = await Promise.all([fetchAdminStats(), fetchAdminListings(), fetchAdminMembers(), fetchAdminReports()])
       fetchAdminBanners().then(setBannersA).catch(() => setBannersA([]))
+      fetchAdminTrends().then(setTrends).catch(() => setTrends(null)) // errors → hide the analytics section
       setStats(s)
       setListings(l)
       setMembers(m)
@@ -156,6 +206,36 @@ export default function AdminView() {
       ]
     : []
 
+  // weekly trend buckets — only computed once the rows arrive
+  let trendCards: React.ReactNode = null
+  if (trends) {
+    const mondays = lastEightMondays()
+    const newListings = new Array(8).fill(0) as number[]
+    const itemsSold = new Array(8).fill(0) as number[]
+    const revenue = new Array(8).fill(0) as number[]
+    for (const row of trends) {
+      const ci = bucketIndex(row.created_at, mondays)
+      if (ci >= 0) newListings[ci]++
+      if (row.status === 'sold') {
+        const si = bucketIndex(row.updated_at || row.created_at, mondays)
+        if (si >= 0) {
+          itemsSold[si]++
+          revenue[si] += row.platform_fee || 0
+        }
+      }
+    }
+    trendCards = (
+      <>
+        <div style={{ ...mono, marginBottom: 10 }}>ANALYTICS · LAST 8 WEEKS</div>
+        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 26 }}>
+          <TrendCard label="NEW LISTINGS" values={newListings} mondays={mondays} />
+          <TrendCard label="ITEMS SOLD" values={itemsSold} mondays={mondays} />
+          <TrendCard label="REVENUE (Rp)" values={revenue} mondays={mondays} isMoney />
+        </div>
+      </>
+    )
+  }
+
   return (
     <div style={{ animation: 'lok-fade .3s ease both', maxWidth: 980, margin: '0 auto' }}>
       <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 12, marginBottom: 18 }}>
@@ -188,6 +268,9 @@ export default function AdminView() {
           )}
         </div>
       </div>
+
+      {/* analytics — three mini weekly bar charts (hidden if the trends fetch failed) */}
+      {trendCards}
 
       {/* reports queue — open ones first, resolved/dismissed shown muted */}
       <div style={{ ...mono, marginBottom: 10 }}>

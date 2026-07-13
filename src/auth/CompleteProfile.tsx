@@ -79,6 +79,46 @@ const STANDINGS: { v: ClassStanding; label: string }[] = [
   { v: 'senior', label: 'Senior' },
 ]
 
+// country dial codes for the WhatsApp field — Indonesia first / default
+const DIAL_CODES = [
+  { flag: '🇮🇩', code: '+62' },
+  { flag: '🇸🇬', code: '+65' },
+  { flag: '🇲🇾', code: '+60' },
+  { flag: '🇯🇵', code: '+81' },
+  { flag: '🇰🇷', code: '+82' },
+  { flag: '🇨🇳', code: '+86' },
+  { flag: '🇮🇳', code: '+91' },
+  { flag: '🇸🇦', code: '+966' },
+  { flag: '🇦🇺', code: '+61' },
+  { flag: '🇬🇧', code: '+44' },
+  { flag: '🇺🇸', code: '+1' },
+]
+// stored shape is code + national digits, e.g. "+62812345678"
+function splitWa(v: string): { code: string; national: string } {
+  const s = (v || '').trim()
+  if (!s) return { code: '+62', national: '' }
+  const code = DIAL_CODES.map((d) => d.code)
+    .filter((c) => s.startsWith(c))
+    .sort((a, b) => b.length - a.length)[0]
+  const rest = code ? s.slice(code.length) : s
+  return { code: code || '+62', national: rest.replace(/[^0-9]/g, '') }
+}
+function joinWa(code: string, national: string): string {
+  const digits = national.replace(/[^0-9]/g, '').replace(/^0+/, '') // 0812… → 812…
+  return digits ? code + digits : ''
+}
+
+const BATCH_YEARS = ['2021', '2022', '2023', '2024', '2025', '2026']
+// exact DB values — option value= must stay English, only the label is translated
+const MAJORS = [
+  'Accounting',
+  'English Literature',
+  'Information Systems',
+  'Information Technology',
+  'Japanese Literature',
+  'Visual Communication Design',
+]
+
 export default function CompleteProfile() {
   const navigate = useNavigate()
   const { t } = useLang()
@@ -88,7 +128,9 @@ export default function CompleteProfile() {
   const [room, setRoom] = useState('')
   const [batch, setBatch] = useState('')
   const [standing, setStanding] = useState<ClassStanding | ''>('')
-  const [whatsapp, setWhatsapp] = useState('')
+  const [major, setMajor] = useState('')
+  const [waCode, setWaCode] = useState('+62')
+  const [waNum, setWaNum] = useState('')
   const [studentId, setStudentId] = useState('')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
@@ -110,7 +152,12 @@ export default function CompleteProfile() {
         if (p.room_number) setRoom(p.room_number)
         if (p.batch_year) setBatch(String(p.batch_year))
         if (p.class_standing) setStanding(p.class_standing)
-        if (p.whatsapp_number) setWhatsapp(p.whatsapp_number)
+        if (p.whatsapp_number) {
+          const wa = splitWa(p.whatsapp_number)
+          setWaCode(wa.code)
+          setWaNum(wa.national)
+        }
+        if (p.major) setMajor(p.major)
         if (p.student_id_number) setStudentId(p.student_id_number)
       } catch {
         /* ignore */
@@ -130,7 +177,8 @@ export default function CompleteProfile() {
         room_number: room.trim() || undefined,
         batch_year: batch ? Number(batch) : undefined,
         class_standing: standing || undefined,
-        whatsapp_number: whatsapp.trim() || undefined,
+        major: major || undefined,
+        whatsapp_number: joinWa(waCode, waNum) || undefined,
         student_id_number: studentId.trim() || undefined,
       })
       // belt-and-braces: re-read the profile and confirm the save actually
@@ -194,7 +242,10 @@ export default function CompleteProfile() {
             </div>
             <div style={{ flex: 1 }}>
               <div style={cap}>{t('BATCH / YEAR')}</div>
-              <input value={batch} onChange={(e) => setBatch(e.target.value.replace(/[^0-9]/g, ''))} placeholder={t('e.g. 2027')} inputMode="numeric" className="lok-field" style={field} />
+              <select value={batch} onChange={(e) => setBatch(e.target.value)} className="lok-field" style={{ ...field, fontWeight: 600 }}>
+                <option value="">{t('Select…')}</option>
+                {BATCH_YEARS.map((y) => <option key={y} value={y}>{y}</option>)}
+              </select>
             </div>
           </div>
 
@@ -208,8 +259,33 @@ export default function CompleteProfile() {
             </div>
             <div style={{ flex: 1 }}>
               <div style={cap}>{t('WHATSAPP')}</div>
-              <input value={whatsapp} onChange={(e) => setWhatsapp(e.target.value)} placeholder="+62 812-…" className="lok-field" style={field} />
+              <div style={{ display: 'flex', gap: 6 }}>
+                <select
+                  value={waCode}
+                  onChange={(e) => setWaCode(e.target.value)}
+                  className="lok-field"
+                  style={{ ...field, width: 92, flex: 'none', fontWeight: 600, padding: '12px 6px' }}
+                >
+                  {DIAL_CODES.map((d) => <option key={d.code} value={d.code}>{d.flag} {d.code}</option>)}
+                </select>
+                <input
+                  value={waNum}
+                  onChange={(e) => setWaNum(e.target.value.replace(/[^0-9]/g, ''))}
+                  placeholder="812 3456 7890"
+                  inputMode="numeric"
+                  className="lok-field"
+                  style={{ ...field, flex: 1, minWidth: 0 }}
+                />
+              </div>
             </div>
+          </div>
+
+          <div>
+            <div style={cap}>{t('MAJOR')}</div>
+            <select value={major} onChange={(e) => setMajor(e.target.value)} className="lok-field" style={{ ...field, fontWeight: 600 }}>
+              <option value="">{t('Select…')}</option>
+              {MAJORS.map((m) => <option key={m} value={m}>{t(m)}</option>)}
+            </select>
           </div>
 
           <div>

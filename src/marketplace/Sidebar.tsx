@@ -85,13 +85,20 @@ export default function Sidebar() {
             <span style={{ fontSize: 12.5, fontWeight: 600, color: '#3A3B3E' }}>{t('Live listings')}</span>
             <span style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 700, fontSize: 15, color: '#000000' }}>{totalCount}</span>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '11px 0' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '11px 0', borderBottom: '1px solid #ECECEA' }}>
             <span style={{ fontSize: 12.5, fontWeight: 600, color: '#3A3B3E' }}>{t('Neighbours online')}</span>
             <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontFamily: "'Space Grotesk',sans-serif", fontWeight: 700, fontSize: 15, color: '#1E9E5A' }}>
               <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#3DBB6E' }} />
               {s.guest ? '—' : s.onlineIds.length}
             </span>
           </div>
+          {/* credibility counter — total completed escrow trades, live */}
+          {s.marketStats != null && (
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '11px 0' }}>
+              <span style={{ fontSize: 12.5, fontWeight: 600, color: '#3A3B3E' }}>{t('Trades completed')} ✅</span>
+              <span style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 700, fontSize: 15, color: '#000000' }}>{s.marketStats}</span>
+            </div>
+          )}
         </div>
       </div>
 

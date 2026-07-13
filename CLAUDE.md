@@ -192,6 +192,24 @@ Also shipped (growth batch, 2026-07-13):
   /privacy intentionally stay English. New user-visible strings MUST be wrapped in t()
   with an ID entry added.
 
+Also shipped (marketplace-app batch, 2026-07-13, migration 0025):
+- **Chat = one thread per person**: fetchConversations groups by counterparty
+  (`ConversationRow.conv_ids`); messages/reads/deletes span the group. NEVER
+  key chat features on a single conversation id — resolve the group first
+  (`groupIdsFor` in context.tsx).
+- **Product-card attachments**: `messages.listing_id`; contacting a seller
+  queues `state.pendingAttach` which rides the next message. "Make an offer"
+  on DetailModal sends `💰 OFFER · Rp X` with the card attached.
+- Delete chat (both sides, RLS delete policy + cascade), emoji keyboard,
+  banned-word filter (`src/lib/moderation.ts`, enforced in api.ts at
+  createListing/createRequest/sendMessage).
+- Ticker: measured seamless marquee (repeats sets to fill width, ~150px/s).
+- Market pulse: `market_stats()` SECURITY DEFINER → live "Trades completed".
+- Sell form: up to 5 photos (first = cover), category starts blank/required.
+- Profiles: `major` column (6 fixed programs), WhatsApp stored as `+62…`
+  (dial-code picker), batch select 2021–2026, ⭐ TOP SELLER badge (5+ sales,
+  4.5★+), Control Room analytics (8-week bar charts via fetchAdminTrends).
+
 Remaining / nice-to-have:
 - **Real Midtrans QRIS** — deliberately last; blocked on the owner signing up for
   Midtrans. api/qris scaffolding exists; currently prototype/static-QR mode.

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useM } from './context'
 import { useIsPhone } from './useIsMobile'
 import { getUserId } from '../lib/api'
@@ -19,6 +19,9 @@ const QUICK_BUYER = [
   "Deal — I'll order now 👍",
 ]
 
+// compact emoji keyboard — curated set, no library needed
+const EMOJIS = ['😀','😂','🤣','😊','😍','😘','😎','🤔','😅','🙂','😢','😭','😡','🥺','🤝','👍','👎','🙏','👏','💪','✌️','🤙','👋','🫶','❤️','💔','🔥','✨','🎉','🎊','💯','⭐','✅','❌','❓','‼️','💰','💸','🛒','📦','🚚','🏷️','⏰','📍','🏠','🛏️','🪑','📚','💻','📱','🎧','👕','👟','🧺','🍜','☕','🍰','😴','🤗','🤩','😇','🙌','🤞','🆗','🆕']
+
 const timeShort = (iso: string) => {
   const d = new Date(iso)
   if (isNaN(d.getTime())) return ''
@@ -36,7 +39,9 @@ function Avatar({ photo, initial, size }: { photo: string | null; initial: strin
 }
 
 export default function MessagesView() {
-  const { state, openConversation, sendMsg, setMsgDraft, patch, openListingById } = useM()
+  const { state, openConversation, deleteThread, cancelAttach, sendMsg, setMsgDraft, patch, openListingById } = useM()
+  const [emojiOpen, setEmojiOpen] = useState(false)
+  const emojiRef = useRef<HTMLDivElement>(null)
   const { t } = useLang()
   const s = state
   const isPhone = useIsPhone()
@@ -52,7 +57,7 @@ export default function MessagesView() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [s.convs, s.activeConvId, isPhone])
 
-  const active = s.convs.find((c) => c.id === s.activeConvId) || null
+  const active = s.convs.find((c) => c.id === s.activeConvId || (s.activeConvId ? c.conv_ids.includes(s.activeConvId) : false)) || null
   const back = () => patch({ activeConvId: null, msgs: [] })
   // on phone show one pane at a time
   const showList = !isPhone || !s.activeConvId
@@ -96,6 +101,17 @@ export default function MessagesView() {
                   <div style={{ fontSize: 12, color: '#5F6063', fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginTop: 2 }}>{c.last_content || t('Say hello 👋')}</div>
                 </div>
                 {c.unread > 0 && <div style={{ width: 9, height: 9, borderRadius: '50%', background: '#D4562F', flex: 'none' }} />}
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    if (window.confirm(t('Delete this chat? It disappears for both of you and cannot be undone.'))) deleteThread(c)
+                  }}
+                  title={t('Delete chat')}
+                  className="lok-navi"
+                  style={{ flex: 'none', border: 'none', background: 'none', cursor: 'pointer', fontSize: 13, color: '#B9B9B3', padding: 4 }}
+                >
+                  🗑
+                </button>
               </div>
             ))}
           </div>
@@ -151,7 +167,25 @@ export default function MessagesView() {
               {s.msgs.map((m) => {
                 const mine = m.sender_id === uid
                 return (
-                  <div key={m.id} style={{ alignSelf: mine ? 'flex-end' : 'flex-start', maxWidth: '64%', background: mine ? 'var(--accent,#000000)' : '#FFFFFF', color: mine ? '#F7F3EA' : '#000000', fontSize: 13.5, lineHeight: 1.45, padding: '10px 14px', borderRadius: mine ? '16px 16px 4px 16px' : '16px 16px 16px 4px', fontWeight: 500, boxShadow: '0 1px 2px rgba(0,0,0,.05)' }}>{m.content}</div>
+                  <div key={m.id} style={{ alignSelf: mine ? 'flex-end' : 'flex-start', maxWidth: '64%', display: 'flex', flexDirection: 'column', gap: 4 }}>
+                    {/* product-card attachment — which item this message is about */}
+                    {m.item_title && (
+                      <div
+                        onClick={() => m.listing_id && openListingById(m.listing_id)}
+                        className="lok-btn"
+                        style={{ cursor: m.listing_id ? 'pointer' : 'default', background: '#FFFFFF', border: '1px solid #D8D8D4', padding: '8px 10px', display: 'flex', alignItems: 'center', gap: 9, borderRadius: 10 }}
+                      >
+                        <div style={{ width: 38, height: 38, flex: 'none', background: '#ECECEA', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 6 }}>
+                          {m.item_photo ? <img src={m.item_photo} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : '📦'}
+                        </div>
+                        <div style={{ minWidth: 0 }}>
+                          <div style={{ fontWeight: 700, fontSize: 12, color: '#000000', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 190 }}>{m.item_title}</div>
+                          {m.item_price != null && <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 700, fontSize: 12, color: '#000000' }}>Rp {Number(m.item_price).toLocaleString('id-ID')}</div>}
+                        </div>
+                      </div>
+                    )}
+                    <div style={{ background: mine ? 'var(--accent,#000000)' : '#FFFFFF', color: mine ? '#F7F3EA' : '#000000', fontSize: 13.5, lineHeight: 1.45, padding: '10px 14px', borderRadius: mine ? '16px 16px 4px 16px' : '16px 16px 16px 4px', fontWeight: 500, boxShadow: '0 1px 2px rgba(0,0,0,.05)', alignSelf: mine ? 'flex-end' : 'flex-start' }}>{m.content}</div>
+                  </div>
                 )
               })}
             </div>
@@ -170,7 +204,37 @@ export default function MessagesView() {
                 ))}
               </div>
             )}
-            <div style={{ padding: '14px 18px', display: 'flex', gap: 10, alignItems: 'center' }}>
+            {/* queued product card — attaches to the next message sent */}
+            {s.pendingAttach && (
+              <div style={{ margin: '10px 18px 0', display: 'flex', alignItems: 'center', gap: 9, background: '#FBF5E9', border: '1px solid #C8A96A', padding: '7px 10px' }}>
+                <div style={{ width: 30, height: 30, flex: 'none', background: '#ECECEA', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  {s.pendingAttach.photo ? <img src={s.pendingAttach.photo} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : '📦'}
+                </div>
+                <div style={{ flex: 1, minWidth: 0, fontSize: 12, fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                  {t('Attached:')} {s.pendingAttach.title} · {s.pendingAttach.price}
+                </div>
+                <button onClick={cancelAttach} style={{ flex: 'none', border: 'none', background: 'none', cursor: 'pointer', fontWeight: 700, color: '#8B8B86' }}>✕</button>
+              </div>
+            )}
+            <div style={{ padding: '14px 18px', display: 'flex', gap: 10, alignItems: 'center', position: 'relative' }}>
+              {/* emoji keyboard */}
+              <button
+                onClick={() => setEmojiOpen((v) => !v)}
+                title={t('Emoji')}
+                className="lok-navi"
+                style={{ flex: 'none', border: '1.5px solid #D8D8D4', background: emojiOpen ? '#ECECEA' : '#F5F5F3', width: 42, height: 42, borderRadius: 0, cursor: 'pointer', fontSize: 18, lineHeight: 1 }}
+              >
+                😊
+              </button>
+              {emojiOpen && (
+                <div ref={emojiRef} style={{ position: 'absolute', bottom: 64, left: 18, width: 292, maxHeight: 220, overflowY: 'auto', background: '#FFFFFF', border: '1px solid #D8D8D4', boxShadow: '0 18px 40px -12px rgba(0,0,0,.3)', padding: 8, display: 'grid', gridTemplateColumns: 'repeat(8, 1fr)', gap: 2, zIndex: 30, animation: 'lok-pop .15s ease both' }}>
+                  {EMOJIS.map((e) => (
+                    <button key={e} onClick={() => setMsgDraft(s.msgDraft + e)} style={{ border: 'none', background: 'none', cursor: 'pointer', fontSize: 19, padding: 4, lineHeight: 1 }}>
+                      {e}
+                    </button>
+                  ))}
+                </div>
+              )}
               <input
                 className="lok-field"
                 value={s.msgDraft}

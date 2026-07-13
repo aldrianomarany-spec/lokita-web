@@ -20,6 +20,7 @@ export interface Profile {
   room_number: string | null
   batch_year: number | null
   class_standing: ClassStanding | null
+  major: string | null
   verification_status: VerificationStatus
   verification_doc_url: string | null
   role: 'user' | 'admin'
@@ -35,6 +36,7 @@ export interface ProfileDetails {
   room_number?: string
   batch_year?: number
   class_standing?: ClassStanding
+  major?: string
   whatsapp_number?: string
   student_id_number?: string
 }

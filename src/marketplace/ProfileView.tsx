@@ -18,6 +18,16 @@ const metaField = (label: string, value: string) => (
   </div>
 )
 
+// gold chip for proven sellers (5+ sales, 4.5★+ average)
+function TopSellerChip() {
+  const { t } = useLang()
+  return (
+    <span title={t('5+ completed sales with a 4.5★+ rating')} style={{ background: '#C8A96A', color: '#000000', fontFamily: "'Spline Sans Mono',monospace", fontSize: 9, fontWeight: 700, padding: '3px 8px', letterSpacing: 1, borderRadius: 0 }}>
+      ⭐ {t('TOP SELLER')}
+    </span>
+  )
+}
+
 // verification badge styled by status
 function VerifyBadge({ status }: { status?: string }) {
   const { t } = useLang()
@@ -187,6 +197,7 @@ export default function ProfileView() {
 
   const stats = s.stats
   const ratingLabel = stats && stats.avgRating != null ? stats.avgRating.toFixed(1) : '—'
+  const isTopSeller = !!stats && stats.sold >= 5 && stats.avgRating != null && stats.avgRating >= 4.5
   const statTiles = [
     { value: String(stats?.selling ?? 0), label: t('Selling'), color: 'var(--accent,#000000)' },
     { value: String(stats?.sold ?? 0), label: t('Sold'), color: '#1E9E5A' },
@@ -213,6 +224,7 @@ export default function ProfileView() {
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
             <h1 style={{ fontFamily: "'Bricolage Grotesque',sans-serif", fontSize: 28, fontWeight: 800, letterSpacing: '-.02em', margin: 0 }}>{p.name || t('Your name')}</h1>
             <VerifyBadge status={p.verification_status} />
+            {isTopSeller && <TopSellerChip />}
           </div>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 26, marginTop: 16 }}>
             {metaField(t('STUDENT ID'), p.studentId)}
@@ -221,6 +233,7 @@ export default function ProfileView() {
             {metaField(t('MEMBER SINCE'), p.since)}
             {metaField(t('BATCH / YEAR'), p.batch)}
             {metaField(t('CLASS STANDING'), p.standing)}
+            {metaField(t('MAJOR'), p.major ? t(p.major) : '')}
           </div>
         </div>
         <button onClick={openEdit} className="lok-btn" style={{ flex: 'none', border: '1px solid #C9C9C5', background: '#F5F5F3', color: '#000000', fontFamily: 'inherit', fontWeight: 700, fontSize: 13.5, padding: '11px 16px', borderRadius: 0, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 7 }}>
