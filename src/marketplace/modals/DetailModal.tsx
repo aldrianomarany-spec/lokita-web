@@ -9,10 +9,12 @@ import ReportForm from '../ReportForm'
 import { ChevronRight, MapPin, MessageBubble, ShieldCheck, Star, Verified } from '../../components/Icons'
 
 export default function DetailModal() {
-  const { state, closeDetail, chatSeller, openCheckout, openMember, deleteMyListing, toggleSaveItem, goSignup } = useM()
+  const { state, closeDetail, chatSeller, openCheckout, openMember, deleteMyListing, toggleSaveItem, goSignup, sendOffer } = useM()
   const [deleting, setDeleting] = useState(false)
   const [photoIdx, setPhotoIdx] = useState(0)
   const [copied, setCopied] = useState(false)
+  const [offerOpen, setOfferOpen] = useState(false)
+  const [offerVal, setOfferVal] = useState('')
   const isPhone = useIsPhone()
   const { t } = useLang()
   const guest = state.guest
@@ -208,6 +210,36 @@ export default function DetailModal() {
                   <MessageBubble size={17} />
                   {t('Message seller')}
                 </button>
+                {/* make an offer — lands in the seller's chat with the product card attached */}
+                {offerOpen ? (
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <div className="lok-in" style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 7, background: '#F5F5F3', border: '1.5px solid #D8D8D4', borderRadius: 0, padding: '0 12px' }}>
+                      <span style={{ fontWeight: 700, fontSize: 13, color: '#8B8B86' }}>Rp</span>
+                      <input
+                        autoFocus
+                        inputMode="numeric"
+                        value={offerVal}
+                        onChange={(e) => setOfferVal(e.target.value.replace(/[^0-9]/g, ''))}
+                        onKeyDown={(e) => { if (e.key === 'Enter' && Number(offerVal) > 0) sendOffer(Number(offerVal)) }}
+                        placeholder={t('Your offer')}
+                        style={{ flex: 1, minWidth: 0, border: 'none', background: 'none', outline: 'none', fontFamily: 'inherit', fontWeight: 700, fontSize: 14, padding: '12px 0', color: '#000000' }}
+                      />
+                    </div>
+                    <button
+                      className="lok-btn"
+                      disabled={!(Number(offerVal) > 0)}
+                      onClick={() => sendOffer(Number(offerVal))}
+                      style={{ border: 'none', background: Number(offerVal) > 0 ? '#C8A96A' : '#E6E6E3', color: '#000000', fontFamily: 'inherit', fontWeight: 800, fontSize: 13.5, padding: '0 18px', borderRadius: 0, cursor: Number(offerVal) > 0 ? 'pointer' : 'default' }}
+                    >
+                      {t('Send offer')} →
+                    </button>
+                    <button onClick={() => setOfferOpen(false)} className="lok-navi" style={{ border: '1px solid #D8D8D4', background: '#FFFFFF', width: 44, borderRadius: 0, cursor: 'pointer', color: '#4A4B4E' }}>✕</button>
+                  </div>
+                ) : (
+                  <button className="lok-btn" onClick={() => setOfferOpen(true)} style={{ border: '1px solid #C8A96A', background: '#FBF5E9', color: '#6B5320', fontFamily: 'inherit', fontWeight: 700, fontSize: 14, padding: 13, borderRadius: 0, cursor: 'pointer' }}>
+                    💰 {t('Make an offer')}
+                  </button>
+                )}
                 <button className="lok-btn" onClick={openCheckout} style={{ border: 'none', background: 'var(--accent,#000000)', color: '#F7F3EA', fontFamily: 'inherit', fontWeight: 700, fontSize: 14.5, padding: 14, borderRadius: 0, cursor: 'pointer', boxShadow: '0 8px 20px -8px rgba(0,0,0,.6)' }}>{t('Buy now')} · {sel.price}</button>
                 <ReportForm targetType="listing" targetId={sel.id} label={t('this listing')} />
               </>

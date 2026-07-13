@@ -44,6 +44,7 @@ export interface Profile {
   floor: string
   batch: string
   standing: string
+  major: string
   since: string
   // populated from the DB row (optional so the empty seed is valid)
   verification_status?: string

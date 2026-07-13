@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { useM } from './context'
 import { fetchBanners, subscribeBanners, type BannerRow } from '../lib/api'
 
@@ -14,6 +14,21 @@ export default function Ticker() {
   // rule proved unreliable across browsers/overlays.
   const [paused, setPaused] = useState(false)
   const touchTimer = useRef<number | null>(null)
+  // seamless loop: the track is 2 identical halves and slides -50%; each half
+  // must be at least as wide as the strip, so short announcement sets are
+  // repeated k times. Measured, so it always loops perfectly.
+  const boxRef = useRef<HTMLDivElement>(null)
+  const setRef = useRef<HTMLSpanElement>(null)
+  const [reps, setReps] = useState(1)
+  const [dur, setDur] = useState(18)
+  useLayoutEffect(() => {
+    const setW = setRef.current?.offsetWidth || 0
+    const boxW = boxRef.current?.offsetWidth || 0
+    if (!setW || !boxW) return
+    const k = Math.max(1, Math.ceil(boxW / setW))
+    setReps(k)
+    setDur(Math.max(6, Math.round((k * setW) / 150))) // ~150 px/s, quick but readable
+  }, [items])
 
   useEffect(() => {
     let live = true
@@ -35,11 +50,10 @@ export default function Ticker() {
     else if (b.target_type === 'sell') (state.guest ? goSignup() : openSell())
   }
 
-  const speed = Math.max(9, items.length * 6)
-  const row = (dup: boolean) =>
+  const row = (copy: number) =>
     items.map((b) => (
       <span
-        key={(dup ? 'd-' : '') + b.id}
+        key={copy + '-' + b.id}
         onClick={() => b.target_type !== 'none' && go(b)}
         style={{ display: 'inline-flex', alignItems: 'center', gap: 10, padding: '0 28px', cursor: b.target_type !== 'none' ? 'pointer' : 'default', whiteSpace: 'nowrap' }}
       >
@@ -51,6 +65,7 @@ export default function Ticker() {
 
   return (
     <div
+      ref={boxRef}
       className="lok-ticker"
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
@@ -61,9 +76,11 @@ export default function Ticker() {
       }}
       style={{ flex: 'none', background: '#3555E6', color: '#FFFFFF', overflow: 'hidden', fontFamily: "'Spline Sans Mono',monospace", fontSize: 12, fontWeight: 600, letterSpacing: '.02em', padding: '7px 0', zIndex: 41 }}
     >
-      <div className="lok-ticker-track" style={{ ['--ticker-speed' as string]: `${speed}s`, animationPlayState: paused ? 'paused' : 'running' } as React.CSSProperties}>
-        {row(false)}
-        {row(true)}
+      <div className="lok-ticker-track" style={{ ['--ticker-speed' as string]: `${dur}s`, animationPlayState: paused ? 'paused' : 'running' } as React.CSSProperties}>
+        {/* first half: one measured set + (k-1) fillers; second half: identical */}
+        <span ref={setRef} style={{ display: 'inline-flex' }}>{row(0)}</span>
+        {Array.from({ length: reps - 1 }, (_, i) => row(i + 1))}
+        {Array.from({ length: reps }, (_, i) => row(reps + i))}
       </div>
     </div>
   )
