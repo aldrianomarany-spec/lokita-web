@@ -1,7 +1,48 @@
+import { useState } from 'react'
 import { useM } from '../context'
 import { BUILDINGS, floorsForBuilding, STANDINGS } from '../../theme'
 import { useLang } from '../../i18n'
 import Overlay, { stop } from './Overlay'
+
+// country dial codes for the WhatsApp field — Indonesia first / default
+const DIAL_CODES = [
+  { flag: '🇮🇩', code: '+62' },
+  { flag: '🇸🇬', code: '+65' },
+  { flag: '🇲🇾', code: '+60' },
+  { flag: '🇯🇵', code: '+81' },
+  { flag: '🇰🇷', code: '+82' },
+  { flag: '🇨🇳', code: '+86' },
+  { flag: '🇮🇳', code: '+91' },
+  { flag: '🇸🇦', code: '+966' },
+  { flag: '🇦🇺', code: '+61' },
+  { flag: '🇬🇧', code: '+44' },
+  { flag: '🇺🇸', code: '+1' },
+]
+// stored shape is code + national digits, e.g. "+62812345678"
+function splitWa(v: string): { code: string; national: string } {
+  const s = (v || '').trim()
+  if (!s) return { code: '+62', national: '' }
+  const code = DIAL_CODES.map((d) => d.code)
+    .filter((c) => s.startsWith(c))
+    .sort((a, b) => b.length - a.length)[0]
+  const rest = code ? s.slice(code.length) : s
+  return { code: code || '+62', national: rest.replace(/[^0-9]/g, '') }
+}
+function joinWa(code: string, national: string): string {
+  const digits = national.replace(/[^0-9]/g, '').replace(/^0+/, '') // 0812… → 812…
+  return digits ? code + digits : ''
+}
+
+const BATCH_YEARS = ['2021', '2022', '2023', '2024', '2025', '2026']
+// exact DB values — option value= must stay English, only the label is translated
+const MAJORS = [
+  'Accounting',
+  'English Literature',
+  'Information Systems',
+  'Information Technology',
+  'Japanese Literature',
+  'Visual Communication Design',
+]
 
 const fieldBase: React.CSSProperties = {
   width: '100%',
@@ -27,6 +68,9 @@ export default function EditProfileModal() {
   const { t } = useLang()
   const pf = state.pf
   const profileInitial = (state.profile.name || 'A').trim().charAt(0).toUpperCase()
+  const initWa = splitWa(pf.whatsapp)
+  const [waCode, setWaCode] = useState(initWa.code)
+  const [waNum, setWaNum] = useState(initWa.national)
 
   return (
     <Overlay onClose={closeEdit}>
@@ -63,7 +107,33 @@ export default function EditProfileModal() {
             </div>
             <div style={{ flex: 1 }}>
               <div style={cap}>{t('WHATSAPP')}</div>
-              <input className="lok-field" value={pf.whatsapp} onChange={(e) => setPf('whatsapp', e.target.value)} style={fieldBase} />
+              <div style={{ display: 'flex', gap: 6 }}>
+                <select
+                  className="lok-field"
+                  value={waCode}
+                  onChange={(e) => {
+                    setWaCode(e.target.value)
+                    setPf('whatsapp', joinWa(e.target.value, waNum))
+                  }}
+                  style={{ ...fieldBase, width: 92, flex: 'none', fontWeight: 600, padding: '12px 6px' }}
+                >
+                  {DIAL_CODES.map((d) => (
+                    <option key={d.code} value={d.code}>{d.flag} {d.code}</option>
+                  ))}
+                </select>
+                <input
+                  className="lok-field"
+                  value={waNum}
+                  inputMode="numeric"
+                  placeholder="812 3456 7890"
+                  onChange={(e) => {
+                    const digits = e.target.value.replace(/[^0-9]/g, '')
+                    setWaNum(digits)
+                    setPf('whatsapp', joinWa(waCode, digits))
+                  }}
+                  style={{ ...fieldBase, flex: 1, minWidth: 0 }}
+                />
+              </div>
             </div>
           </div>
           <div style={{ display: 'flex', gap: 11 }}>
@@ -101,16 +171,32 @@ export default function EditProfileModal() {
             </div>
             <div style={{ flex: 1 }}>
               <div style={cap}>{t('BATCH / YEAR')}</div>
-              <input className="lok-field" value={pf.batch} onChange={(e) => setPf('batch', e.target.value)} style={fieldBase} />
+              <select className="lok-field" value={(pf.batch || '').replace(/[^0-9]/g, '')} onChange={(e) => setPf('batch', e.target.value)} style={{ ...fieldBase, fontWeight: 600 }}>
+                <option value="">{t('Select…')}</option>
+                {BATCH_YEARS.map((y) => (
+                  <option key={y} value={y}>{y}</option>
+                ))}
+              </select>
             </div>
           </div>
-          <div>
-            <div style={cap}>{t('CLASS STANDING')}</div>
-            <select className="lok-field" value={pf.standing} onChange={(e) => setPf('standing', e.target.value)} style={{ ...fieldBase, fontWeight: 600 }}>
-              {STANDINGS.map((st) => (
-                <option key={st} value={st}>{t(st)}</option>
-              ))}
-            </select>
+          <div style={{ display: 'flex', gap: 11 }}>
+            <div style={{ flex: 1 }}>
+              <div style={cap}>{t('CLASS STANDING')}</div>
+              <select className="lok-field" value={pf.standing} onChange={(e) => setPf('standing', e.target.value)} style={{ ...fieldBase, fontWeight: 600 }}>
+                {STANDINGS.map((st) => (
+                  <option key={st} value={st}>{t(st)}</option>
+                ))}
+              </select>
+            </div>
+            <div style={{ flex: 1 }}>
+              <div style={cap}>{t('MAJOR')}</div>
+              <select className="lok-field" value={pf.major} onChange={(e) => setPf('major', e.target.value)} style={{ ...fieldBase, fontWeight: 600 }}>
+                <option value="">{t('Select…')}</option>
+                {MAJORS.map((m) => (
+                  <option key={m} value={m}>{t(m)}</option>
+                ))}
+              </select>
+            </div>
           </div>
         </div>
 

@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useM } from '../context'
 import { SELL_CATEGORIES, BUILDINGS, floorsForBuilding, platformFee, publishedPrice } from '../../theme'
 import { useLang } from '../../i18n'
@@ -24,14 +24,25 @@ export default function SellModal() {
   const f = s.f
   const [photos, setPhotos] = useState<File[]>([])
   const fileRef = useRef<HTMLInputElement>(null)
+  const MAX_PHOTOS = 5
+
+  // category must be an explicit choice — start blank every time the modal opens
+  useEffect(() => {
+    setF('cat', '')
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const listLabel = s.listState === 'saving' ? t('Posting…') : s.listState === 'done' ? t('Posted ✓') : t('Post listing')
   const listBg = s.listState === 'done' ? '#3DBB6E' : 'var(--accent,#000000)'
   const busy = s.listState !== 'idle'
 
+  // append newly picked files, hard cap at MAX_PHOTOS (extras are ignored)
   const onFiles = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setPhotos(Array.from(e.target.files || []).slice(0, 6))
+    const picked = Array.from(e.target.files || [])
+    setPhotos((prev) => [...prev, ...picked].slice(0, MAX_PHOTOS))
+    e.target.value = '' // allow re-picking the same file after a remove
   }
+  const removePhoto = (i: number) => setPhotos((prev) => prev.filter((_, idx) => idx !== i))
 
   // live revenue preview — LOKITA adds its platform fee on top of the ask,
   // so the seller sees exactly what buyers will pay before posting.
@@ -52,18 +63,27 @@ export default function SellModal() {
         {/* photo picker */}
         <input ref={fileRef} type="file" accept="image/*" multiple onChange={onFiles} style={{ display: 'none' }} />
         {photos.length > 0 ? (
-          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 14 }}>
-            {photos.map((p, i) => (
-              <div key={i} style={{ width: 72, height: 72, borderRadius: 0, overflow: 'hidden', border: '1px solid #D8D8D4', position: 'relative' }}>
-                <img src={URL.createObjectURL(p)} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-              </div>
-            ))}
-            <button onClick={() => fileRef.current?.click()} className="lok-btn" style={{ width: 72, height: 72, borderRadius: 0, border: '1.5px dashed #C2C2BE', background: '#F5F5F3', color: '#9A9A94', cursor: 'pointer', fontSize: 22 }}>+</button>
+          <div style={{ marginBottom: 14 }}>
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+              {photos.map((p, i) => (
+                <div key={i} style={{ width: 72, height: 72, borderRadius: 0, border: '1px solid #D8D8D4', position: 'relative' }}>
+                  <img src={URL.createObjectURL(p)} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                  {i === 0 && (
+                    <span style={{ position: 'absolute', left: 0, bottom: 0, background: '#000000', color: '#F7F3EA', fontFamily: "'Spline Sans Mono',monospace", fontSize: 8.5, letterSpacing: '.08em', padding: '2px 5px' }}>{t('COVER')}</span>
+                  )}
+                  <button onClick={() => removePhoto(i)} title={t('Remove photo')} style={{ position: 'absolute', top: 0, right: 0, width: 18, height: 18, border: 'none', borderRadius: 0, background: 'rgba(0,0,0,.7)', color: '#FFFFFF', fontSize: 10, lineHeight: '18px', padding: 0, cursor: 'pointer' }}>✕</button>
+                </div>
+              ))}
+              {photos.length < MAX_PHOTOS && (
+                <button onClick={() => fileRef.current?.click()} className="lok-btn" style={{ width: 72, height: 72, borderRadius: 0, border: '1.5px dashed #C2C2BE', background: '#F5F5F3', color: '#9A9A94', cursor: 'pointer', fontSize: 22 }}>+</button>
+              )}
+            </div>
+            <div style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 9.5, color: '#9A9A94', letterSpacing: '.06em', marginTop: 6 }}>{photos.length}/{MAX_PHOTOS} · {t('First photo is the cover buyers see first.')}</div>
           </div>
         ) : (
           <div onClick={() => fileRef.current?.click()} style={{ height: 124, borderRadius: 0, display: 'flex', flexDirection: 'column', gap: 6, alignItems: 'center', justifyContent: 'center', marginBottom: 14, border: '1.5px dashed #C2C2BE', background: '#F5F5F3', color: '#9A9A94', cursor: 'pointer' }}>
             <svg width={26} height={26} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="16" rx="3" /><circle cx="9" cy="10" r="2" /><path d="m21 16-4-4-9 8" /></svg>
-            <span style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 11 }}>{t('ADD PHOTOS (optional)')}</span>
+            <span style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 11 }}>{t('ADD PHOTOS — up to 5 (optional)')}</span>
           </div>
         )}
 
@@ -95,7 +115,8 @@ export default function SellModal() {
             <span style={cap}>{t('CONDITION')}</span>
           </div>
           <div style={{ display: 'flex', gap: 10 }}>
-            <select className="lok-field" value={f.cat} onChange={(e) => setF('cat', e.target.value)} title={t('Category')} style={{ ...fieldBase, flex: 1, fontWeight: 600 }}>
+            <select className="lok-field" value={f.cat} onChange={(e) => setF('cat', e.target.value)} title={t('Category')} style={{ ...fieldBase, flex: 1, fontWeight: 600, color: f.cat ? '#000000' : '#9A9A94' }}>
+              <option value="" disabled>{t('Select a category…')}</option>
               {SELL_CATEGORIES.map((c) => <option key={c} value={c}>{t(c)}</option>)}
             </select>
             <select className="lok-field" value={f.cond} onChange={(e) => setF('cond', e.target.value)} title={t('Condition')} style={{ ...fieldBase, flex: 1, fontWeight: 600 }}>
@@ -157,7 +178,13 @@ export default function SellModal() {
 
         </div>
 
-        <button disabled={busy} className="lok-btn" onClick={() => submitListing(photos)} style={{ width: '100%', border: 'none', background: listBg, color: '#F7F3EA', fontFamily: 'inherit', fontWeight: 700, fontSize: 14.5, padding: 14, borderRadius: 0, cursor: busy ? 'default' : 'pointer', marginTop: 18, transition: 'background .2s ease', boxShadow: '0 8px 20px -8px rgba(0,0,0,.6)' }}>{listLabel}</button>
+        <button
+          disabled={busy}
+          className="lok-btn"
+          onClick={() => {
+            if (!f.cat) { alert(t('Please choose a category.')); return }
+            submitListing(photos)
+          }} style={{ width: '100%', border: 'none', background: listBg, color: '#F7F3EA', fontFamily: 'inherit', fontWeight: 700, fontSize: 14.5, padding: 14, borderRadius: 0, cursor: busy ? 'default' : 'pointer', marginTop: 18, transition: 'background .2s ease', boxShadow: '0 8px 20px -8px rgba(0,0,0,.6)' }}>{listLabel}</button>
       </div>
     </Overlay>
   )

@@ -70,7 +70,9 @@ export default function MemberProfileView() {
 
   const isOnline = !!id && s.onlineIds.includes(id)
   const isMe = !!id && id === uid
-  const rating = reviews && reviews.length ? (reviews.reduce((a, r) => a + r.rating, 0) / reviews.length).toFixed(1) : '—'
+  const avgRating = reviews && reviews.length ? reviews.reduce((a, r) => a + r.rating, 0) / reviews.length : null
+  const rating = avgRating != null ? avgRating.toFixed(1) : '—'
+  const isTopSeller = !!stats && stats.sold >= 5 && avgRating != null && avgRating >= 4.5
 
   const backBtn = (
     <button onClick={closeMember} className="lok-navi" style={{ border: '1px solid #D8D8D4', background: '#F5F5F3', padding: '9px 14px', borderRadius: 0, cursor: 'pointer', color: '#4A4B4E', fontFamily: 'inherit', fontWeight: 700, fontSize: 13 }}>{t('‹ Back')}</button>
@@ -108,12 +110,18 @@ export default function MemberProfileView() {
                 <Verified size={13} checkColor="#F6F0E3" /> {t('Dorm-Verified')}
               </span>
             )}
+            {isTopSeller && (
+              <span title={t('5+ completed sales with a 4.5★+ rating')} style={{ background: '#C8A96A', color: '#000000', fontFamily: "'Spline Sans Mono',monospace", fontSize: 9, fontWeight: 700, padding: '3px 8px', letterSpacing: 1, borderRadius: 0 }}>
+                ⭐ {t('TOP SELLER')}
+              </span>
+            )}
           </div>
           <div style={{ fontSize: 12.5, fontWeight: 700, marginTop: 5, color: isOnline ? '#1E9E5A' : '#8B8B86' }}>{isOnline ? '● ' + t('Online now') : '● ' + t('Offline')}</div>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 22, marginTop: 14 }}>
             {metaField(t('BUILDING'), info ? [info.building, info.floor].filter(Boolean).join(' · ') : '')}
             {metaField(t('BATCH'), info?.batch || '')}
             {metaField(t('STANDING'), info?.standing || '')}
+            {metaField(t('MAJOR'), info?.major ? t(info.major) : '')}
             {metaField(t('MEMBER SINCE'), info?.since || '')}
           </div>
         </div>
