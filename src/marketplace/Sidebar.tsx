@@ -1,9 +1,8 @@
 import { useM } from './context'
-import { CATEGORIES, CAT_META, CAT_DOT, type Category } from '../theme'
 import { MASCOT_URL } from '../brand'
 
 export default function Sidebar() {
-  const { state, selectCat, openRequests, openPeople, openAdmin } = useM()
+  const { state, openRequests, openPeople, openAdmin, openSell, toggleSavedView } = useM()
   const s = state
   const counts = s.categoryCounts
   const totalCount = Object.values(counts).reduce((a, n) => a + n, 0)
@@ -56,24 +55,42 @@ export default function Sidebar() {
         )}
       </div>
 
+      {/* categories live as chips above the grid — this rail carries actions + live stats */}
       <div>
-        <div style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 10, color: '#9A9A94', padding: '0 11px 9px', letterSpacing: '.1em' }}>CATEGORIES</div>
-        {CATEGORIES.map((label: Category) => {
-          const active = s.cat === label && !s.savedOnly
-          const count = label === 'All' ? totalCount : counts[label] || 0
-          return (
-            <button
-              key={label}
-              onClick={() => selectCat(label)}
-              className="lok-navi"
-              style={{ width: '100%', border: 'none', cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left', display: 'flex', alignItems: 'center', gap: 12, fontWeight: 600, fontSize: 14, padding: '10px 12px', borderRadius: 0, background: active ? '#F6F0E3' : 'transparent', color: active ? '#8A6C34' : '#3A3B3E', marginBottom: 2 }}
-            >
-              <span style={{ width: 26, height: 26, borderRadius: 0, background: CAT_DOT[label], display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, flex: 'none' }}>{CAT_META[label]}</span>
-              <span style={{ flex: 1 }}>{label}</span>
-              <span style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 11, color: active ? '#4A8067' : '#ABABA6', fontWeight: 500 }}>{count}</span>
-            </button>
-          )
-        })}
+        <div style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 10, color: '#9A9A94', padding: '0 11px 9px', letterSpacing: '.1em' }}>QUICK ACTIONS</div>
+        <button
+          onClick={openSell}
+          className="lok-btn"
+          style={{ width: '100%', border: 'none', cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 9, fontWeight: 800, fontSize: 14, padding: '12px 12px', borderRadius: 0, background: '#000000', color: '#FFFFFF', marginBottom: 8 }}
+        >
+          <span style={{ color: '#C8A96A', fontSize: 16, lineHeight: 1 }}>＋</span> Sell an item
+        </button>
+        {!s.guest && (
+          <button
+            onClick={toggleSavedView}
+            className="lok-navi"
+            style={{ width: '100%', border: '1px solid #D8D8D4', cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 9, fontWeight: 700, fontSize: 13.5, padding: '11px 12px', borderRadius: 0, background: s.savedOnly ? '#F6F0E3' : '#FFFFFF', color: s.savedOnly ? '#8A6C34' : '#3A3B3E' }}
+          >
+            ★ Saved items{Object.keys(s.saved).length > 0 ? ` (${Object.keys(s.saved).length})` : ''}
+          </button>
+        )}
+      </div>
+
+      <div>
+        <div style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 10, color: '#9A9A94', padding: '0 11px 9px', letterSpacing: '.1em' }}>MARKET PULSE</div>
+        <div style={{ background: '#FFFFFF', border: '1px solid #D8D8D4', padding: '4px 14px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '11px 0', borderBottom: '1px solid #ECECEA' }}>
+            <span style={{ fontSize: 12.5, fontWeight: 600, color: '#3A3B3E' }}>Live listings</span>
+            <span style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 700, fontSize: 15, color: '#000000' }}>{totalCount}</span>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '11px 0' }}>
+            <span style={{ fontSize: 12.5, fontWeight: 600, color: '#3A3B3E' }}>Neighbours online</span>
+            <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontFamily: "'Space Grotesk',sans-serif", fontWeight: 700, fontSize: 15, color: '#1E9E5A' }}>
+              <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#3DBB6E' }} />
+              {s.guest ? '—' : s.onlineIds.length}
+            </span>
+          </div>
+        </div>
       </div>
 
       <div style={{ marginTop: 'auto', background: 'var(--accent,#000000)', borderRadius: 0, padding: 17, color: '#EAF3EE', position: 'relative', overflow: 'hidden' }}>

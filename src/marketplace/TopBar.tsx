@@ -105,9 +105,9 @@ export default function TopBar() {
         zIndex: 40,
       }}
     >
-      {/* brand — Grid Market text wordmark with the blue period */}
+      {/* brand — logo mark (when configured) + Grid Market text wordmark */}
       <div onClick={goHome} style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer', flex: 'none' }}>
-        {BRAND_LOGO_URL && isPhone && <img src={BRAND_LOGO_URL} alt="LOKITA" style={{ width: 30, height: 30, objectFit: 'contain' }} />}
+        {BRAND_LOGO_URL && <img src={BRAND_LOGO_URL} alt="LOKITA" style={{ width: isPhone ? 30 : 36, height: isPhone ? 30 : 36, objectFit: 'contain' }} />}
         {!isPhone ? (
           <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 700, fontSize: 22, letterSpacing: '-0.5px', color: '#FFFFFF', lineHeight: 1 }}>
             LOKITA<span style={{ color: '#C8A96A' }}>.</span>

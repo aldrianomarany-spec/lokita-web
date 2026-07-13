@@ -158,6 +158,24 @@ Also shipped (foundation upgrade):
   legal pages `/terms` + `/privacy` (`src/pages/Legal.tsx`), Vercel Analytics component,
   GitHub Actions CI (.github/workflows/ci.yml).
 
+Also shipped (Grid Market / Noir & Gold era, 2026-07-12/13):
+- Full UI re-skin: jet-black statements + champagne gold `#C8A96A` on paper `#F5F5F3`,
+  zero border-radius. Design restore points exist as git tags: `look-warm-editorial`,
+  `look-grid-market`, `look-noir-gold`.
+- **Admin banners (migrations 0021–0023)**: `banners` table (RLS: everyone reads active,
+  admins manage; realtime). Two Control Room sections — big black homepage slot
+  (`placement='hero'`, optional image via `uploadBannerImage`) and the blue moving
+  announcement ticker (`placement='ticker'`, `Ticker.tsx`, marquee above TopBar app-wide).
+- Homepage hero is a true **sliding carousel** (translateX track, 6s auto-advance that
+  resets on manual dot clicks, clickable gold dots) — falls back to the featured item,
+  then to Kapi. `subscribeBanners` MUST keep a unique channel topic per subscriber
+  (two components subscribe; a shared literal topic crashes Supabase realtime).
+- Branding is env-driven (`src/brand.ts`): `VITE_BRAND_LOGO_URL` + `VITE_MASCOT_URL`
+  (Kapi the capybara) set in Vercel env. Logo shows in TopBar (desktop + phone),
+  mascot in sidebar card, banner fallback panel, empty state, auth splash.
+- Desktop sidebar: category list removed (chips above the grid own filtering) —
+  replaced by QUICK ACTIONS (Sell / Saved) + MARKET PULSE (live listings, online count).
+
 Remaining / nice-to-have:
 - **Real Midtrans QRIS** — deliberately last; blocked on the owner signing up for
   Midtrans. api/qris scaffolding exists; currently prototype/static-QR mode.

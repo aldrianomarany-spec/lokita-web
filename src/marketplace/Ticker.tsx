@@ -30,7 +30,7 @@ export default function Ticker() {
     else if (b.target_type === 'sell') (state.guest ? goSignup() : openSell())
   }
 
-  const speed = Math.max(18, items.length * 12)
+  const speed = Math.max(9, items.length * 6)
   const row = (dup: boolean) =>
     items.map((b) => (
       <span
