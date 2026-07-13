@@ -87,12 +87,7 @@ export default function BrowseView() {
   const list: EnrichedItem[] = s.savedOnly ? enrichedItems.filter((i) => s.saved[i.id]) : enrichedItems
   const filtersActive = q !== '' || s.cat !== 'All' || s.cond !== 'All' || s.savedOnly
 
-  // hero: top item (featured sorts first) gets the dark promo panel
-  const showHero = !filtersActive && !s.feedLoading && list.length >= 3
-  const hero = showHero ? list[0] : null
-  const gridItems = hero ? list.slice(1) : list
-
-  // admin promotion banners (realtime) — rotate; fall back to the item hero
+  // admin promotion banners (realtime) — sliding carousel; fall back to the item hero
   const [banners, setBanners] = useState<BannerRow[]>([])
   const [slide, setSlide] = useState(0)
   useEffect(() => {
@@ -105,12 +100,20 @@ export default function BrowseView() {
       unsub()
     }
   }, [])
+  // keyed on `slide` so clicking a dot restarts the 6s clock instead of
+  // getting yanked forward moments later by a stale timer
   useEffect(() => {
     if (banners.length < 2) return
-    const t = window.setInterval(() => setSlide((v) => (v + 1) % banners.length), 6000)
-    return () => window.clearInterval(t)
-  }, [banners.length])
-  const banner = banners.length ? banners[slide % banners.length] : null
+    const t = window.setTimeout(() => setSlide((v) => (v + 1) % banners.length), 6000)
+    return () => window.clearTimeout(t)
+  }, [banners.length, slide])
+  const activeSlide = banners.length ? slide % banners.length : 0
+
+  // hero: top item (featured sorts first) gets the dark promo panel — but only
+  // when no admin banner occupies the slot, so the item stays in the grid
+  const showHero = !filtersActive && !s.feedLoading && list.length >= 3 && banners.length === 0
+  const hero = showHero ? list[0] : null
+  const gridItems = hero ? list.slice(1) : list
   const bannerCta = (b: BannerRow) => {
     if (b.target_type === 'category' && b.target_value) selectCat(b.target_value)
     else if (b.target_type === 'listing' && b.target_value) openListingById(b.target_value)
@@ -153,47 +156,66 @@ export default function BrowseView() {
         </div>
       )}
 
-      {/* black statement slot — admin banner first, featured item as fallback */}
-      {banner ? (
-        <div
-          key={banner.id}
-          onClick={() => banner.target_type !== 'none' && bannerCta(banner)}
-          className="lok-card"
-          style={{ display: 'grid', gridTemplateColumns: isNarrow ? '1fr' : '1fr 380px', background: INK, color: PAPER, marginBottom: 18, cursor: banner.target_type !== 'none' ? 'pointer' : 'default', animation: 'lok-slidein .55s cubic-bezier(.25,.8,.3,1) both', overflow: 'hidden' }}
-        >
-          <div style={{ padding: isNarrow ? '26px 22px' : '36px 32px', display: 'flex', flexDirection: 'column', gap: 14, justifyContent: 'center' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <span style={{ fontFamily: "'Spline Sans Mono',monospace", fontWeight: 600, fontSize: 10, letterSpacing: 1, background: GOLD, color: INK, padding: '3px 8px' }}>LOKITA</span>
-              <span style={{ fontFamily: "'Spline Sans Mono',monospace", fontWeight: 500, fontSize: 11, color: '#9A9A94' }}>CAMPUS ANNOUNCEMENT</span>
-            </div>
-            <div style={{ fontFamily: "'Instrument Serif',serif", fontWeight: 400, fontSize: isNarrow ? 28 : 38, lineHeight: 1.06, letterSpacing: '-.5px' }}>{banner.title}</div>
-            {banner.subtitle && <div style={{ fontSize: 14, color: '#B9B9B3' }}>{banner.subtitle}</div>}
-            {banner.target_type !== 'none' && (
-              <button
-                onClick={(e) => {
-                  e.stopPropagation()
-                  bannerCta(banner)
-                }}
-                style={{ alignSelf: 'flex-start', background: GOLD, color: INK, border: 'none', padding: '11px 22px', fontFamily: "'Archivo',sans-serif", fontWeight: 600, fontSize: 13, cursor: 'pointer' }}
+      {/* black statement slot — admin banner carousel first, featured item as fallback */}
+      {banners.length > 0 ? (
+        <div className="lok-card" style={{ position: 'relative', background: INK, marginBottom: 18, overflow: 'hidden' }}>
+          {/* sliding track: all slides side by side, translateX moves smoothly between them */}
+          <div style={{ display: 'flex', width: `${banners.length * 100}%`, transform: `translateX(-${activeSlide * (100 / banners.length)}%)`, transition: 'transform .65s cubic-bezier(.25,.8,.3,1)' }}>
+            {banners.map((b) => (
+              <div
+                key={b.id}
+                onClick={() => b.target_type !== 'none' && bannerCta(b)}
+                style={{ width: `${100 / banners.length}%`, flex: 'none', display: 'grid', gridTemplateColumns: isNarrow ? '1fr' : '1fr 380px', color: PAPER, cursor: b.target_type !== 'none' ? 'pointer' : 'default', overflow: 'hidden' }}
               >
-                {banner.cta_label || 'See details'} →
-              </button>
-            )}
-            {banners.length > 1 && (
-              <div style={{ display: 'flex', gap: 6, marginTop: 2 }}>
-                {banners.map((_, i) => (
-                  <button key={i} onClick={() => setSlide(i)} aria-label={`Banner ${i + 1}`} style={{ width: 22, height: 3, border: 'none', cursor: 'pointer', background: i === slide % banners.length ? GOLD : '#3A3B3E', padding: 0 }} />
-                ))}
+                <div style={{ padding: isNarrow ? '26px 22px' : '36px 32px', paddingBottom: banners.length > 1 ? (isNarrow ? 40 : 48) : undefined, display: 'flex', flexDirection: 'column', gap: 14, justifyContent: 'center' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <span style={{ fontFamily: "'Spline Sans Mono',monospace", fontWeight: 600, fontSize: 10, letterSpacing: 1, background: GOLD, color: INK, padding: '3px 8px' }}>LOKITA</span>
+                    <span style={{ fontFamily: "'Spline Sans Mono',monospace", fontWeight: 500, fontSize: 11, color: '#9A9A94' }}>CAMPUS ANNOUNCEMENT</span>
+                  </div>
+                  <div style={{ fontFamily: "'Instrument Serif',serif", fontWeight: 400, fontSize: isNarrow ? 28 : 38, lineHeight: 1.06, letterSpacing: '-.5px' }}>{b.title}</div>
+                  {b.subtitle && <div style={{ fontSize: 14, color: '#B9B9B3' }}>{b.subtitle}</div>}
+                  {b.target_type !== 'none' && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        bannerCta(b)
+                      }}
+                      style={{ alignSelf: 'flex-start', background: GOLD, color: INK, border: 'none', padding: '11px 22px', fontFamily: "'Archivo',sans-serif", fontWeight: 600, fontSize: 13, cursor: 'pointer' }}
+                    >
+                      {b.cta_label || 'See details'} →
+                    </button>
+                  )}
+                </div>
+                <div style={{ background: 'repeating-linear-gradient(45deg,#141414 0 12px,#0A0A0A 12px 24px)', display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: isNarrow ? (b.image_url ? 180 : 110) : 0, position: 'relative', overflow: 'hidden' }}>
+                  {b.image_url ? (
+                    <img src={b.image_url} alt={b.title} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
+                  ) : MASCOT_URL ? (
+                    <img src={MASCOT_URL} alt="Kapi, the LOKITA capybara" className="lok-mascot" style={{ width: isNarrow ? 92 : 150, maxHeight: '82%', objectFit: 'contain', padding: '10px 0' }} />
+                  ) : (
+                    <span style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 700, fontSize: 26, color: '#222222', letterSpacing: '-.5px' }}>LOKITA<span style={{ color: GOLD }}>.</span></span>
+                  )}
+                </div>
               </div>
-            )}
+            ))}
           </div>
-          <div style={{ background: 'repeating-linear-gradient(45deg,#141414 0 12px,#0A0A0A 12px 24px)', display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: isNarrow ? (banner.image_url ? 180 : 90) : 0, position: 'relative', overflow: 'hidden' }}>
-            {banner.image_url ? (
-              <img src={banner.image_url} alt={banner.title} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
-            ) : (
-              <span style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 700, fontSize: 26, color: '#222222', letterSpacing: '-.5px' }}>LOKITA<span style={{ color: GOLD }}>.</span></span>
-            )}
-          </div>
+          {/* clickable dots — pick a slide directly; the 6s auto-slide keeps going */}
+          {banners.length > 1 && (
+            <div style={{ position: 'absolute', left: isNarrow ? 22 : 32, bottom: 12, display: 'flex', gap: 7, zIndex: 2 }}>
+              {banners.map((_, i) => (
+                <button
+                  key={i}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    setSlide(i)
+                  }}
+                  aria-label={`Go to banner ${i + 1}`}
+                  style={{ width: 26, height: 16, border: 'none', background: 'none', cursor: 'pointer', padding: 0, display: 'flex', alignItems: 'center' }}
+                >
+                  <span style={{ display: 'block', width: '100%', height: 3.5, background: i === activeSlide ? GOLD : 'rgba(255,255,255,.38)', transition: 'background .25s' }} />
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       ) : hero && (
         <div onClick={() => openItem(hero)} className="lok-card" style={{ cursor: 'pointer', display: 'grid', gridTemplateColumns: isNarrow ? '1fr' : '1fr 380px', background: INK, color: PAPER, marginBottom: 18 }}>
