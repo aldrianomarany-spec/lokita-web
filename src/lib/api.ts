@@ -1204,6 +1204,7 @@ export interface AdminMemberRow {
   email: string | null
   building: string | null
   verification_status: string
+  verification_doc_url: string | null // storage path of the uploaded student ID (private bucket)
   role: string
   is_banned: boolean
   created_at: string
@@ -1212,7 +1213,7 @@ export interface AdminMemberRow {
 export async function fetchAdminMembers(): Promise<AdminMemberRow[]> {
   const { data, error } = await supabase
     .from('profiles')
-    .select('id, name, email, building, verification_status, role, is_banned, created_at')
+    .select('id, name, email, building, verification_status, verification_doc_url, role, is_banned, created_at')
     .order('created_at', { ascending: false })
     .limit(200)
   if (error) throw error
@@ -1220,8 +1221,17 @@ export async function fetchAdminMembers(): Promise<AdminMemberRow[]> {
 }
 
 // The privileged-columns trigger allows this write only for admins.
-export async function adminSetVerification(id: string, status: 'verified' | 'pending'): Promise<void> {
+// Approve → 'verified', reject → 'rejected' (member can re-upload), reset → 'pending'.
+export async function adminSetVerification(id: string, status: 'verified' | 'pending' | 'rejected'): Promise<void> {
   const { error } = await supabase.from('profiles').update({ verification_status: status }).eq('id', id)
+  if (error) throw error
+}
+
+// Permanently delete a member account (migration 0024). SECURITY DEFINER
+// function guards: admins only, no self-delete, admins can't delete admins.
+// Cascades wipe the profile + their listings; trade history keeps nulled rows.
+export async function adminDeleteUser(id: string): Promise<void> {
+  const { error } = await supabase.rpc('admin_delete_user', { target: id })
   if (error) throw error
 }
 

@@ -14,6 +14,7 @@ import {
   adminSetFeatured,
   adminSetVerification,
   adminSetBanned,
+  adminDeleteUser,
   adminSetReportStatus,
   type AdminStats,
   type AdminListingRow,
@@ -22,6 +23,7 @@ import {
   type BannerRow,
 } from '../lib/api'
 import { Verified } from '../components/Icons'
+import { getVerificationDocUrl } from '../lib/auth'
 
 const rp = (n: number) => 'Rp ' + Math.round(n).toLocaleString('id-ID')
 const mono: React.CSSProperties = { fontFamily: "'Spline Sans Mono',monospace", fontSize: 11, color: '#9A9A94', letterSpacing: '.08em' }
@@ -87,6 +89,22 @@ export default function AdminView() {
   const [tSaving, setTSaving] = useState(false)
   const [err, setErr] = useState<string | null>(null)
   const [busyId, setBusyId] = useState<string | null>(null)
+  // inline student-ID viewer (signed URL from the private verification bucket)
+  const [docView, setDocView] = useState<{ id: string; name: string; url: string } | null>(null)
+
+  // pending first; rejected stay listed (members may re-upload a better photo)
+  const pendingVerif = (members || [])
+    .filter((m) => m.verification_doc_url && m.verification_status !== 'verified')
+    .sort((a, b) => (a.verification_status === 'pending' ? 0 : 1) - (b.verification_status === 'pending' ? 0 : 1))
+  const viewDoc = async (m: AdminMemberRow) => {
+    if (!m.verification_doc_url) return
+    try {
+      const url = await getVerificationDocUrl(m.verification_doc_url, 300)
+      setDocView({ id: m.id, name: m.name, url })
+    } catch (e) {
+      alert('Could not open the ID photo: ' + (e instanceof Error ? e.message : 'unknown error'))
+    }
+  }
 
   const load = useCallback(async () => {
     setErr(null)
@@ -354,6 +372,48 @@ export default function AdminView() {
         )}
       </div>
 
+      {/* ID verification queue — members who uploaded a student ID and await review.
+          Verification is NEVER automatic: the admin looks at the photo and decides. */}
+      <div style={{ ...mono, marginBottom: 10 }}>🪪 ID VERIFICATION QUEUE {pendingVerif.length > 0 ? `· ${pendingVerif.length} WAITING` : ''}</div>
+      <div style={{ ...card, overflow: 'hidden', marginBottom: 18 }}>
+        {members === null ? (
+          <div style={{ padding: 20, textAlign: 'center', color: '#8B8B86', fontSize: 12 }}>…</div>
+        ) : pendingVerif.length === 0 ? (
+          <div style={{ padding: '18px 20px', color: '#8B8B86', fontSize: 12.5 }}>No IDs waiting for review. When a member uploads their student ID, it appears here for you to approve or reject.</div>
+        ) : (
+          pendingVerif.map((m) => (
+            <div key={m.id} style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap', padding: '12px 16px', borderBottom: '1px solid #E6E6E3', background: '#FBF5E9' }}>
+              <div style={{ flex: '1 1 200px', minWidth: 0 }}>
+                <div style={{ fontWeight: 700, fontSize: 13.5, display: 'flex', alignItems: 'center', gap: 7 }}>
+                  <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{m.name}</span>
+                  {m.verification_status === 'rejected' && <span style={{ ...mono, fontSize: 8.5, color: '#B23A1B', background: '#FBEEE9', padding: '2px 6px', flex: 'none' }}>REJECTED</span>}
+                </div>
+                <div style={{ fontSize: 11.5, color: '#8B8B86', fontWeight: 600, marginTop: 2 }}>{m.email || '—'} · uploaded a student ID</div>
+              </div>
+              <div style={{ display: 'flex', gap: 7, flex: 'none', flexWrap: 'wrap' }}>
+                <SmallBtn label="👁 View ID photo" busy={busyId === m.id} onClick={() => viewDoc(m)} />
+                <SmallBtn label="Approve ✓" tone="accent" busy={busyId === m.id} onClick={() => act(m.id, () => adminSetVerification(m.id, 'verified'))} />
+                <SmallBtn label="Reject ✗" tone="danger" busy={busyId === m.id} onClick={() => act(m.id, () => adminSetVerification(m.id, 'rejected'))} />
+              </div>
+            </div>
+          ))
+        )}
+        {/* inline ID photo viewer (signed, time-limited URL from the private bucket) */}
+        {docView && (
+          <div style={{ padding: 16, borderTop: '1px solid #E6E6E3', background: '#F5F5F3' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+              <span style={{ fontWeight: 800, fontSize: 13 }}>🪪 {docView.name} — student ID</span>
+              <SmallBtn label="Close ✕" onClick={() => setDocView(null)} />
+            </div>
+            <img src={docView.url} alt={`Student ID of ${docView.name}`} style={{ maxWidth: '100%', maxHeight: 380, objectFit: 'contain', border: '1px solid #D8D8D4', background: '#FFFFFF', display: 'block', margin: '0 auto' }} />
+            <div style={{ display: 'flex', gap: 8, justifyContent: 'center', marginTop: 12 }}>
+              <SmallBtn label="Approve ✓" tone="accent" busy={busyId === docView.id} onClick={() => { const id = docView.id; setDocView(null); act(id, () => adminSetVerification(id, 'verified')) }} />
+              <SmallBtn label="Reject ✗" tone="danger" busy={busyId === docView.id} onClick={() => { const id = docView.id; setDocView(null); act(id, () => adminSetVerification(id, 'rejected')) }} />
+            </div>
+          </div>
+        )}
+      </div>
+
       {/* members — verify/unverify; the DB trigger only lets admins touch this column */}
       <div style={{ ...mono, marginBottom: 10 }}>MEMBERS · VERIFICATION</div>
       <div style={{ ...card, overflow: 'hidden', marginBottom: 30 }}>
@@ -379,6 +439,7 @@ export default function AdminView() {
                 <div style={{ fontSize: 11.5, color: '#8B8B86', fontWeight: 600, marginTop: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{m.email || '—'}</div>
               </div>
               <div style={{ display: 'flex', gap: 7, flex: 'none', flexWrap: 'wrap' }}>
+                {m.verification_doc_url && <SmallBtn label="🪪 ID" busy={busyId === m.id} onClick={() => viewDoc(m)} />}
                 {m.verification_status === 'verified' ? (
                   <SmallBtn label="Unverify" tone="danger" busy={busyId === m.id} onClick={() => act(m.id, () => adminSetVerification(m.id, 'pending'))} />
                 ) : (
@@ -399,6 +460,19 @@ export default function AdminView() {
                       }}
                     />
                   ))}
+                {m.role !== 'admin' && (
+                  <SmallBtn
+                    label="Delete 🗑"
+                    tone="danger"
+                    busy={busyId === m.id}
+                    onClick={() => {
+                      if (!window.confirm(`PERMANENTLY delete ${m.name}'s account? Their profile and listings are wiped. This cannot be undone.`)) return
+                      if (!window.confirm(`Really sure? Type OK to proceed — deleting ${m.email || m.name} forever.`)) return
+                      setDocView(null)
+                      act(m.id, () => adminDeleteUser(m.id))
+                    }}
+                  />
+                )}
               </div>
             </div>
           ))

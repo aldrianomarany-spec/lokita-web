@@ -50,7 +50,7 @@ function GridCard({ it, saved, onOpen, onSave }: { it: EnrichedItem; saved: bool
       )}
       <div style={{ aspectRatio: '1 / 0.85', background: 'repeating-linear-gradient(45deg,#ECECEA 0 10px,#F3F3F1 10px 20px)', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', overflow: 'hidden' }}>
         {it.photoUrl ? (
-          <img src={it.photoUrl} alt={it.title} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
+          <img src={it.photoUrl} alt={it.title} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'contain' }} />
         ) : (
           <span style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 10, color: '#9A9A94', padding: '0 14px', textAlign: 'center' }}>{it.title}</span>
         )}
@@ -197,7 +197,7 @@ export default function BrowseView() {
                 </div>
                 <div style={{ background: 'repeating-linear-gradient(45deg,#141414 0 12px,#0A0A0A 12px 24px)', display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: isNarrow ? (b.image_url ? 180 : 110) : 0, position: 'relative', overflow: 'hidden' }}>
                   {b.image_url ? (
-                    <img src={b.image_url} alt={b.title} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
+                    <img src={b.image_url} alt={b.title} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'contain' }} />
                   ) : MASCOT_URL ? (
                     <img src={MASCOT_URL} alt="Kapi, the LOKITA capybara" className="lok-mascot" style={{ width: isNarrow ? 92 : 150, maxHeight: '82%', objectFit: 'contain', padding: '10px 0' }} />
                   ) : (
@@ -241,7 +241,7 @@ export default function BrowseView() {
           </div>
           <div style={{ background: 'repeating-linear-gradient(45deg,#1E1E1E 0 12px,#232427 12px 24px)', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', minHeight: isNarrow ? 180 : 0, overflow: 'hidden' }}>
             {hero.photoUrl ? (
-              <img src={hero.photoUrl} alt={hero.title} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
+              <img src={hero.photoUrl} alt={hero.title} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'contain' }} />
             ) : (
               <span style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 11, color: GRAY, background: INK, padding: '4px 8px' }}>item photo</span>
             )}

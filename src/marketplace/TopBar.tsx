@@ -179,7 +179,7 @@ export default function TopBar() {
             if (document.activeElement !== e.target) return
             setQuery(e.target.value)
           }}
-          placeholder={isPhone ? t('Search…') : t('Search your dorm — desk, mini fridge, textbooks…')}
+          placeholder={isPhone ? t('Search…') : t('Search your dorm…')}
           style={{ flex: 1, minWidth: 0, border: 'none', background: 'none', outline: 'none', fontFamily: 'inherit', fontSize: 14, fontWeight: 500, color: '#000000' }}
         />
         {s.query && (

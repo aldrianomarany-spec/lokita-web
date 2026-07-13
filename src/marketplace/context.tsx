@@ -2,6 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useRef, useState } f
 import { useNavigate } from 'react-router-dom'
 import QRCode from 'qrcode'
 import { signOut } from '../lib/auth'
+import { ringNotification } from '../lib/alerts'
 import {
   fetchMyProfile,
   updateMyProfile,
@@ -525,7 +526,9 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
         uid,
         () => loadNotifications(),
         (n) => {
-          // pop a toast for the fresh notification; auto-dismiss after 5s
+          // pop a toast for the fresh notification; auto-dismiss after 5s.
+          // Also ring: chime + vibration + system popup (when permitted)
+          ringNotification(n.title, n.body)
           patch({ toast: n })
           if (toastTimer.current) window.clearTimeout(toastTimer.current)
           toastTimer.current = window.setTimeout(() => patch({ toast: null }), 5000)

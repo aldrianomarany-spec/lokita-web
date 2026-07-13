@@ -1,5 +1,7 @@
+import { useState } from 'react'
 import { useM } from './context'
 import type { NotifRow, NotifType } from '../lib/api'
+import { enableSystemAlerts, systemAlertsGranted, systemAlertsSupported } from '../lib/alerts'
 import { useLang } from '../i18n'
 
 const s2 = (children: React.ReactNode) => (
@@ -50,6 +52,8 @@ export default function NotificationsView() {
   const { t } = useLang()
   const s = state
 
+  const [alertsOn, setAlertsOn] = useState(systemAlertsGranted())
+
   const unread = (n: NotifRow) => !n.is_read
   const notifBadge = s.notifs.filter(unread).length
   const filtered = s.notifs.filter((n) => s.notifFilter === 'all' || n.type === s.notifFilter)
@@ -66,6 +70,18 @@ export default function NotificationsView() {
           <button className="lok-btn" onClick={markAllRead} style={{ border: '1px solid #D8D8D4', background: '#FFFFFF', color: '#1E1E1E', fontFamily: 'inherit', fontWeight: 700, fontSize: 12.5, padding: '9px 14px', borderRadius: 0, cursor: 'pointer', flex: 'none' }}>{t('Mark all read')}</button>
         )}
       </div>
+
+      {/* system popup alerts — chime + vibration are always on; this adds the
+          OS-level popup while the tab is in the background */}
+      {systemAlertsSupported() && !alertsOn && (
+        <button
+          className="lok-btn"
+          onClick={() => enableSystemAlerts().then(setAlertsOn)}
+          style={{ width: '100%', border: '1px solid #C8A96A', background: '#FBF5E9', color: '#6B5320', fontFamily: 'inherit', fontWeight: 700, fontSize: 13, padding: '12px 14px', borderRadius: 0, cursor: 'pointer', marginBottom: 16, textAlign: 'left' }}
+        >
+          🔔 {t('Enable popup alerts — get pinged even when LOKITA is in another tab.')}
+        </button>
+      )}
 
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 20 }}>
         {FILTERS.map(([key, label]) => {
