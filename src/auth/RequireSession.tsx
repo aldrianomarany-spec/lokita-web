@@ -15,8 +15,14 @@ export default function RequireSession({ children }: { children: React.ReactNode
     let active = true
     getSession().then((session) => {
       if (!active) return
-      if (session || isGuest()) setStatus('ok')
-      else navigate('/', { replace: true })
+      if (session || isGuest()) return setStatus('ok')
+      // shared listing links (/app?item=…) open for everyone: drop the visitor
+      // into read-only guest mode instead of bouncing them to the login screen
+      if (new URLSearchParams(window.location.search).get('item')) {
+        sessionStorage.setItem('lokita-guest', '1')
+        return setStatus('ok')
+      }
+      navigate('/', { replace: true })
     })
     const unsub = onAuthStateChange((session) => {
       if (!session && !isGuest()) navigate('/', { replace: true })

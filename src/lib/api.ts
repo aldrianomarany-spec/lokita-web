@@ -692,6 +692,7 @@ export interface ConversationRow {
   other_name: string
   other_photo: string | null
   other_verified: boolean
+  i_am_seller: boolean // which side of the trade the viewer is on (picks quick replies)
   last_content: string
   last_at: string
   unread: number
@@ -741,6 +742,7 @@ export async function fetchConversations(): Promise<ConversationRow[]> {
       other_name: other?.name || 'Student',
       other_photo: other?.profile_photo_url || null,
       other_verified: other?.verification_status === 'verified',
+      i_am_seller: r.seller_id === uid,
       last_content: last?.content || '',
       last_at: last?.created_at || r.created_at,
       unread: ms.filter((m) => m.sender_id !== uid && !m.is_read).length,

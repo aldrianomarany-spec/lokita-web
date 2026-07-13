@@ -4,6 +4,20 @@ import { useIsPhone } from './useIsMobile'
 import { getUserId } from '../lib/api'
 import { Verified } from '../components/Icons'
 
+// one-tap canned answers — the sets differ by which side of the trade you're on
+const QUICK_SELLER = [
+  'Still available! 👍',
+  'Sorry, it just sold 🙏',
+  "Deal — order it in the app and I'll drop it off",
+  "I'll drop it at the Security Post tomorrow",
+]
+const QUICK_BUYER = [
+  'Is this still available?',
+  'Can you do a lower price?',
+  'When can you drop it at the Security Post?',
+  "Deal — I'll order now 👍",
+]
+
 const timeShort = (iso: string) => {
   const d = new Date(iso)
   if (isNaN(d.getTime())) return ''
@@ -139,7 +153,22 @@ export default function MessagesView() {
                 )
               })}
             </div>
-            <div style={{ padding: '14px 18px', borderTop: '1px solid #E6E6E3', display: 'flex', gap: 10, alignItems: 'center' }}>
+            {/* quick replies — one tap sends; horizontal scroll on small screens */}
+            {active && (
+              <div style={{ padding: '10px 18px 0', borderTop: '1px solid #E6E6E3', display: 'flex', gap: 7, overflowX: 'auto' }}>
+                {(active.i_am_seller ? QUICK_SELLER : QUICK_BUYER).map((q) => (
+                  <button
+                    key={q}
+                    onClick={() => sendMsg(q)}
+                    className="lok-navi"
+                    style={{ flex: 'none', border: '1px solid #D8D8D4', background: '#F5F5F3', color: '#1E1E1E', fontFamily: 'inherit', fontWeight: 600, fontSize: 12, padding: '7px 12px', borderRadius: 0, cursor: 'pointer', whiteSpace: 'nowrap' }}
+                  >
+                    {q}
+                  </button>
+                ))}
+              </div>
+            )}
+            <div style={{ padding: '14px 18px', display: 'flex', gap: 10, alignItems: 'center' }}>
               <input
                 className="lok-field"
                 value={s.msgDraft}

@@ -11,6 +11,7 @@ export default function DetailModal() {
   const { state, closeDetail, chatSeller, openCheckout, openMember, deleteMyListing, toggleSaveItem, goSignup } = useM()
   const [deleting, setDeleting] = useState(false)
   const [photoIdx, setPhotoIdx] = useState(0)
+  const [copied, setCopied] = useState(false)
   const isPhone = useIsPhone()
   const guest = state.guest
   const sel = state.sel
@@ -26,6 +27,28 @@ export default function DetailModal() {
   const hasPhoto = !!mainPhoto
   const isOwner = !!sel.mine
   const isSaved = !!state.saved[sel.id]
+
+  // share kit — every listing has a public deep link (/app?item=<id>) that
+  // opens for anyone, even without an account (read-only guest mode)
+  const shareUrl = `${window.location.origin}/app?item=${sel.id}`
+  const shareText = `${sel.title} — ${sel.price} on LOKITA, the JIU dorm marketplace`
+  const waHref = `https://wa.me/?text=${encodeURIComponent(shareText + '\n' + shareUrl)}`
+  const canNativeShare = typeof navigator !== 'undefined' && typeof navigator.share === 'function'
+  const doNativeShare = () => navigator.share({ title: sel.title, text: shareText, url: shareUrl }).catch(() => {})
+  const doCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(shareUrl)
+    } catch {
+      const ta = document.createElement('textarea')
+      ta.value = shareUrl
+      document.body.appendChild(ta)
+      ta.select()
+      document.execCommand('copy')
+      document.body.removeChild(ta)
+    }
+    setCopied(true)
+    window.setTimeout(() => setCopied(false), 1600)
+  }
 
   const onDelete = async () => {
     if (deleting) return
@@ -142,6 +165,28 @@ export default function DetailModal() {
               <div style={{ fontWeight: 700, fontSize: 13, marginBottom: 2 }}>Security Post drop-off</div>
               <div style={{ fontSize: 12.5, color: '#4A5A50', lineHeight: 1.55 }}>Pay in-app now — your money is held in escrow. Seller drops it at the campus Security Post; pick it up whenever suits you. No meetups.</div>
             </div>
+          </div>
+
+          {/* share — every listing has a public link; group shares are free marketing */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 20 }}>
+            <span style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 10, letterSpacing: '.06em', color: '#9A9A94', flex: 'none' }}>SHARE</span>
+            <a
+              href={waHref}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="lok-btn"
+              style={{ border: '1px solid #BFE3CC', background: '#EFFAF3', color: '#1DA851', fontFamily: 'inherit', fontWeight: 700, fontSize: 12, padding: '8px 13px', borderRadius: 0, cursor: 'pointer', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 6 }}
+            >
+              🟢 WhatsApp
+            </a>
+            <button onClick={doCopy} className="lok-btn" style={{ border: '1px solid #D8D8D4', background: '#FFFFFF', color: copied ? '#1E9E5A' : '#1E1E1E', fontFamily: 'inherit', fontWeight: 700, fontSize: 12, padding: '8px 13px', borderRadius: 0, cursor: 'pointer' }}>
+              {copied ? 'Copied ✓' : '🔗 Copy link'}
+            </button>
+            {canNativeShare && (
+              <button onClick={doNativeShare} className="lok-btn" style={{ border: '1px solid #D8D8D4', background: '#FFFFFF', color: '#1E1E1E', fontFamily: 'inherit', fontWeight: 700, fontSize: 12, padding: '8px 13px', borderRadius: 0, cursor: 'pointer' }}>
+                More…
+              </button>
+            )}
           </div>
 
           {/* actions */}

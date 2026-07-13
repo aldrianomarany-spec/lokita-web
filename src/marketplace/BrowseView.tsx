@@ -122,6 +122,12 @@ export default function BrowseView() {
   }
   const emptyCat = s.cat !== 'All' ? ` in ${s.cat}` : ''
 
+  // recently viewed (device-local) resolved against the live feed — items that
+  // sold or were removed simply drop out because they're no longer in the feed
+  const recentItems = s.recents
+    .map((id) => enrichedItems.find((i) => i.id === id))
+    .filter((i): i is EnrichedItem => !!i)
+
   const save = (it: EnrichedItem) => (s.guest ? goSignup() : toggleSaveItem(it.id))
 
   return (
@@ -236,6 +242,26 @@ export default function BrowseView() {
             ) : (
               <span style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 11, color: GRAY, background: INK, padding: '4px 8px' }}>item photo</span>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* recently viewed — quick way back to items you looked at (this device) */}
+      {!filtersActive && recentItems.length > 0 && (
+        <div style={{ margin: '0 0 14px' }}>
+          <div style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 10, letterSpacing: 1, color: GRAY, marginBottom: 8 }}>RECENTLY VIEWED</div>
+          <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 4 }}>
+            {recentItems.map((it) => (
+              <div key={it.id} onClick={() => openItem(it)} className="lok-card" style={{ flex: 'none', width: 200, background: '#FFFFFF', border: `1px solid ${LINE}`, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 9, padding: 7 }}>
+                <div style={{ width: 42, height: 42, flex: 'none', background: '#ECECEA', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  {it.photoUrl ? <img src={it.photoUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <span style={{ fontSize: 15 }}>🧺</span>}
+                </div>
+                <div style={{ minWidth: 0 }}>
+                  <div style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 500, fontSize: 12, color: INK, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{it.title}</div>
+                  <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 600, fontSize: 12, color: INK }}>{it.price}</div>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       )}
