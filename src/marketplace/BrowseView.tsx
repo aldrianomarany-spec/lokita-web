@@ -18,7 +18,7 @@ const INK = '#000000'
 const PAPER = '#F5F5F3'
 const LINE = '#D8D8D4'
 const GRAY = '#8B8B86'
-const GOLD = '#C8A96A'
+const GOLD = '#519BB8'
 
 const CONDS = ['All', 'Like new', 'Good', 'Fair']
 const SORTS: { key: Sort; label: string }[] = [
@@ -44,7 +44,7 @@ function GridCard({ it, saved, onOpen, onSave }: { it: EnrichedItem; saved: bool
   return (
     <div onClick={onOpen} className="lok-card" style={{ background: '#FFFFFF', padding: '0 0 14px', cursor: 'pointer', position: 'relative' }}>
       {(it.isFeatured || it.mine) && (
-        <span style={{ position: 'absolute', top: 10, left: 10, fontFamily: "'Spline Sans Mono',monospace", fontWeight: 600, fontSize: 9, letterSpacing: 1, background: it.isFeatured ? GOLD : INK, color: it.isFeatured ? INK : '#FFFFFF', padding: '3px 7px', zIndex: 2 }}>
+        <span style={{ position: 'absolute', top: 10, left: 10, fontFamily: "'Spline Sans Mono',monospace", fontWeight: 600, fontSize: 9, letterSpacing: 1, background: it.isFeatured ? GOLD : INK, color: '#FFFFFF', padding: '3px 7px', zIndex: 2 }}>
           {it.isFeatured ? t('FEATURED') : t('YOURS')}
         </span>
       )}
@@ -178,7 +178,7 @@ export default function BrowseView() {
               >
                 <div style={{ padding: isNarrow ? '26px 22px' : '36px 32px', paddingBottom: banners.length > 1 ? (isNarrow ? 40 : 48) : undefined, display: 'flex', flexDirection: 'column', gap: 14, justifyContent: 'center' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <span style={{ fontFamily: "'Spline Sans Mono',monospace", fontWeight: 600, fontSize: 10, letterSpacing: 1, background: GOLD, color: INK, padding: '3px 8px' }}>LOKITA</span>
+                    <span style={{ fontFamily: "'Spline Sans Mono',monospace", fontWeight: 600, fontSize: 10, letterSpacing: 1, background: GOLD, color: '#FFFFFF', padding: '3px 8px' }}>LOKITA</span>
                     <span style={{ fontFamily: "'Spline Sans Mono',monospace", fontWeight: 500, fontSize: 11, color: '#9A9A94' }}>{t('CAMPUS ANNOUNCEMENT')}</span>
                   </div>
                   <div style={{ fontFamily: "'Instrument Serif',serif", fontWeight: 400, fontSize: isNarrow ? 28 : 38, lineHeight: 1.06, letterSpacing: '-.5px' }}>{b.title}</div>
@@ -189,7 +189,7 @@ export default function BrowseView() {
                         e.stopPropagation()
                         bannerCta(b)
                       }}
-                      style={{ alignSelf: 'flex-start', background: GOLD, color: INK, border: 'none', padding: '11px 22px', fontFamily: "'Archivo',sans-serif", fontWeight: 600, fontSize: 13, cursor: 'pointer' }}
+                      style={{ alignSelf: 'flex-start', background: GOLD, color: '#FFFFFF', border: 'none', padding: '11px 22px', fontFamily: "'Archivo',sans-serif", fontWeight: 600, fontSize: 13, cursor: 'pointer' }}
                     >
                       {b.cta_label || t('See details')} →
                     </button>
@@ -230,7 +230,7 @@ export default function BrowseView() {
         <div onClick={() => openItem(hero)} className="lok-card" style={{ cursor: 'pointer', display: 'grid', gridTemplateColumns: isNarrow ? '1fr' : '1fr 380px', background: INK, color: PAPER, marginBottom: 18 }}>
           <div style={{ padding: isNarrow ? '26px 22px' : '36px 32px', display: 'flex', flexDirection: 'column', gap: 14, justifyContent: 'center' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-              <span style={{ fontFamily: "'Spline Sans Mono',monospace", fontWeight: 600, fontSize: 10, letterSpacing: 1, background: GOLD, color: INK, padding: '3px 8px' }}>
+              <span style={{ fontFamily: "'Spline Sans Mono',monospace", fontWeight: 600, fontSize: 10, letterSpacing: 1, background: GOLD, color: '#FFFFFF', padding: '3px 8px' }}>
                 {hero.isFeatured ? t('FEATURED') : t("TODAY'S PICK")}
               </span>
               <span style={{ fontFamily: "'Spline Sans Mono',monospace", fontWeight: 500, fontSize: 11, color: '#9A9A94' }}>{hero.seller}{hero.sellerVerified ? ' · ' + t('Dorm-Verified') : ''}</span>

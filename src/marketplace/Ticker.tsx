@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { useM } from './context'
-import { fetchBanners, subscribeBanners, type BannerRow } from '../lib/api'
+import { fetchBanners, subscribeBanners, fetchTickerSettings, subscribeSettings, type BannerRow, type TickerSettings } from '../lib/api'
 
 // Moving announcement strip (design exploration 1b) — electric blue marquee
 // above the top bar, fed by admin banners with placement='ticker'. Realtime:
@@ -9,6 +9,7 @@ import { fetchBanners, subscribeBanners, type BannerRow } from '../lib/api'
 export default function Ticker() {
   const { state, selectCat, openListingById, openRequests, openSell, goSignup } = useM()
   const [items, setItems] = useState<BannerRow[]>([])
+  const [cfg, setCfg] = useState<TickerSettings>({ speed: 'normal', clickable: true })
   // hover/touch pauses the scroll so items are easy to read and click.
   // Done in React state (inline animationPlayState) — the pure-CSS :hover
   // rule proved unreliable across browsers/overlays.
@@ -27,17 +28,22 @@ export default function Ticker() {
     if (!setW || !boxW) return
     const k = Math.max(1, Math.ceil(boxW / setW))
     setReps(k)
-    setDur(Math.max(6, Math.round((k * setW) / 150))) // ~150 px/s, quick but readable
-  }, [items])
+    const pxPerSec = cfg.speed === 'slow' ? 70 : cfg.speed === 'fast' ? 170 : 115
+    setDur(Math.max(5, Math.round((k * setW) / pxPerSec)))
+  }, [items, cfg.speed])
 
   useEffect(() => {
     let live = true
     const load = () => fetchBanners().then((b) => live && setItems(b.filter((x) => x.placement === 'ticker')))
+    const loadCfg = () => fetchTickerSettings().then((c) => live && setCfg(c))
     load()
+    loadCfg()
     const unsub = subscribeBanners(load)
+    const unsubCfg = subscribeSettings(loadCfg)
     return () => {
       live = false
       unsub()
+      unsubCfg()
     }
   }, [])
 
@@ -54,8 +60,8 @@ export default function Ticker() {
     items.map((b) => (
       <span
         key={copy + '-' + b.id}
-        onClick={() => b.target_type !== 'none' && go(b)}
-        style={{ display: 'inline-flex', alignItems: 'center', gap: 10, padding: '0 28px', cursor: b.target_type !== 'none' ? 'pointer' : 'default', whiteSpace: 'nowrap' }}
+        onClick={() => cfg.clickable && b.target_type !== 'none' && go(b)}
+        style={{ display: 'inline-flex', alignItems: 'center', gap: 10, padding: '0 28px', cursor: cfg.clickable && b.target_type !== 'none' ? 'pointer' : 'default', whiteSpace: 'nowrap' }}
       >
         <span style={{ color: 'rgba(255,255,255,.75)' }}>★</span>
         {b.title}
@@ -74,7 +80,7 @@ export default function Ticker() {
         if (touchTimer.current) window.clearTimeout(touchTimer.current)
         touchTimer.current = window.setTimeout(() => setPaused(false), 4000)
       }}
-      style={{ flex: 'none', background: '#3555E6', color: '#FFFFFF', overflow: 'hidden', fontFamily: "'Spline Sans Mono',monospace", fontSize: 12, fontWeight: 600, letterSpacing: '.02em', padding: '7px 0', zIndex: 41 }}
+      style={{ flex: 'none', background: '#519BB8', color: '#FFFFFF', overflow: 'hidden', fontFamily: "'Spline Sans Mono',monospace", fontSize: 12, fontWeight: 600, letterSpacing: '.02em', padding: '7px 0', zIndex: 41 }}
     >
       <div className="lok-ticker-track" style={{ ['--ticker-speed' as string]: `${dur}s`, animationPlayState: paused ? 'paused' : 'running' } as React.CSSProperties}>
         {/* first half: one measured set + (k-1) fillers; second half: identical */}

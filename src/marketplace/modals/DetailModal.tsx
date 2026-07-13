@@ -161,7 +161,7 @@ export default function DetailModal() {
           </div>
 
           {/* security post note */}
-          <div style={{ background: '#F6F0E3', border: '1px solid #E2D3AF', borderRadius: 0, padding: '14px 15px', display: 'flex', gap: 12, marginBottom: 22 }}>
+          <div style={{ background: '#E8F2F7', border: '1px solid #BFDCE8', borderRadius: 0, padding: '14px 15px', display: 'flex', gap: 12, marginBottom: 22 }}>
             <div style={{ color: 'var(--accent,#000000)', flex: 'none' }}>
               <ShieldCheck size={22} />
             </div>
@@ -229,14 +229,14 @@ export default function DetailModal() {
                       className="lok-btn"
                       disabled={!(Number(offerVal) > 0)}
                       onClick={() => sendOffer(Number(offerVal))}
-                      style={{ border: 'none', background: Number(offerVal) > 0 ? '#C8A96A' : '#E6E6E3', color: '#000000', fontFamily: 'inherit', fontWeight: 800, fontSize: 13.5, padding: '0 18px', borderRadius: 0, cursor: Number(offerVal) > 0 ? 'pointer' : 'default' }}
+                      style={{ border: 'none', background: Number(offerVal) > 0 ? '#519BB8' : '#E6E6E3', color: '#000000', fontFamily: 'inherit', fontWeight: 800, fontSize: 13.5, padding: '0 18px', borderRadius: 0, cursor: Number(offerVal) > 0 ? 'pointer' : 'default' }}
                     >
                       {t('Send offer')} →
                     </button>
                     <button onClick={() => setOfferOpen(false)} className="lok-navi" style={{ border: '1px solid #D8D8D4', background: '#FFFFFF', width: 44, borderRadius: 0, cursor: 'pointer', color: '#4A4B4E' }}>✕</button>
                   </div>
                 ) : (
-                  <button className="lok-btn" onClick={() => setOfferOpen(true)} style={{ border: '1px solid #C8A96A', background: '#FBF5E9', color: '#6B5320', fontFamily: 'inherit', fontWeight: 700, fontSize: 14, padding: 13, borderRadius: 0, cursor: 'pointer' }}>
+                  <button className="lok-btn" onClick={() => setOfferOpen(true)} style={{ border: '1px solid #519BB8', background: '#EDF5F9', color: '#27607A', fontFamily: 'inherit', fontWeight: 700, fontSize: 14, padding: 13, borderRadius: 0, cursor: 'pointer' }}>
                     💰 {t('Make an offer')}
                   </button>
                 )}

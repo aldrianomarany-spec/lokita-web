@@ -106,12 +106,12 @@ export default function MemberProfileView() {
           <div style={{ display: 'flex', alignItems: 'center', gap: 9, flexWrap: 'wrap' }}>
             <h1 style={{ fontFamily: "'Bricolage Grotesque',sans-serif", fontSize: 26, fontWeight: 800, letterSpacing: '-.02em', margin: 0 }}>{info?.name || s.memberName || t('Member')}</h1>
             {info?.verified && (
-              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12, fontWeight: 800, color: '#F6F0E3', background: 'var(--accent,#000000)', padding: '6px 11px', borderRadius: 0 }}>
-                <Verified size={13} checkColor="#F6F0E3" /> {t('Dorm-Verified')}
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12, fontWeight: 800, color: '#E8F2F7', background: 'var(--accent,#000000)', padding: '6px 11px', borderRadius: 0 }}>
+                <Verified size={13} checkColor="#E8F2F7" /> {t('Dorm-Verified')}
               </span>
             )}
             {isTopSeller && (
-              <span title={t('5+ completed sales with a 4.5★+ rating')} style={{ background: '#C8A96A', color: '#000000', fontFamily: "'Spline Sans Mono',monospace", fontSize: 9, fontWeight: 700, padding: '3px 8px', letterSpacing: 1, borderRadius: 0 }}>
+              <span title={t('5+ completed sales with a 4.5★+ rating')} style={{ background: '#519BB8', color: '#FFFFFF', fontFamily: "'Spline Sans Mono',monospace", fontSize: 9, fontWeight: 700, padding: '3px 8px', letterSpacing: 1, borderRadius: 0 }}>
                 ⭐ {t('TOP SELLER')}
               </span>
             )}
@@ -149,7 +149,7 @@ export default function MemberProfileView() {
       </div>
 
       {/* trust note */}
-      <div style={{ background: '#F6F0E3', border: '1px solid #E2D3AF', borderRadius: 0, padding: '13px 16px', display: 'flex', gap: 11, alignItems: 'center', marginBottom: 24 }}>
+      <div style={{ background: '#E8F2F7', border: '1px solid #BFDCE8', borderRadius: 0, padding: '13px 16px', display: 'flex', gap: 11, alignItems: 'center', marginBottom: 24 }}>
         <span style={{ color: 'var(--accent,#000000)', flex: 'none', display: 'flex' }}><ShieldCheck size={19} /></span>
         <span style={{ fontSize: 12.5, color: '#4A5A50', fontWeight: 600 }}>{t('All trades are paid in-app and exchanged via the campus Security Post — no risky meetups.')}</span>
       </div>

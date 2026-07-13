@@ -22,7 +22,7 @@ const metaField = (label: string, value: string) => (
 function TopSellerChip() {
   const { t } = useLang()
   return (
-    <span title={t('5+ completed sales with a 4.5★+ rating')} style={{ background: '#C8A96A', color: '#000000', fontFamily: "'Spline Sans Mono',monospace", fontSize: 9, fontWeight: 700, padding: '3px 8px', letterSpacing: 1, borderRadius: 0 }}>
+    <span title={t('5+ completed sales with a 4.5★+ rating')} style={{ background: '#519BB8', color: '#FFFFFF', fontFamily: "'Spline Sans Mono',monospace", fontSize: 9, fontWeight: 700, padding: '3px 8px', letterSpacing: 1, borderRadius: 0 }}>
       ⭐ {t('TOP SELLER')}
     </span>
   )
@@ -33,8 +33,8 @@ function VerifyBadge({ status }: { status?: string }) {
   const { t } = useLang()
   if (status === 'verified') {
     return (
-      <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, fontWeight: 800, color: '#8A6C34', background: '#F6F0E3', border: '1px solid #E2D3AF', padding: '6px 11px', borderRadius: 0 }}>
-        <Verified size={14} checkColor="#F6F0E3" /> {t('Dorm-Verified Student')}
+      <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, fontWeight: 800, color: '#2F6B85', background: '#E8F2F7', border: '1px solid #BFDCE8', padding: '6px 11px', borderRadius: 0 }}>
+        <Verified size={14} checkColor="#E8F2F7" /> {t('Dorm-Verified Student')}
       </span>
     )
   }
@@ -103,7 +103,7 @@ function AccountPrivacyCard() {
           <div style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 10, color: '#9A9A94', letterSpacing: '.06em', marginBottom: 7 }}>{t('👁️ OTHER MEMBERS SEE')}</div>
           <div style={{ fontSize: 12.5, color: '#4A4B4E', lineHeight: 1.7, fontWeight: 500 }}>{t('your name & photo · building + floor · batch & standing · rating, reviews & listings')}</div>
         </div>
-        <div style={{ flex: '1 1 260px', background: '#F6F0E3', border: '1px solid #E2D3AF', borderRadius: 0, padding: '13px 15px' }}>
+        <div style={{ flex: '1 1 260px', background: '#E8F2F7', border: '1px solid #BFDCE8', borderRadius: 0, padding: '13px 15px' }}>
           <div style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 10, color: '#4A8067', letterSpacing: '.06em', marginBottom: 7 }}>{t('🔒 ONLY YOU SEE')}</div>
           <div style={{ fontSize: 12.5, color: '#3E4F45', lineHeight: 1.7, fontWeight: 500 }}>{t('WhatsApp number · student ID · email · room number — never shown to other members. All contact happens in-app.')}</div>
         </div>
@@ -308,7 +308,7 @@ export default function ProfileView() {
       {wishlist && wishlist.length > 0 ? (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(200px,1fr))', gap: 16, marginBottom: 32 }}>
           {wishlist.map((it) => (
-            <SmallCard key={it.id} title={it.title} price={rupiah(it.price)} badge={t('SAVED')} badgeBg="#F6F0E3" badgeFg="#8A6C34" photoUrl={it.photoUrl} onClick={() => openItem(dbListingToItem(it))} />
+            <SmallCard key={it.id} title={it.title} price={rupiah(it.price)} badge={t('SAVED')} badgeBg="#E8F2F7" badgeFg="#2F6B85" photoUrl={it.photoUrl} onClick={() => openItem(dbListingToItem(it))} />
           ))}
         </div>
       ) : (

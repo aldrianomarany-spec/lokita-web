@@ -19,7 +19,7 @@ export default function Sidebar() {
         <button
           onClick={openRequests}
           className="lok-navi"
-          style={{ width: '100%', border: 'none', cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left', display: 'flex', alignItems: 'center', gap: 12, fontWeight: 600, fontSize: 14, padding: '10px 12px', borderRadius: 0, background: s.view === 'requests' ? '#F6F0E3' : 'transparent', color: s.view === 'requests' ? '#8A6C34' : '#3A3B3E', marginBottom: 2 }}
+          style={{ width: '100%', border: 'none', cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left', display: 'flex', alignItems: 'center', gap: 12, fontWeight: 600, fontSize: 14, padding: '10px 12px', borderRadius: 0, background: s.view === 'requests' ? '#E8F2F7' : 'transparent', color: s.view === 'requests' ? '#2F6B85' : '#3A3B3E', marginBottom: 2 }}
         >
           <span style={{ width: 26, height: 26, borderRadius: 0, background: '#E7EEF7', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, flex: 'none' }}>🙋</span>
           <span style={{ flex: 1 }}>{t('Requests')}</span>
@@ -29,7 +29,7 @@ export default function Sidebar() {
           <button
             onClick={openPeople}
             className="lok-navi"
-            style={{ width: '100%', border: 'none', cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left', display: 'flex', alignItems: 'center', gap: 12, fontWeight: 600, fontSize: 14, padding: '10px 12px', borderRadius: 0, background: s.view === 'people' ? '#F6F0E3' : 'transparent', color: s.view === 'people' ? '#8A6C34' : '#3A3B3E', marginBottom: 2 }}
+            style={{ width: '100%', border: 'none', cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left', display: 'flex', alignItems: 'center', gap: 12, fontWeight: 600, fontSize: 14, padding: '10px 12px', borderRadius: 0, background: s.view === 'people' ? '#E8F2F7' : 'transparent', color: s.view === 'people' ? '#2F6B85' : '#3A3B3E', marginBottom: 2 }}
           >
             <span style={{ width: 26, height: 26, borderRadius: 0, background: '#E7F1EA', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, flex: 'none' }}>👋</span>
             <span style={{ flex: 1 }}>{t('People')}</span>
@@ -44,7 +44,7 @@ export default function Sidebar() {
           <button
             onClick={openAdmin}
             className="lok-navi"
-            style={{ width: '100%', border: 'none', cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left', display: 'flex', alignItems: 'center', gap: 12, fontWeight: 600, fontSize: 14, padding: '10px 12px', borderRadius: 0, background: s.view === 'admin' ? '#F6F0E3' : 'transparent', color: s.view === 'admin' ? '#8A6C34' : '#3A3B3E', marginBottom: 2 }}
+            style={{ width: '100%', border: 'none', cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left', display: 'flex', alignItems: 'center', gap: 12, fontWeight: 600, fontSize: 14, padding: '10px 12px', borderRadius: 0, background: s.view === 'admin' ? '#E8F2F7' : 'transparent', color: s.view === 'admin' ? '#2F6B85' : '#3A3B3E', marginBottom: 2 }}
           >
             <span style={{ width: 26, height: 26, borderRadius: 0, background: '#F1E4E0', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, flex: 'none' }}>🛡️</span>
             <span style={{ flex: 1 }}>{t('Admin')}</span>
@@ -65,13 +65,13 @@ export default function Sidebar() {
           className="lok-btn"
           style={{ width: '100%', border: 'none', cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 9, fontWeight: 800, fontSize: 14, padding: '12px 12px', borderRadius: 0, background: '#000000', color: '#FFFFFF', marginBottom: 8 }}
         >
-          <span style={{ color: '#C8A96A', fontSize: 16, lineHeight: 1 }}>＋</span> {t('Sell an item')}
+          <span style={{ color: '#519BB8', fontSize: 16, lineHeight: 1 }}>＋</span> {t('Sell an item')}
         </button>
         {!s.guest && (
           <button
             onClick={toggleSavedView}
             className="lok-navi"
-            style={{ width: '100%', border: '1px solid #D8D8D4', cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 9, fontWeight: 700, fontSize: 13.5, padding: '11px 12px', borderRadius: 0, background: s.savedOnly ? '#F6F0E3' : '#FFFFFF', color: s.savedOnly ? '#8A6C34' : '#3A3B3E' }}
+            style={{ width: '100%', border: '1px solid #D8D8D4', cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 9, fontWeight: 700, fontSize: 13.5, padding: '11px 12px', borderRadius: 0, background: s.savedOnly ? '#E8F2F7' : '#FFFFFF', color: s.savedOnly ? '#2F6B85' : '#3A3B3E' }}
           >
             ★ {t('Saved items')}{Object.keys(s.saved).length > 0 ? ` (${Object.keys(s.saved).length})` : ''}
           </button>

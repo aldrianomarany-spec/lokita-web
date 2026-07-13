@@ -81,7 +81,7 @@ export default function CheckoutModal() {
               {PICKUP_OPTS.map((o) => {
                 const on = s.pickup === o.key
                 return (
-                  <div key={o.key} onClick={() => setPickup(o.key)} className="lok-btn" style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 12, background: on ? '#F6F0E3' : '#F5F5F3', border: `1.5px solid ${on ? 'var(--accent,#000000)' : '#D8D8D4'}`, borderRadius: 0, padding: '12px 14px' }}>
+                  <div key={o.key} onClick={() => setPickup(o.key)} className="lok-btn" style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 12, background: on ? '#E8F2F7' : '#F5F5F3', border: `1.5px solid ${on ? 'var(--accent,#000000)' : '#D8D8D4'}`, borderRadius: 0, padding: '12px 14px' }}>
                     <div style={{ width: 34, height: 34, borderRadius: 0, background: '#fff', color: 'var(--accent,#000000)', display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 'none' }}>{o.ic}</div>
                     <div style={{ flex: 1 }}>
                       <div style={{ fontWeight: 700, fontSize: 13.5 }}>{t(o.label)}</div>
@@ -99,7 +99,7 @@ export default function CheckoutModal() {
               {PAY_OPTS.map((o) => {
                 const on = s.pay === o.key
                 return (
-                  <div key={o.key} onClick={() => setPay(o.key)} className="lok-btn" style={{ flex: 1, cursor: 'pointer', background: on ? '#F6F0E3' : '#F5F5F3', border: `1.5px solid ${on ? 'var(--accent,#000000)' : '#D8D8D4'}`, borderRadius: 0, padding: '14px 13px', textAlign: 'center' }}>
+                  <div key={o.key} onClick={() => setPay(o.key)} className="lok-btn" style={{ flex: 1, cursor: 'pointer', background: on ? '#E8F2F7' : '#F5F5F3', border: `1.5px solid ${on ? 'var(--accent,#000000)' : '#D8D8D4'}`, borderRadius: 0, padding: '14px 13px', textAlign: 'center' }}>
                     <div style={{ width: 34, height: 34, borderRadius: 0, background: '#fff', color: 'var(--accent,#000000)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 8px' }}>{o.ic}</div>
                     <div style={{ fontWeight: 700, fontSize: 13 }}>{t(o.label)}</div>
                     <div style={{ fontSize: 11, color: '#5F6063', fontWeight: 500, marginTop: 2 }}>{t(o.desc)}</div>
@@ -134,8 +134,8 @@ export default function CheckoutModal() {
               </>
             )}
             {s.qris && !manualQr && (
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 9, background: '#F6F0E3', border: '1px solid #E2D3AF', borderRadius: 0, padding: '11px 14px', marginBottom: 12, fontSize: 12.5, fontWeight: 600, color: '#8A6C34' }}>
-                <span className="lok-spin" style={{ width: 14, height: 14, border: '2px solid #A9CBB8', borderTopColor: '#8A6C34', borderRadius: '50%', display: 'inline-block' }} />
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 9, background: '#E8F2F7', border: '1px solid #BFDCE8', borderRadius: 0, padding: '11px 14px', marginBottom: 12, fontSize: 12.5, fontWeight: 600, color: '#2F6B85' }}>
+                <span className="lok-spin" style={{ width: 14, height: 14, border: '2px solid #A9CBB8', borderTopColor: '#2F6B85', borderRadius: '50%', display: 'inline-block' }} />
                 {t('Waiting for your payment — this confirms automatically.')}
               </div>
             )}
@@ -145,7 +145,7 @@ export default function CheckoutModal() {
 
         {s.coStep === 'done' && (
           <div style={{ textAlign: 'center' }}>
-            <div style={{ width: 66, height: 66, borderRadius: '50%', background: '#F6F0E3', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 18px', color: 'var(--accent,#000000)' }}>
+            <div style={{ width: 66, height: 66, borderRadius: '50%', background: '#E8F2F7', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 18px', color: 'var(--accent,#000000)' }}>
               <Check size={32} />
             </div>
             <div style={{ fontFamily: "'Bricolage Grotesque',sans-serif", fontWeight: 800, fontSize: 20, marginBottom: 9 }}>{t('Order placed')}</div>

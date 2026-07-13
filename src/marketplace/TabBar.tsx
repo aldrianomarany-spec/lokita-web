@@ -15,7 +15,7 @@ export default function TabBar() {
     <button
       onClick={onClick}
       className="lok-navi"
-      style={{ flex: 1, border: 'none', background: 'none', cursor: 'pointer', fontFamily: 'inherit', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, padding: '7px 0 5px', position: 'relative', color: active ? '#C8A96A' : '#8B8B86' }}
+      style={{ flex: 1, border: 'none', background: 'none', cursor: 'pointer', fontFamily: 'inherit', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, padding: '7px 0 5px', position: 'relative', color: active ? '#519BB8' : '#8B8B86' }}
     >
       <span style={{ fontSize: 19, lineHeight: 1, filter: active ? 'none' : 'grayscale(.6)' }}>{icon}</span>
       <span style={{ fontSize: 9.5, fontWeight: 700, letterSpacing: '.02em' }}>{label}</span>
@@ -37,7 +37,7 @@ export default function TabBar() {
           onClick={openSell}
           aria-label={t('Post an item')}
           className="lok-btn"
-          style={{ border: 'none', width: 50, height: 50, borderRadius: '50%', background: '#C8A96A', color: '#000000', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', marginTop: -22, boxShadow: '0 0 0 5px #000000' }}
+          style={{ border: 'none', width: 50, height: 50, borderRadius: '50%', background: '#519BB8', color: '#FFFFFF', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', marginTop: -22, boxShadow: '0 0 0 5px #000000' }}
         >
           <Plus size={22} />
         </button>

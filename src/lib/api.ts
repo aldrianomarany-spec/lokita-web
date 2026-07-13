@@ -1498,6 +1498,43 @@ export async function adminDeleteBanner(id: string): Promise<void> {
 }
 
 // realtime: homepage carousels update the moment the admin publishes
+// ---- site settings (admin-tunable knobs; migration 0026) ----
+export interface TickerSettings {
+  speed: 'slow' | 'normal' | 'fast'
+  clickable: boolean
+}
+const TICKER_DEFAULTS: TickerSettings = { speed: 'normal', clickable: true }
+
+export async function fetchTickerSettings(): Promise<TickerSettings> {
+  try {
+    const { data, error } = await supabase.from('site_settings').select('value').eq('key', 'ticker').maybeSingle()
+    if (error || !data) return TICKER_DEFAULTS
+    const v = (data as { value: Partial<TickerSettings> }).value || {}
+    return {
+      speed: v.speed === 'slow' || v.speed === 'fast' ? v.speed : 'normal',
+      clickable: v.clickable !== false,
+    }
+  } catch {
+    return TICKER_DEFAULTS
+  }
+}
+
+export async function adminSetTickerSettings(v: TickerSettings): Promise<void> {
+  const { error } = await supabase.from('site_settings').upsert({ key: 'ticker', value: v, updated_at: new Date().toISOString() })
+  if (error) throw error
+}
+
+export function subscribeSettings(onChange: () => void): () => void {
+  // unique topic per subscriber (same rule as subscribeBanners)
+  const ch = supabase
+    .channel('settings-' + Math.random().toString(36).slice(2))
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'site_settings' }, onChange)
+    .subscribe()
+  return () => {
+    supabase.removeChannel(ch)
+  }
+}
+
 export function subscribeBanners(onChange: () => void): () => void {
   // unique topic per subscriber — the Ticker and the homepage hero both
   // listen, and Supabase throws if two callers attach callbacks to the

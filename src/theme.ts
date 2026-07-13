@@ -7,8 +7,8 @@
 
 // GRID MARKET skin (design exploration 1a): electric blue on neutral paper.
 // Previous warm-editorial accent: '#000000' / '#000000' — restore to revert.
-export const ACCENT = '#000000'
-export const ACCENT_DEEP = '#000000'
+export const ACCENT = '#519BB8'
+export const ACCENT_DEEP = '#3D7E9A'
 
 // soft, warm/low-sat tint palette with matching stripe + label colours.
 export type Tone = 'sand' | 'sage' | 'clay' | 'haze' | 'blush' | 'olive'
