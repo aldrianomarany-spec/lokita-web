@@ -4,6 +4,7 @@ import { useIsPhone } from './useIsMobile'
 import { Search, MessageBubble, Bell, Verified } from '../components/Icons'
 import { BUILDINGS } from '../theme'
 import { BRAND_LOGO_URL } from '../brand'
+import { useLang, LangToggle } from '../i18n'
 
 const navBtn: React.CSSProperties = {
   position: 'relative',
@@ -65,6 +66,7 @@ const Avatar = ({ photo, initial, size, radius, fontSize }: { photo: string | nu
 export default function TopBar() {
   const { state, patch, goHome, goSignup, goLogin, selectBldg, setQuery, clearQuery, openSell, toggleSavedView, openMessages, openNotifs, toggleMenu, openProfile, openOrders, logout } = useM()
   const [bldgOpen, setBldgOpen] = useState(false)
+  const { t } = useLang()
   // Anti-autofill: Chrome's password manager targets this box (the page's main
   // text input) and injects saved emails. readOnly-until-focused blocks all
   // programmatic fills — browsers never autofill readonly inputs.
@@ -85,10 +87,10 @@ export default function TopBar() {
   const notifActive = s.view === 'notifications'
 
   const menuItems = [
-    { icon: '🧑', label: 'My profile', act: openProfile },
-    { icon: '🧾', label: 'My orders', act: openOrders },
-    { icon: '🔔', label: 'Notifications', act: openNotifs },
-    { icon: '🚪', label: 'Log out', act: logout },
+    { icon: '🧑', label: t('My profile'), act: openProfile },
+    { icon: '🧾', label: t('My orders'), act: openOrders },
+    { icon: '🔔', label: t('Notifications'), act: openNotifs },
+    { icon: '🚪', label: t('Log out'), act: logout },
   ]
 
   return (
@@ -125,11 +127,11 @@ export default function TopBar() {
           <button
             className="lok-btn"
             onClick={() => setBldgOpen((v) => !v)}
-            title="Filter the marketplace by building"
+            title={t('Filter the marketplace by building')}
             style={{ cursor: 'pointer', border: '1px solid #222222', display: 'flex', alignItems: 'center', gap: 9, fontFamily: 'inherit', fontWeight: 500, fontSize: 13, color: '#F5F5F3', background: '#141414', padding: '9px 13px', borderRadius: 0 }}
           >
             <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#C8A96A' }} />
-            {s.bldg === 'All' ? 'All buildings' : s.bldg}
+            {s.bldg === 'All' ? t('All buildings') : s.bldg}
             <span style={{ fontFamily: "'Spline Sans Mono',monospace", fontWeight: 500, fontSize: 10, color: '#9A9A94' }}>JIU · CIKARANG ▾</span>
           </button>
           {bldgOpen && (
@@ -146,8 +148,8 @@ export default function TopBar() {
                     }}
                     style={{ width: '100%', textAlign: 'left', border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontWeight: active ? 800 : 600, fontSize: 13.5, padding: '9px 11px', borderRadius: 0, background: active ? '#F6F0E3' : 'transparent', color: active ? '#8A6C34' : '#3A3B3E', display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 1 }}
                   >
-                    {b === 'All' ? 'All buildings' : b}
-                    {b === 'Main Building' && <span style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 9, color: '#9A9A94', fontWeight: 500 }}>JIU STAFF & LECTURERS</span>}
+                    {b === 'All' ? t('All buildings') : b}
+                    {b === 'Main Building' && <span style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 9, color: '#9A9A94', fontWeight: 500 }}>{t('JIU STAFF & LECTURERS')}</span>}
                   </button>
                 )
               })}
@@ -177,7 +179,7 @@ export default function TopBar() {
             if (document.activeElement !== e.target) return
             setQuery(e.target.value)
           }}
-          placeholder={isPhone ? 'Search…' : 'Search your dorm — desk, mini fridge, textbooks…'}
+          placeholder={isPhone ? t('Search…') : t('Search your dorm — desk, mini fridge, textbooks…')}
           style={{ flex: 1, minWidth: 0, border: 'none', background: 'none', outline: 'none', fontFamily: 'inherit', fontSize: 14, fontWeight: 500, color: '#000000' }}
         />
         {s.query && (
@@ -187,14 +189,17 @@ export default function TopBar() {
         )}
       </div>
 
+      {/* language switch — EN | Bahasa Indonesia, remembered on this device */}
+      {!isPhone && <LangToggle dark />}
+
       {/* actions — guests get a different, minimal interface */}
       {guest ? (
         <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 9, flex: 'none' }}>
           {!isPhone && (
-            <span style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 10, color: '#8B8B86', letterSpacing: '.08em', marginRight: 4 }}>BROWSING AS GUEST</span>
+            <span style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 10, color: '#8B8B86', letterSpacing: '.08em', marginRight: 4 }}>{t('BROWSING AS GUEST')}</span>
           )}
-          <button className="lok-btn" onClick={goLogin} style={{ border: '1px solid #222222', background: '#141414', color: '#F5F5F3', fontFamily: 'inherit', fontWeight: 700, fontSize: 13.5, padding: '10px 15px', borderRadius: 0, cursor: 'pointer' }}>Log in</button>
-          <button className="lok-btn" onClick={goSignup} style={{ border: 'none', background: '#C8A96A', color: '#000000', fontFamily: 'inherit', fontWeight: 700, fontSize: 13.5, padding: '10px 16px', borderRadius: 0, cursor: 'pointer' }}>Sign up — it's free</button>
+          <button className="lok-btn" onClick={goLogin} style={{ border: '1px solid #222222', background: '#141414', color: '#F5F5F3', fontFamily: 'inherit', fontWeight: 700, fontSize: 13.5, padding: '10px 15px', borderRadius: 0, cursor: 'pointer' }}>{t('Log in')}</button>
+          <button className="lok-btn" onClick={goSignup} style={{ border: 'none', background: '#C8A96A', color: '#000000', fontFamily: 'inherit', fontWeight: 700, fontSize: 13.5, padding: '10px 16px', borderRadius: 0, cursor: 'pointer' }}>{t("Sign up — it's free")}</button>
         </div>
       ) : (
       <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: isPhone ? 8 : 12, flex: 'none' }}>
@@ -203,26 +208,26 @@ export default function TopBar() {
         {!isPhone && (
           <>
             <button className="lok-navi" onClick={openSell} style={{ border: 'none', background: 'none', cursor: 'pointer', fontFamily: "'Archivo',sans-serif", fontWeight: 500, fontSize: 13, color: '#F5F5F3', padding: '8px 4px' }}>
-              Sell
+              {t('Sell')}
             </button>
             <button className="lok-navi" onClick={toggleSavedView} style={{ border: 'none', background: 'none', cursor: 'pointer', fontFamily: "'Archivo',sans-serif", fontWeight: s.savedOnly ? 700 : 500, fontSize: 13, color: s.savedOnly ? '#C8A96A' : '#F5F5F3', padding: '8px 4px' }}>
-              Saved{savedCount > 0 ? ` (${savedCount})` : ''}
+              {t('Saved')}{savedCount > 0 ? ` (${savedCount})` : ''}
             </button>
           </>
         )}
 
-        <button className="lok-navi" onClick={openMessages} title="Messages" style={{ ...navBtn, background: msgActive ? '#C8A96A' : '#141414', color: msgActive ? '#000000' : '#D8D8D4' }}>
+        <button className="lok-navi" onClick={openMessages} title={t('Messages')} style={{ ...navBtn, background: msgActive ? '#C8A96A' : '#141414', color: msgActive ? '#000000' : '#D8D8D4' }}>
           <MessageBubble />
           {unreadCount > 0 && badge(unreadCount)}
         </button>
 
-        <button className="lok-navi" onClick={openNotifs} title="Notifications" style={{ ...navBtn, background: notifActive ? '#C8A96A' : '#141414', color: notifActive ? '#000000' : '#D8D8D4' }}>
+        <button className="lok-navi" onClick={openNotifs} title={t('Notifications')} style={{ ...navBtn, background: notifActive ? '#C8A96A' : '#141414', color: notifActive ? '#000000' : '#D8D8D4' }}>
           <Bell />
           {notifBadge > 0 && badge(notifBadge)}
         </button>
 
         {/* avatar */}
-        <div onClick={toggleMenu} title="Account" style={{ width: 42, height: 42, cursor: 'pointer', position: 'relative', flex: 'none' }}>
+        <div onClick={toggleMenu} title={t('Account')} style={{ width: 42, height: 42, cursor: 'pointer', position: 'relative', flex: 'none' }}>
           <Avatar photo={s.photo} initial={profileInitial} size={42} radius="50%" fontSize={16} />
           <span style={{ position: 'absolute', bottom: 0, right: 0, width: 11, height: 11, borderRadius: '50%', background: '#3DBB6E', border: '2px solid #FFFFFF' }} />
         </div>
@@ -238,26 +243,26 @@ export default function TopBar() {
             <Avatar photo={s.photo} initial={profileInitial} size={46} radius="50%" fontSize={19} />
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontWeight: 800, fontSize: 15 }}>
-                {s.profile.name || 'You'}
+                {s.profile.name || t('You')}
                 {s.profile.verification_status === 'verified' && <Verified size={14} />}
               </div>
               <div style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 10, color: '#8B8B86', marginTop: 2 }}>
-                {s.profile.verification_status === 'verified' ? 'DORM-VERIFIED' : 'VERIFICATION PENDING'} · ⭐ {ratingLabel}
+                {s.profile.verification_status === 'verified' ? t('DORM-VERIFIED') : t('VERIFICATION PENDING')} · ⭐ {ratingLabel}
               </div>
             </div>
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 2px', borderBottom: '1px solid #E6E6E3' }}>
             <div style={{ textAlign: 'center', flex: 1 }}>
               <div style={{ fontWeight: 800, fontSize: 16, fontFamily: "'Bricolage Grotesque',sans-serif" }}>{stats?.selling ?? 0}</div>
-              <div style={{ fontSize: 10, color: '#8B8B86', fontWeight: 600 }}>Selling</div>
+              <div style={{ fontSize: 10, color: '#8B8B86', fontWeight: 600 }}>{t('Selling')}</div>
             </div>
             <div style={{ textAlign: 'center', flex: 1, borderLeft: '1px solid #E6E6E3', borderRight: '1px solid #E6E6E3' }}>
               <div style={{ fontWeight: 800, fontSize: 16, fontFamily: "'Bricolage Grotesque',sans-serif" }}>{stats?.buying ?? 0}</div>
-              <div style={{ fontSize: 10, color: '#8B8B86', fontWeight: 600 }}>Buying</div>
+              <div style={{ fontSize: 10, color: '#8B8B86', fontWeight: 600 }}>{t('Buying')}</div>
             </div>
             <div style={{ textAlign: 'center', flex: 1 }}>
               <div style={{ fontWeight: 800, fontSize: 16, fontFamily: "'Bricolage Grotesque',sans-serif" }}>{ratingLabel}</div>
-              <div style={{ fontSize: 10, color: '#8B8B86', fontWeight: 600 }}>Rating</div>
+              <div style={{ fontSize: 10, color: '#8B8B86', fontWeight: 600 }}>{t('Rating')}</div>
             </div>
           </div>
           {menuItems.map((m, i) => (
@@ -273,6 +278,13 @@ export default function TopBar() {
               {m.icon} {m.label}
             </div>
           ))}
+          {/* phones have no room in the header — language switch lives here */}
+          {isPhone && (
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 10px 2px', borderTop: '1px solid #E6E6E3', marginTop: 6 }}>
+              <span style={{ fontSize: 12.5, fontWeight: 600, color: '#5F6063' }}>🌐 {t('Language')}</span>
+              <LangToggle />
+            </div>
+          )}
         </div>
       )}
     </header>

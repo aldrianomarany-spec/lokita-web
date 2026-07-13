@@ -10,6 +10,7 @@ import RequireSession from './auth/RequireSession'
 import Marketplace from './marketplace/Marketplace'
 import { Terms, Privacy } from './pages/Legal'
 import { MASCOT_URL, BRAND_LOGO_URL } from './brand'
+import { LangProvider } from './i18n'
 
 // browser-tab icon: use our mascot (fallback: the logo) instead of the default
 const faviconUrl = MASCOT_URL || BRAND_LOGO_URL
@@ -40,7 +41,9 @@ const router = createBrowserRouter([
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <RouterProvider router={router} />
+    <LangProvider>
+      <RouterProvider router={router} />
+    </LangProvider>
     {/* privacy-friendly page analytics (only active on Vercel with Analytics enabled) */}
     <Analytics />
   </React.StrictMode>,
