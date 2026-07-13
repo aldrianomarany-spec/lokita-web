@@ -1338,6 +1338,62 @@ export async function adminSetBanned(id: string, banned: boolean): Promise<void>
 // Cancel overdue orders (pending >48h, paid past drop-off deadline) so items
 // don't stay reserved forever. Fire-and-forget on app start; the DB function
 // (migration 0019) is idempotent and safe for any signed-in caller.
+// ---- featured boosts (migration 0027) ----
+export const BOOST_OPTIONS: { days: 3 | 7; amount: number }[] = [
+  { days: 3, amount: 3000 },
+  { days: 7, amount: 5000 },
+]
+
+export async function requestBoost(listingId: string, days: 3 | 7): Promise<void> {
+  const uid = await getUserId()
+  if (!uid) throw new Error('Not signed in')
+  const amount = BOOST_OPTIONS.find((o) => o.days === days)?.amount ?? 3000
+  const { error } = await supabase.from('boost_requests').insert({ listing_id: listingId, seller_id: uid, days, amount })
+  if (error) throw error
+}
+
+export interface BoostRow {
+  id: string
+  listing_id: string
+  seller_id: string
+  days: number
+  amount: number
+  status: 'pending' | 'approved' | 'rejected'
+  created_at: string
+  listing_title: string
+  seller_name: string
+}
+
+export async function fetchAdminBoosts(): Promise<BoostRow[]> {
+  const { data, error } = await supabase
+    .from('boost_requests')
+    .select('*, listing:listing_id(title), seller:seller_id(name)')
+    .order('created_at', { ascending: false })
+    .limit(100)
+  if (error) throw error
+  type Row = Omit<BoostRow, 'listing_title' | 'seller_name'> & { listing: { title: string } | null; seller: { name: string } | null }
+  return ((data as Row[]) || []).map((r) => ({
+    ...r,
+    listing_title: r.listing?.title || '(deleted listing)',
+    seller_name: r.seller?.name || 'Student',
+  }))
+}
+
+export async function adminResolveBoost(b: BoostRow, approve: boolean): Promise<void> {
+  if (approve) {
+    const until = new Date(Date.now() + b.days * 86400000).toISOString()
+    const { error } = await supabase.from('listings').update({ is_featured: true, featured_until: until }).eq('id', b.listing_id)
+    if (error) throw error
+  }
+  const { error } = await supabase.from('boost_requests').update({ status: approve ? 'approved' : 'rejected' }).eq('id', b.id)
+  if (error) throw error
+}
+
+// clear expired FEATURED windows (0027) — app-start sweep, safe pre-migration
+export async function expireFeatured(): Promise<void> {
+  await supabase.rpc('expire_featured').then(() => {}, () => {})
+}
+
 export async function expireStaleOrders(): Promise<void> {
   await supabase.rpc('expire_stale_orders')
 }

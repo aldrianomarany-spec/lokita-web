@@ -3,7 +3,7 @@
   "private": true,
   "version": "2.0.0",
   "type": "module",
-  "description": "LOKITA — the dorm marketplace for Jakarta International University (JIU), Cikarang.",
+  "description": "LOKITA \u2014 the dorm marketplace for Jakarta International University (JIU), Cikarang.",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
@@ -16,7 +16,8 @@
     "qrcode": "^1.5.4",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "react-router-dom": "^6.26.2"
+    "react-router-dom": "^6.26.2",
+    "web-push": "^3.6.7"
   },
   "devDependencies": {
     "@types/qrcode": "^1.5.6",

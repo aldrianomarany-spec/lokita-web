@@ -11,6 +11,7 @@ import Marketplace from './marketplace/Marketplace'
 import { Terms, Privacy } from './pages/Legal'
 import { MASCOT_URL, BRAND_LOGO_URL } from './brand'
 import { LangProvider } from './i18n'
+import { initDark } from './lib/darkmode'
 
 // browser-tab icon: use our mascot (fallback: the logo) instead of the default
 const faviconUrl = MASCOT_URL || BRAND_LOGO_URL
@@ -21,6 +22,8 @@ if (faviconUrl) {
   link.href = faviconUrl
   document.head.appendChild(link)
 }
+
+initDark()
 
 const router = createBrowserRouter([
   { path: '/', element: <AuthFlow /> },

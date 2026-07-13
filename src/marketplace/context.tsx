@@ -46,6 +46,8 @@ import {
   subscribeNotifications,
   countOpenReports,
   expireStaleOrders,
+  expireFeatured,
+  requestBoost,
   cleanupStaleData,
   type ProfileStats,
   type OrderRow,
@@ -71,7 +73,7 @@ const EMPTY_PROFILE: Profile = {
   verification_status: 'pending', profile_photo_url: null,
 }
 
-export type View = 'browse' | 'requests' | 'people' | 'member' | 'messages' | 'notifications' | 'profile' | 'orders' | 'admin'
+export type View = 'browse' | 'requests' | 'people' | 'member' | 'messages' | 'notifications' | 'profile' | 'orders' | 'admin' | 'guide'
 export type Sort = 'Nearest' | 'Newest' | 'Price'
 export type CoStep = 'options' | 'qris' | 'done' | 'review' | 'reviewdone'
 export type ListState = 'idle' | 'saving' | 'done'
@@ -244,6 +246,7 @@ export interface MarketplaceApi {
   openRequests: () => void
   openPeople: () => void
   openAdmin: () => void
+  openGuide: () => void
   refreshReports: () => void
   openRequestChat: (requesterId: string) => Promise<void>
   selectSort: (k: Sort) => void
@@ -265,6 +268,7 @@ export interface MarketplaceApi {
   deleteThread: (conv: ConversationRow) => Promise<void>
   cancelAttach: () => void
   sendOffer: (amount: number) => Promise<void> | void
+  boostListing: (days: 3 | 7) => Promise<void>
   setMsgDraft: (v: string) => void
   sendMsg: (text?: string) => void
   openNotifs: () => void
@@ -446,6 +450,7 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
       // reserved items free up, then load the fresh list; also let the DB
       // tidy stale wishlist rows + old notifications (fire-and-forget)
       cleanupStaleData().catch(() => {})
+      expireFeatured().catch(() => {})
       expireStaleOrders()
         .catch(() => {})
         .finally(() => loadOrders())
@@ -626,6 +631,7 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
       patch({ view: 'admin', menuOpen: false, sel: null })
       loadReportsCount()
     },
+    openGuide: () => patch({ view: 'guide', menuOpen: false, sel: null }),
     refreshReports: () => loadReportsCount(),
     openPeople: () => {
       if (state.guest) return goSignup()
@@ -788,6 +794,12 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
     },
 
     cancelAttach: () => patch({ pendingAttach: null }),
+
+    boostListing: async (days) => {
+      const sel = state.sel
+      if (!sel || state.guest) return
+      await requestBoost(sel.id, days)
+    },
 
     sendOffer: async (amount) => {
       if (state.guest) return goSignup()
