@@ -5,6 +5,7 @@ import { Search, Star } from '../components/Icons'
 import { CATEGORIES, CAT_META, BUILDINGS, type Category } from '../theme'
 import { useIsNarrow } from './useIsMobile'
 import { MASCOT_URL } from '../brand'
+import { useLang } from '../i18n'
 import type { EnrichedItem } from '../types'
 
 // ============================================================================
@@ -39,11 +40,12 @@ const chip = (active: boolean): React.CSSProperties => ({
 })
 
 function GridCard({ it, saved, onOpen, onSave }: { it: EnrichedItem; saved: boolean; onOpen: () => void; onSave: () => void }) {
+  const { t } = useLang()
   return (
     <div onClick={onOpen} className="lok-card" style={{ background: '#FFFFFF', padding: '0 0 14px', cursor: 'pointer', position: 'relative' }}>
       {(it.isFeatured || it.mine) && (
         <span style={{ position: 'absolute', top: 10, left: 10, fontFamily: "'Spline Sans Mono',monospace", fontWeight: 600, fontSize: 9, letterSpacing: 1, background: it.isFeatured ? GOLD : INK, color: it.isFeatured ? INK : '#FFFFFF', padding: '3px 7px', zIndex: 2 }}>
-          {it.isFeatured ? 'FEATURED' : 'YOURS'}
+          {it.isFeatured ? t('FEATURED') : t('YOURS')}
         </span>
       )}
       <div style={{ aspectRatio: '1 / 0.85', background: 'repeating-linear-gradient(45deg,#ECECEA 0 10px,#F3F3F1 10px 20px)', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', overflow: 'hidden' }}>
@@ -58,7 +60,7 @@ function GridCard({ it, saved, onOpen, onSave }: { it: EnrichedItem; saved: bool
               e.stopPropagation()
               onSave()
             }}
-            title={saved ? 'Remove from saved' : 'Save item'}
+            title={saved ? t('Remove from saved') : t('Save item')}
             style={{ position: 'absolute', top: 8, right: 8, width: 30, height: 30, border: 'none', background: '#FFFFFF', cursor: 'pointer', fontSize: 14, lineHeight: 1, color: saved ? '#E7A81E' : INK, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
           >
             <Star fill={saved ? '#E7A81E' : 'none'} size={15} />
@@ -80,6 +82,7 @@ export default function BrowseView() {
   const { state, enrichedItems, selectCond, selectSort, resetFilters, openSell, selectCat, toggleSavedView, selectBldg, openRequests, openPeople, openItem, toggleSaveItem, goSignup, openListingById } = useM()
   const s = state
   const isNarrow = useIsNarrow()
+  const { t } = useLang()
   const counts = s.categoryCounts
   const totalCount = Object.values(counts).reduce((a, n) => a + n, 0)
 
@@ -120,7 +123,13 @@ export default function BrowseView() {
     else if (b.target_type === 'requests') openRequests()
     else if (b.target_type === 'sell') (s.guest ? goSignup() : openSell())
   }
-  const emptyCat = s.cat !== 'All' ? ` in ${s.cat}` : ''
+  const emptyCat = s.cat !== 'All' ? ` ${t('in')} ${t(s.cat)}` : ''
+
+  // recently viewed (device-local) resolved against the live feed — items that
+  // sold or were removed simply drop out because they're no longer in the feed
+  const recentItems = s.recents
+    .map((id) => enrichedItems.find((i) => i.id === id))
+    .filter((i): i is EnrichedItem => !!i)
 
   const save = (it: EnrichedItem) => (s.guest ? goSignup() : toggleSaveItem(it.id))
 
@@ -135,20 +144,20 @@ export default function BrowseView() {
             onChange={(e) => selectBldg(e.target.value)}
             style={{ flex: 'none', fontFamily: 'inherit', fontWeight: 500, fontSize: 12.5, padding: '8px 10px', borderRadius: 0, border: `1px solid ${LINE}`, background: '#FFFFFF', color: INK }}
           >
-            <option value="All">All buildings</option>
+            <option value="All">{t('All buildings')}</option>
             {BUILDINGS.map((b) => (
               <option key={b}>{b}</option>
             ))}
           </select>
-          <button onClick={openRequests} style={{ ...chip(false), flex: 'none' }}>🙋 Requests</button>
-          {!s.guest && <button onClick={openPeople} style={{ ...chip(false), flex: 'none' }}>👋 People</button>}
-          <button onClick={toggleSavedView} style={{ ...chip(s.savedOnly), flex: 'none' }}>★ Saved</button>
+          <button onClick={openRequests} style={{ ...chip(false), flex: 'none' }}>🙋 {t('Requests')}</button>
+          {!s.guest && <button onClick={openPeople} style={{ ...chip(false), flex: 'none' }}>👋 {t('People')}</button>}
+          <button onClick={toggleSavedView} style={{ ...chip(s.savedOnly), flex: 'none' }}>★ {t('Saved')}</button>
           {CATEGORIES.map((label: Category) => {
             const active = s.cat === label && !s.savedOnly
             const count = label === 'All' ? totalCount : counts[label] || 0
             return (
               <button key={label} onClick={() => selectCat(label)} style={{ ...chip(active), flex: 'none' }}>
-                {CAT_META[label]} {label}
+                {CAT_META[label]} {t(label)}
                 {count > 0 ? ` ${count}` : ''}
               </button>
             )
@@ -170,7 +179,7 @@ export default function BrowseView() {
                 <div style={{ padding: isNarrow ? '26px 22px' : '36px 32px', paddingBottom: banners.length > 1 ? (isNarrow ? 40 : 48) : undefined, display: 'flex', flexDirection: 'column', gap: 14, justifyContent: 'center' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                     <span style={{ fontFamily: "'Spline Sans Mono',monospace", fontWeight: 600, fontSize: 10, letterSpacing: 1, background: GOLD, color: INK, padding: '3px 8px' }}>LOKITA</span>
-                    <span style={{ fontFamily: "'Spline Sans Mono',monospace", fontWeight: 500, fontSize: 11, color: '#9A9A94' }}>CAMPUS ANNOUNCEMENT</span>
+                    <span style={{ fontFamily: "'Spline Sans Mono',monospace", fontWeight: 500, fontSize: 11, color: '#9A9A94' }}>{t('CAMPUS ANNOUNCEMENT')}</span>
                   </div>
                   <div style={{ fontFamily: "'Instrument Serif',serif", fontWeight: 400, fontSize: isNarrow ? 28 : 38, lineHeight: 1.06, letterSpacing: '-.5px' }}>{b.title}</div>
                   {b.subtitle && <div style={{ fontSize: 14, color: '#B9B9B3' }}>{b.subtitle}</div>}
@@ -182,7 +191,7 @@ export default function BrowseView() {
                       }}
                       style={{ alignSelf: 'flex-start', background: GOLD, color: INK, border: 'none', padding: '11px 22px', fontFamily: "'Archivo',sans-serif", fontWeight: 600, fontSize: 13, cursor: 'pointer' }}
                     >
-                      {b.cta_label || 'See details'} →
+                      {b.cta_label || t('See details')} →
                     </button>
                   )}
                 </div>
@@ -222,13 +231,13 @@ export default function BrowseView() {
           <div style={{ padding: isNarrow ? '26px 22px' : '36px 32px', display: 'flex', flexDirection: 'column', gap: 14, justifyContent: 'center' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
               <span style={{ fontFamily: "'Spline Sans Mono',monospace", fontWeight: 600, fontSize: 10, letterSpacing: 1, background: GOLD, color: INK, padding: '3px 8px' }}>
-                {hero.isFeatured ? 'FEATURED' : "TODAY'S PICK"}
+                {hero.isFeatured ? t('FEATURED') : t("TODAY'S PICK")}
               </span>
-              <span style={{ fontFamily: "'Spline Sans Mono',monospace", fontWeight: 500, fontSize: 11, color: '#9A9A94' }}>{hero.seller}{hero.sellerVerified ? ' · Dorm-Verified' : ''}</span>
+              <span style={{ fontFamily: "'Spline Sans Mono',monospace", fontWeight: 500, fontSize: 11, color: '#9A9A94' }}>{hero.seller}{hero.sellerVerified ? ' · ' + t('Dorm-Verified') : ''}</span>
             </div>
             <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 600, fontSize: isNarrow ? 26 : 34, lineHeight: 1.05, letterSpacing: '-1px' }}>{hero.title}</div>
             <div style={{ fontSize: 14, color: '#B9B9B3' }}>{hero.price} · {hero.proxTag} · {hero.cond}</div>
-            <button style={{ alignSelf: 'flex-start', background: PAPER, color: INK, border: 'none', padding: '11px 22px', fontFamily: "'Archivo',sans-serif", fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>View item →</button>
+            <button style={{ alignSelf: 'flex-start', background: PAPER, color: INK, border: 'none', padding: '11px 22px', fontFamily: "'Archivo',sans-serif", fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>{t('View item →')}</button>
           </div>
           <div style={{ background: 'repeating-linear-gradient(45deg,#1E1E1E 0 12px,#232427 12px 24px)', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', minHeight: isNarrow ? 180 : 0, overflow: 'hidden' }}>
             {hero.photoUrl ? (
@@ -240,6 +249,26 @@ export default function BrowseView() {
         </div>
       )}
 
+      {/* recently viewed — quick way back to items you looked at (this device) */}
+      {!filtersActive && recentItems.length > 0 && (
+        <div style={{ margin: '0 0 14px' }}>
+          <div style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 10, letterSpacing: 1, color: GRAY, marginBottom: 8 }}>{t('RECENTLY VIEWED')}</div>
+          <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 4 }}>
+            {recentItems.map((it) => (
+              <div key={it.id} onClick={() => openItem(it)} className="lok-card" style={{ flex: 'none', width: 200, background: '#FFFFFF', border: `1px solid ${LINE}`, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 9, padding: 7 }}>
+                <div style={{ width: 42, height: 42, flex: 'none', background: '#ECECEA', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  {it.photoUrl ? <img src={it.photoUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <span style={{ fontSize: 15 }}>🧺</span>}
+                </div>
+                <div style={{ minWidth: 0 }}>
+                  <div style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 500, fontSize: 12, color: INK, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{it.title}</div>
+                  <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 600, fontSize: 12, color: INK }}>{it.price}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* category chips (desktop — mobile has the strip above) */}
       {!isNarrow && (
         <div style={{ display: 'flex', gap: 8, padding: '4px 0 6px', flexWrap: 'wrap' }}>
@@ -247,7 +276,7 @@ export default function BrowseView() {
             const active = s.cat === label && !s.savedOnly
             return (
               <button key={label} onClick={() => selectCat(label)} style={chip(active)}>
-                {label}
+                {t(label)}
               </button>
             )
           })}
@@ -260,20 +289,20 @@ export default function BrowseView() {
 
       {/* condition + sort rail */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', padding: '10px 0 14px' }}>
-        <span style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 10, letterSpacing: 1, color: GRAY }}>CONDITION</span>
+        <span style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 10, letterSpacing: 1, color: GRAY }}>{t('CONDITION')}</span>
         {CONDS.map((label) => (
           <button key={label} onClick={() => selectCond(label)} style={{ ...chip(s.cond === label), padding: '5px 12px', fontSize: 11.5 }}>
-            {label}
+            {t(label)}
           </button>
         ))}
         <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 8 }}>
-          <span style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 10, letterSpacing: 1, color: GRAY }}>SORT</span>
+          <span style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 10, letterSpacing: 1, color: GRAY }}>{t('SORT')}</span>
           {SORTS.map(({ key, label }) => (
             <button key={key} onClick={() => selectSort(key)} style={{ ...chip(s.sort === key), padding: '5px 12px', fontSize: 11.5 }}>
-              {label}
+              {t(label)}
             </button>
           ))}
-          <span style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 10, letterSpacing: 1, color: GRAY, marginLeft: 6 }}>{list.length} ITEM{list.length === 1 ? '' : 'S'}</span>
+          <span style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 10, letterSpacing: 1, color: GRAY, marginLeft: 6 }}>{list.length} {list.length === 1 ? t('ITEM') : t('ITEMS')}</span>
         </div>
       </div>
 
@@ -284,7 +313,7 @@ export default function BrowseView() {
         </div>
       ) : s.feedError ? (
         <div style={{ maxWidth: 520, margin: '44px auto 0', textAlign: 'center', background: '#FFFFFF', border: '1px solid #E0B4A8', padding: 28, color: '#B23A1B', fontWeight: 600 }}>
-          Couldn't load listings: {s.feedError}
+          {t("Couldn't load listings:")} {s.feedError}
         </div>
       ) : list.length > 0 ? (
         <div style={{ display: 'grid', gridTemplateColumns: `repeat(auto-fill,minmax(${isNarrow ? 164 : 236}px,1fr))`, gap: 1, background: LINE, border: `1px solid ${LINE}` }}>
@@ -297,11 +326,11 @@ export default function BrowseView() {
           <div style={{ width: 76, height: 76, background: PAPER, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px', color: '#9A9A94' }}>
             <Search size={34} />
           </div>
-          <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 600, fontSize: 20, marginBottom: 8, color: INK }}>No matches{s.query ? '' : emptyCat}</div>
+          <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 600, fontSize: 20, marginBottom: 8, color: INK }}>{t('No matches')}{s.query ? '' : emptyCat}</div>
           <div style={{ fontSize: 14, color: GRAY, lineHeight: 1.6, marginBottom: 24 }}>
-            {s.query ? <>We couldn't find anything for <b style={{ color: INK }}>"{s.query}"{emptyCat}</b>.</> : 'Nothing here yet with these filters.'} Try widening your filters.
+            {s.query ? <>{t("We couldn't find anything for")} <b style={{ color: INK }}>"{s.query}"{emptyCat}</b>.</> : t('Nothing here yet with these filters.')} {t('Try widening your filters.')}
           </div>
-          <button onClick={resetFilters} style={{ ...chip(true), padding: '11px 20px', fontSize: 13 }}>Clear filters</button>
+          <button onClick={resetFilters} style={{ ...chip(true), padding: '11px 20px', fontSize: 13 }}>{t('Clear filters')}</button>
         </div>
       ) : (
         <div style={{ animation: 'lok-fade .3s ease both', maxWidth: 520, margin: '44px auto 0', textAlign: 'center', background: '#FFFFFF', border: `1px solid ${LINE}`, padding: '44px 36px' }}>
@@ -310,11 +339,11 @@ export default function BrowseView() {
           ) : (
             <div style={{ width: 76, height: 76, background: PAPER, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px', fontSize: 34 }}>🧺</div>
           )}
-          <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 600, fontSize: 20, marginBottom: 8, color: INK }}>No listings yet</div>
+          <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 600, fontSize: 20, marginBottom: 8, color: INK }}>{t('No listings yet')}</div>
           <div style={{ fontSize: 14, color: GRAY, lineHeight: 1.6, marginBottom: 24 }}>
-            The marketplace is brand new. Be the first to post something — your neighbours will see it right away.
+            {t('The marketplace is brand new. Be the first to post something — your neighbours will see it right away.')}
           </div>
-          <button onClick={openSell} style={{ border: 'none', background: 'var(--accent,#000000)', color: '#FFFFFF', fontFamily: "'Archivo',sans-serif", fontWeight: 600, fontSize: 13, padding: '12px 22px', cursor: 'pointer' }}>Post the first item</button>
+          <button onClick={openSell} style={{ border: 'none', background: 'var(--accent,#000000)', color: '#FFFFFF', fontFamily: "'Archivo',sans-serif", fontWeight: 600, fontSize: 13, padding: '12px 22px', cursor: 'pointer' }}>{t('Post the first item')}</button>
         </div>
       )}
     </div>

@@ -18,6 +18,7 @@ import DetailModal from './modals/DetailModal'
 import SellModal from './modals/SellModal'
 import EditProfileModal from './modals/EditProfileModal'
 import CheckoutModal from './modals/CheckoutModal'
+import { useLang } from '../i18n'
 
 // brand accent (tweakable). Blue is the shipped default. CSS custom properties
 // aren't in React.CSSProperties, so the object is cast.
@@ -33,6 +34,7 @@ const rootStyle = {
 
 function Shell() {
   const { state, onPhoto, openNotifTarget, dismissToast } = useM()
+  const { t } = useLang()
   const s = state
   const isPhone = useIsPhone()
   const showTabBar = isPhone && !s.guest
@@ -47,7 +49,7 @@ function Shell() {
       {/* restricted-account notice — writes are blocked by DB policy */}
       {!s.guest && s.profile.banned && (
         <div style={{ background: '#B23A1B', color: '#FBEEE9', fontSize: 12.5, fontWeight: 700, padding: '9px 16px', textAlign: 'center', flex: 'none' }}>
-          Your account is restricted — you can browse, but posting, buying and messaging are disabled. Contact the LOKITA team if you think this is a mistake.
+          {t('Your account is restricted — you can browse, but posting, buying and messaging are disabled. Contact the LOKITA team if you think this is a mistake.')}
         </div>
       )}
 
@@ -83,7 +85,7 @@ function Shell() {
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ fontWeight: 800, fontSize: 13.5 }}>{s.toast.title}</div>
             {s.toast.body && <div style={{ fontSize: 12, color: 'rgba(247,243,234,.75)', marginTop: 2, lineHeight: 1.4, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{s.toast.body}</div>}
-            <div style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 9, color: 'rgba(247,243,234,.5)', marginTop: 4, letterSpacing: '.06em' }}>TAP TO OPEN</div>
+            <div style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 9, color: 'rgba(247,243,234,.5)', marginTop: 4, letterSpacing: '.06em' }}>{t('TAP TO OPEN')}</div>
           </div>
           <button
             onClick={(e) => {

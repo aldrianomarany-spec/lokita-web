@@ -147,6 +147,18 @@ export interface State {
   bundleOn: boolean
   f: SellForm
   openReports: number // open-report count for the admin sidebar badge
+  recents: string[] // recently viewed listing ids, newest first (this device only)
+}
+
+// recently viewed lives in localStorage — no DB weight, wiped with browser data
+const RECENTS_KEY = 'lokita_recent'
+const readRecents = (): string[] => {
+  try {
+    const v = JSON.parse(localStorage.getItem(RECENTS_KEY) || '[]')
+    return Array.isArray(v) ? v.filter((x): x is string => typeof x === 'string').slice(0, 8) : []
+  } catch {
+    return []
+  }
 }
 
 const initialState: State = {
@@ -167,6 +179,7 @@ const initialState: State = {
   feedLoading: true,
   feedError: null,
   categoryCounts: {},
+  recents: readRecents(),
   orders: [],
   ordersLoading: false,
   ordersError: null,
@@ -242,7 +255,7 @@ export interface MarketplaceApi {
   openMessages: () => void
   openConversation: (id: string) => void
   setMsgDraft: (v: string) => void
-  sendMsg: () => void
+  sendMsg: (text?: string) => void
   openNotifs: () => void
   selectNotifFilter: (k: string) => void
   markAllRead: () => void
@@ -295,6 +308,22 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
     [],
   )
 
+  // remember what the user opened (newest first, deduped, capped at 8)
+  const recordRecent = useCallback(
+    (id: string) => {
+      patch((prev) => {
+        const next = [id, ...prev.recents.filter((x) => x !== id)].slice(0, 8)
+        try {
+          localStorage.setItem(RECENTS_KEY, JSON.stringify(next))
+        } catch {
+          // storage full/blocked — the row just won't persist
+        }
+        return { recents: next }
+      })
+    },
+    [patch],
+  )
+
   // live feed from Supabase (filters/sort/cap applied server-side)
   const loadFeed = useCallback(
     async (opts: { cat: string; cond: string; sort: Sort; query: string; building: string }, viewerFloor: string | null) => {
@@ -334,6 +363,23 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
     })
     return () => unsub()
   }, [loadFeed])
+
+  // Deep link: /app?item=<id> (a shared listing link) opens that item on
+  // arrival. The param is stripped right away so refresh/back doesn't re-open
+  // the modal, and a dead link (sold + cleaned up) just lands on the homepage.
+  useEffect(() => {
+    const id = new URLSearchParams(window.location.search).get('item')
+    if (!id) return
+    window.history.replaceState({}, '', window.location.pathname)
+    fetchListingById(id, null)
+      .then((it) => {
+        if (it) {
+          recordRecent(id)
+          patch({ sel: it })
+        }
+      })
+      .catch(() => {})
+  }, [patch, recordRecent])
 
   const enrichedItems = state.feed
 
@@ -597,7 +643,10 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
       }
     },
 
-    openItem: (it) => patch({ sel: it, menuOpen: false }),
+    openItem: (it) => {
+      recordRecent(it.id)
+      patch({ sel: it, menuOpen: false })
+    },
     closeDetail: () => patch({ sel: null }),
     chatSeller: async () => {
       if (state.guest) return goSignup()
@@ -690,17 +739,18 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
       markConversationRead(id).then(() => loadConversations())
     },
     setMsgDraft: (v) => patch({ msgDraft: v }),
-    sendMsg: async () => {
+    sendMsg: async (text) => {
       const convId = state.activeConvId
-      const d = state.msgDraft.trim()
+      const fromDraft = text == null
+      const d = (text ?? state.msgDraft).trim()
       if (!convId || !d) return
-      patch({ msgDraft: '' })
+      if (fromDraft) patch({ msgDraft: '' })
       try {
         await apiSendMessage(convId, d)
         await loadMessages(convId)
         loadConversations()
       } catch (e) {
-        patch({ msgDraft: d })
+        if (fromDraft) patch({ msgDraft: d })
         alert('Could not send: ' + (e instanceof Error ? e.message : 'unknown error'))
       }
     },
@@ -730,8 +780,10 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
     openListingById: async (id) => {
       try {
         const it = await fetchListingById(id, state.profile.floor ? state.profile.floor.toLowerCase() : null)
-        if (it) patch({ sel: it, menuOpen: false })
-        else alert('This listing is no longer available.')
+        if (it) {
+          recordRecent(id)
+          patch({ sel: it, menuOpen: false })
+        } else alert('This listing is no longer available.')
       } catch {
         alert('Could not open the listing.')
       }

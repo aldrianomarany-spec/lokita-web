@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ACCENT, ACCENT_DEEP } from '../theme'
 import { getSession, onAuthStateChange, updatePassword } from '../lib/auth'
+import { useLang } from '../i18n'
 
 // Landing page for the password-recovery email link. Supabase signs the user in
 // via the link's token, then this page lets them set a new password — the
@@ -31,6 +32,7 @@ const field: React.CSSProperties = {
 
 export default function ResetPassword() {
   const navigate = useNavigate()
+  const { t } = useLang()
   // 'waiting' while the recovery link's session is being established
   const [phase, setPhase] = useState<'waiting' | 'form' | 'invalid' | 'done'>('waiting')
   const [pw, setPw] = useState('')
@@ -75,35 +77,35 @@ export default function ResetPassword() {
   return (
     <div style={rootStyle}>
       <div style={{ width: '100%', maxWidth: 420, background: '#FFFFFF', border: '1px solid #D8D8D4', borderRadius: 0, padding: '30px 30px 28px', boxShadow: '0 30px 70px -30px rgba(0,0,0,.4)', animation: 'lok-rise-lg .4s ease both' }}>
-        <div style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 11, color: '#9A927F', letterSpacing: '.08em', marginBottom: 8 }}>ACCOUNT SECURITY</div>
-        <h1 style={{ fontFamily: "'Bricolage Grotesque',sans-serif", fontWeight: 800, fontSize: 26, letterSpacing: '-.02em', margin: '0 0 6px' }}>Set a new password</h1>
+        <div style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 11, color: '#9A927F', letterSpacing: '.08em', marginBottom: 8 }}>{t('ACCOUNT SECURITY')}</div>
+        <h1 style={{ fontFamily: "'Bricolage Grotesque',sans-serif", fontWeight: 800, fontSize: 26, letterSpacing: '-.02em', margin: '0 0 6px' }}>{t('Set a new password')}</h1>
 
         {phase === 'waiting' && (
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '18px 0 6px', color: '#5F6063', fontSize: 13.5, fontWeight: 600 }}>
             <span className="lok-spin" style={{ width: 18, height: 18, border: '2.5px solid #D8D8D4', borderTopColor: 'var(--accent,#000000)', borderRadius: '50%', display: 'inline-block' }} />
-            Checking your reset link…
+            {t('Checking your reset link…')}
           </div>
         )}
 
         {phase === 'invalid' && (
           <>
             <p style={{ fontSize: 13.5, color: '#5F6063', lineHeight: 1.6, margin: '4px 0 18px' }}>
-              This reset link is invalid or has expired. Request a new one from the login screen.
+              {t('This reset link is invalid or has expired. Request a new one from the login screen.')}
             </p>
-            <button onClick={() => navigate('/', { replace: true })} className="lok-btn" style={{ width: '100%', border: 'none', background: 'var(--accent,#000000)', color: '#F5F1E8', fontFamily: 'inherit', fontWeight: 700, fontSize: 14.5, padding: 13, borderRadius: 0, cursor: 'pointer' }}>Back to login</button>
+            <button onClick={() => navigate('/', { replace: true })} className="lok-btn" style={{ width: '100%', border: 'none', background: 'var(--accent,#000000)', color: '#F5F1E8', fontFamily: 'inherit', fontWeight: 700, fontSize: 14.5, padding: 13, borderRadius: 0, cursor: 'pointer' }}>{t('Back to login')}</button>
           </>
         )}
 
         {phase === 'form' && (
           <>
             <p style={{ fontSize: 13.5, color: '#5F6063', lineHeight: 1.6, margin: '4px 0 18px' }}>
-              Choose a new password for your LOKITA account.
+              {t('Choose a new password for your LOKITA account.')}
             </p>
             {error && (
-              <div style={{ background: '#FBEEE9', border: '1px solid #E4C4B8', color: '#B23A1B', fontSize: 12.5, fontWeight: 600, borderRadius: 0, padding: '10px 13px', marginBottom: 14, lineHeight: 1.45 }}>{error}</div>
+              <div style={{ background: '#FBEEE9', border: '1px solid #E4C4B8', color: '#B23A1B', fontSize: 12.5, fontWeight: 600, borderRadius: 0, padding: '10px 13px', marginBottom: 14, lineHeight: 1.45 }}>{t(error)}</div>
             )}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 11 }}>
-              <input type="password" autoComplete="new-password" value={pw} onChange={(e) => setPw(e.target.value)} placeholder="New password (min. 6 characters)" className="lok-field" style={field} />
+              <input type="password" autoComplete="new-password" value={pw} onChange={(e) => setPw(e.target.value)} placeholder={t('New password (min. 6 characters)')} className="lok-field" style={field} />
               <input
                 type="password" autoComplete="new-password"
                 value={pw2}
@@ -111,13 +113,13 @@ export default function ResetPassword() {
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') submit()
                 }}
-                placeholder="Repeat new password"
+                placeholder={t('Repeat new password')}
                 className="lok-field"
                 style={field}
               />
             </div>
             <button onClick={submit} className="lok-btn" style={{ width: '100%', border: 'none', background: 'var(--accent,#000000)', color: '#F5F1E8', fontFamily: 'inherit', fontWeight: 700, fontSize: 14.5, padding: 13, borderRadius: 0, cursor: 'pointer', marginTop: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 9 }}>
-              {saving ? <span className="lok-spin" style={{ width: 16, height: 16, border: '2px solid rgba(245,241,232,.4)', borderTopColor: '#F5F1E8', borderRadius: '50%', display: 'inline-block' }} /> : 'Save new password'}
+              {saving ? <span className="lok-spin" style={{ width: 16, height: 16, border: '2px solid rgba(245,241,232,.4)', borderTopColor: '#F5F1E8', borderRadius: '50%', display: 'inline-block' }} /> : t('Save new password')}
             </button>
           </>
         )}
@@ -125,9 +127,9 @@ export default function ResetPassword() {
         {phase === 'done' && (
           <>
             <p style={{ fontSize: 13.5, color: '#5F6063', lineHeight: 1.6, margin: '4px 0 18px' }}>
-              Your password has been changed. You're signed in — welcome back! 🎉
+              {t("Your password has been changed. You're signed in — welcome back! 🎉")}
             </p>
-            <button onClick={() => navigate('/app', { replace: true })} className="lok-btn" style={{ width: '100%', border: 'none', background: 'var(--accent,#000000)', color: '#F5F1E8', fontFamily: 'inherit', fontWeight: 700, fontSize: 14.5, padding: 13, borderRadius: 0, cursor: 'pointer' }}>Enter the marketplace</button>
+            <button onClick={() => navigate('/app', { replace: true })} className="lok-btn" style={{ width: '100%', border: 'none', background: 'var(--accent,#000000)', color: '#F5F1E8', fontFamily: 'inherit', fontWeight: 700, fontSize: 14.5, padding: 13, borderRadius: 0, cursor: 'pointer' }}>{t('Enter the marketplace')}</button>
           </>
         )}
       </div>

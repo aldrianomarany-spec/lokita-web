@@ -13,6 +13,7 @@ import ListingCard from './ListingCard'
 import ReportForm from './ReportForm'
 import { MessageBubble, ShieldCheck, Verified } from '../components/Icons'
 import type { EnrichedItem } from '../types'
+import { useLang } from '../i18n'
 
 // Full public profile of another member: details, live status, what they're
 // selling, how many trades they've completed, and their reviews.
@@ -31,6 +32,7 @@ const metaField = (label: string, value: string) =>
 
 export default function MemberProfileView() {
   const { state, closeMember, openRequestChat } = useM()
+  const { t } = useLang()
   const s = state
   const id = s.memberId
   const [info, setInfo] = useState<MemberProfileInfo | null>(null)
@@ -71,7 +73,7 @@ export default function MemberProfileView() {
   const rating = reviews && reviews.length ? (reviews.reduce((a, r) => a + r.rating, 0) / reviews.length).toFixed(1) : '—'
 
   const backBtn = (
-    <button onClick={closeMember} className="lok-navi" style={{ border: '1px solid #D8D8D4', background: '#F5F5F3', padding: '9px 14px', borderRadius: 0, cursor: 'pointer', color: '#4A4B4E', fontFamily: 'inherit', fontWeight: 700, fontSize: 13 }}>‹ Back</button>
+    <button onClick={closeMember} className="lok-navi" style={{ border: '1px solid #D8D8D4', background: '#F5F5F3', padding: '9px 14px', borderRadius: 0, cursor: 'pointer', color: '#4A4B4E', fontFamily: 'inherit', fontWeight: 700, fontSize: 13 }}>{t('‹ Back')}</button>
   )
 
   if (missing) {
@@ -80,7 +82,7 @@ export default function MemberProfileView() {
         {backBtn}
         <div style={{ background: '#FFFFFF', border: '1px dashed #C9C9C5', borderRadius: 0, padding: '52px 32px', textAlign: 'center', color: '#8B8B86', marginTop: 18 }}>
           <div style={{ fontSize: 34, marginBottom: 12 }}>🫥</div>
-          <div style={{ fontFamily: "'Bricolage Grotesque',sans-serif", fontWeight: 800, fontSize: 19, color: '#000000' }}>This member no longer exists</div>
+          <div style={{ fontFamily: "'Bricolage Grotesque',sans-serif", fontWeight: 800, fontSize: 19, color: '#000000' }}>{t('This member no longer exists')}</div>
         </div>
       </div>
     )
@@ -96,29 +98,29 @@ export default function MemberProfileView() {
           <div style={{ width: 88, height: 88, borderRadius: 0, background: '#DBE1EA', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#1E1E1E', fontWeight: 800, fontSize: 34, fontFamily: "'Bricolage Grotesque',sans-serif", overflow: 'hidden' }}>
             {info?.photo ? <img src={info.photo} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : (info?.name || s.memberName || '?').charAt(0).toUpperCase()}
           </div>
-          <span title={isOnline ? 'Online now' : 'Offline'} style={{ position: 'absolute', bottom: -3, right: -3, width: 18, height: 18, borderRadius: '50%', background: isOnline ? '#3DBB6E' : '#C9C2B2', border: '3px solid #FFFFFF' }} />
+          <span title={isOnline ? t('Online now') : t('Offline')} style={{ position: 'absolute', bottom: -3, right: -3, width: 18, height: 18, borderRadius: '50%', background: isOnline ? '#3DBB6E' : '#C9C2B2', border: '3px solid #FFFFFF' }} />
         </div>
         <div style={{ flex: 1, minWidth: 220 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 9, flexWrap: 'wrap' }}>
-            <h1 style={{ fontFamily: "'Bricolage Grotesque',sans-serif", fontSize: 26, fontWeight: 800, letterSpacing: '-.02em', margin: 0 }}>{info?.name || s.memberName || 'Member'}</h1>
+            <h1 style={{ fontFamily: "'Bricolage Grotesque',sans-serif", fontSize: 26, fontWeight: 800, letterSpacing: '-.02em', margin: 0 }}>{info?.name || s.memberName || t('Member')}</h1>
             {info?.verified && (
               <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12, fontWeight: 800, color: '#F6F0E3', background: 'var(--accent,#000000)', padding: '6px 11px', borderRadius: 0 }}>
-                <Verified size={13} checkColor="#F6F0E3" /> Dorm-Verified
+                <Verified size={13} checkColor="#F6F0E3" /> {t('Dorm-Verified')}
               </span>
             )}
           </div>
-          <div style={{ fontSize: 12.5, fontWeight: 700, marginTop: 5, color: isOnline ? '#1E9E5A' : '#8B8B86' }}>{isOnline ? '● Online now' : '● Offline'}</div>
+          <div style={{ fontSize: 12.5, fontWeight: 700, marginTop: 5, color: isOnline ? '#1E9E5A' : '#8B8B86' }}>{isOnline ? '● ' + t('Online now') : '● ' + t('Offline')}</div>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 22, marginTop: 14 }}>
-            {metaField('BUILDING', info ? [info.building, info.floor].filter(Boolean).join(' · ') : '')}
-            {metaField('BATCH', info?.batch || '')}
-            {metaField('STANDING', info?.standing || '')}
-            {metaField('MEMBER SINCE', info?.since || '')}
+            {metaField(t('BUILDING'), info ? [info.building, info.floor].filter(Boolean).join(' · ') : '')}
+            {metaField(t('BATCH'), info?.batch || '')}
+            {metaField(t('STANDING'), info?.standing || '')}
+            {metaField(t('MEMBER SINCE'), info?.since || '')}
           </div>
         </div>
         {!isMe && (
           <button onClick={() => id && openRequestChat(id)} className="lok-btn" style={{ flex: 'none', border: 'none', background: 'var(--accent,#000000)', color: '#F7F3EA', fontFamily: 'inherit', fontWeight: 700, fontSize: 13.5, padding: '12px 18px', borderRadius: 0, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, boxShadow: '0 6px 16px -6px rgba(0,0,0,.6)' }}>
             <MessageBubble size={15} />
-            Message
+            {t('Message')}
           </button>
         )}
       </div>
@@ -126,10 +128,10 @@ export default function MemberProfileView() {
       {/* stats */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(120px,1fr))', gap: 14, marginBottom: 22 }}>
         {[
-          { value: stats ? String(stats.selling) : '…', label: 'Selling now', color: 'var(--accent,#000000)' },
-          { value: stats ? String(stats.sold) : '…', label: 'Items sold', color: '#1E9E5A' },
-          { value: rating, label: 'Rating', color: '#9A6A12' },
-          { value: reviews ? String(reviews.length) : '…', label: 'Reviews', color: '#000000' },
+          { value: stats ? String(stats.selling) : '…', label: t('Selling now'), color: 'var(--accent,#000000)' },
+          { value: stats ? String(stats.sold) : '…', label: t('Items sold'), color: '#1E9E5A' },
+          { value: rating, label: t('Rating'), color: '#9A6A12' },
+          { value: reviews ? String(reviews.length) : '…', label: t('Reviews'), color: '#000000' },
         ].map((st) => (
           <div key={st.label} style={{ background: '#FFFFFF', border: '1px solid #D8D8D4', borderRadius: 0, padding: '16px 18px', textAlign: 'center' }}>
             <div style={{ fontFamily: "'Bricolage Grotesque',sans-serif", fontWeight: 800, fontSize: 24, color: st.color }}>{st.value}</div>
@@ -141,19 +143,19 @@ export default function MemberProfileView() {
       {/* trust note */}
       <div style={{ background: '#F6F0E3', border: '1px solid #E2D3AF', borderRadius: 0, padding: '13px 16px', display: 'flex', gap: 11, alignItems: 'center', marginBottom: 24 }}>
         <span style={{ color: 'var(--accent,#000000)', flex: 'none', display: 'flex' }}><ShieldCheck size={19} /></span>
-        <span style={{ fontSize: 12.5, color: '#4A5A50', fontWeight: 600 }}>All trades are paid in-app and exchanged via the campus Security Post — no risky meetups.</span>
+        <span style={{ fontSize: 12.5, color: '#4A5A50', fontWeight: 600 }}>{t('All trades are paid in-app and exchanged via the campus Security Post — no risky meetups.')}</span>
       </div>
 
       {/* listings */}
       <div style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 11, color: '#9A9A94', letterSpacing: '.08em', marginBottom: 12 }}>
-        SELLING NOW {items ? `· ${items.length}` : ''}
+        {t('SELLING NOW')} {items ? `· ${items.length}` : ''}
       </div>
       {items === null ? (
         <div style={{ padding: 24, textAlign: 'center' }}>
           <span className="lok-spin" style={{ width: 22, height: 22, border: '3px solid #D8D8D4', borderTopColor: 'var(--accent,#000000)', borderRadius: '50%', display: 'inline-block' }} />
         </div>
       ) : items.length === 0 ? (
-        <div style={{ background: '#F5F5F3', border: '1px dashed #C9C9C5', borderRadius: 0, padding: 24, textAlign: 'center', color: '#8B8B86', fontSize: 13, marginBottom: 28 }}>Nothing listed right now.</div>
+        <div style={{ background: '#F5F5F3', border: '1px dashed #C9C9C5', borderRadius: 0, padding: 24, textAlign: 'center', color: '#8B8B86', fontSize: 13, marginBottom: 28 }}>{t('Nothing listed right now.')}</div>
       ) : (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(228px,1fr))', gap: 18, marginBottom: 30 }}>
           {items.map((it, i) => (
@@ -164,7 +166,7 @@ export default function MemberProfileView() {
 
       {/* reviews */}
       <div style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 11, color: '#9A9A94', letterSpacing: '.08em', margin: '4px 0 12px' }}>
-        WHAT BUYERS SAY {reviews && reviews.length ? `· ★ ${rating}` : ''}
+        {t('WHAT BUYERS SAY')} {reviews && reviews.length ? `· ★ ${rating}` : ''}
       </div>
       {reviews === null ? (
         <div style={{ padding: 20, textAlign: 'center' }}>
@@ -172,7 +174,7 @@ export default function MemberProfileView() {
         </div>
       ) : reviews.length === 0 ? (
         <div style={{ background: '#F5F5F3', border: '1px dashed #C9C9C5', borderRadius: 0, padding: 22, textAlign: 'center', color: '#8B8B86', fontSize: 13, marginBottom: 30 }}>
-          No reviews yet — be the first to trade with {info?.name || 'them'}.
+          {t('No reviews yet — be the first to trade with')} {info?.name || t('them')}.
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 11, marginBottom: 34 }}>
