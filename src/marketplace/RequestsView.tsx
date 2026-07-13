@@ -3,17 +3,18 @@ import { useM } from './context'
 import { fetchRequests, createRequest, setRequestStatus, subscribeRequests, type RequestRow } from '../lib/api'
 import { SELL_CATEGORIES } from '../theme'
 import { Verified } from '../components/Icons'
+import { useLang } from '../i18n'
 
 // Buyers post "looking for X"; anyone can respond via chat.
 const rupiah = (n: number) => 'Rp ' + Number(n).toLocaleString('id-ID')
-const timeAgo = (iso: string) => {
+const timeAgo = (iso: string, t: (s: string) => string) => {
   const d = new Date(iso)
   if (isNaN(d.getTime())) return ''
   const mins = Math.floor((Date.now() - d.getTime()) / 60000)
-  if (mins < 60) return mins < 1 ? 'just now' : mins + 'm ago'
+  if (mins < 60) return mins < 1 ? t('just now') : mins + t('m ago')
   const hrs = Math.floor(mins / 60)
-  if (hrs < 24) return hrs + 'h ago'
-  return Math.floor(hrs / 24) + 'd ago'
+  if (hrs < 24) return hrs + t('h ago')
+  return Math.floor(hrs / 24) + t('d ago')
 }
 
 const field: React.CSSProperties = {
@@ -29,6 +30,7 @@ const field: React.CSSProperties = {
 
 export default function RequestsView() {
   const { state, goSignup, openRequestChat } = useM()
+  const { t } = useLang()
   const s = state
   const [rows, setRows] = useState<RequestRow[] | null>(null)
   const [formOpen, setFormOpen] = useState(false)
@@ -54,7 +56,7 @@ export default function RequestsView() {
   const post = async () => {
     if (saving) return
     if (s.guest) return goSignup()
-    if (!title.trim()) return alert('Please describe what you are looking for.')
+    if (!title.trim()) return alert(t('Please describe what you are looking for.'))
     setSaving(true)
     try {
       await createRequest({ title: title.trim(), category: cat, budgetMax: budget ? Number(budget) : null, description: desc.trim() })
@@ -64,7 +66,7 @@ export default function RequestsView() {
       setFormOpen(false)
       load()
     } catch (e) {
-      alert('Could not post your request: ' + (e instanceof Error ? e.message : 'unknown error'))
+      alert(t('Could not post your request:') + ' ' + (e instanceof Error ? e.message : t('unknown error')))
     } finally {
       setSaving(false)
     }
@@ -77,7 +79,7 @@ export default function RequestsView() {
       await setRequestStatus(r.id, status)
       load()
     } catch (e) {
-      alert(e instanceof Error ? e.message : 'Could not update the request')
+      alert(e instanceof Error ? e.message : t('Could not update the request'))
     } finally {
       setBusyId(null)
     }
@@ -87,34 +89,34 @@ export default function RequestsView() {
     <div style={{ animation: 'lok-fade .3s ease both', maxWidth: 760, margin: '0 auto' }}>
       <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 20, marginBottom: 18 }}>
         <div>
-          <div style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 11, color: '#9A9A94', letterSpacing: '.08em', marginBottom: 6 }}>WANTED · REQUESTS</div>
-          <h1 style={{ fontFamily: "'Bricolage Grotesque',sans-serif", fontSize: 34, fontWeight: 800, letterSpacing: '-.025em', margin: 0, lineHeight: 1.02 }}>Looking for…</h1>
-          <p style={{ fontSize: 14, color: '#5F6063', fontWeight: 500, margin: '8px 0 0' }}>Can't find it in the feed? Post a request — neighbours who have one will message you.</p>
+          <div style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 11, color: '#9A9A94', letterSpacing: '.08em', marginBottom: 6 }}>{t('WANTED · REQUESTS')}</div>
+          <h1 style={{ fontFamily: "'Bricolage Grotesque',sans-serif", fontSize: 34, fontWeight: 800, letterSpacing: '-.025em', margin: 0, lineHeight: 1.02 }}>{t('Looking for…')}</h1>
+          <p style={{ fontSize: 14, color: '#5F6063', fontWeight: 500, margin: '8px 0 0' }}>{t("Can't find it in the feed? Post a request — neighbours who have one will message you.")}</p>
         </div>
         <button
           className="lok-btn"
           onClick={() => (s.guest ? goSignup() : setFormOpen((v) => !v))}
           style={{ flex: 'none', border: 'none', background: 'var(--accent,#000000)', color: '#F7F3EA', fontFamily: 'inherit', fontWeight: 700, fontSize: 13.5, padding: '11px 16px', borderRadius: 0, cursor: 'pointer', boxShadow: '0 6px 16px -6px rgba(0,0,0,.6)' }}
         >
-          {formOpen ? 'Close form' : '+ Post a request'}
+          {formOpen ? t('Close form') : t('+ Post a request')}
         </button>
       </div>
 
       {formOpen && (
         <div style={{ background: '#FFFFFF', border: '1px solid #D8D8D4', borderRadius: 0, padding: '20px 22px', marginBottom: 20, animation: 'lok-rise .3s ease both' }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            <input className="lok-field" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="What are you looking for? e.g. Mini fridge under 500k" style={field} />
+            <input className="lok-field" value={title} onChange={(e) => setTitle(e.target.value)} placeholder={t('What are you looking for? e.g. Mini fridge under 500k')} style={field} />
             <div style={{ display: 'flex', gap: 10 }}>
               <select className="lok-field" value={cat} onChange={(e) => setCat(e.target.value)} style={{ ...field, flex: 1, fontWeight: 600 }}>
                 {SELL_CATEGORIES.map((c) => (
-                  <option key={c}>{c}</option>
+                  <option key={c} value={c}>{t(c)}</option>
                 ))}
               </select>
-              <input className="lok-field" value={budget} onChange={(e) => setBudget(e.target.value.replace(/[^0-9]/g, ''))} placeholder="Max budget in Rp (optional)" inputMode="numeric" style={{ ...field, flex: 1 }} />
+              <input className="lok-field" value={budget} onChange={(e) => setBudget(e.target.value.replace(/[^0-9]/g, ''))} placeholder={t('Max budget in Rp (optional)')} inputMode="numeric" style={{ ...field, flex: 1 }} />
             </div>
-            <textarea className="lok-field" value={desc} onChange={(e) => setDesc(e.target.value)} placeholder="Details — condition you'd accept, when you need it…" style={{ ...field, minHeight: 60, resize: 'none' }} />
+            <textarea className="lok-field" value={desc} onChange={(e) => setDesc(e.target.value)} placeholder={t("Details — condition you'd accept, when you need it…")} style={{ ...field, minHeight: 60, resize: 'none' }} />
             <button onClick={post} className="lok-btn" style={{ border: 'none', background: 'var(--accent,#000000)', color: '#F7F3EA', fontFamily: 'inherit', fontWeight: 700, fontSize: 14, padding: 13, borderRadius: 0, cursor: 'pointer' }}>
-              {saving ? 'Posting…' : 'Post request'}
+              {saving ? t('Posting…') : t('Post request')}
             </button>
           </div>
         </div>
@@ -127,8 +129,8 @@ export default function RequestsView() {
       ) : rows.length === 0 ? (
         <div style={{ background: '#FFFFFF', border: '1px dashed #C9C9C5', borderRadius: 0, padding: '52px 32px', textAlign: 'center', color: '#8B8B86' }}>
           <div style={{ fontSize: 34, marginBottom: 12 }}>🙋</div>
-          <div style={{ fontFamily: "'Bricolage Grotesque',sans-serif", fontWeight: 800, fontSize: 19, color: '#000000', marginBottom: 8 }}>No open requests</div>
-          <div style={{ fontSize: 13.5, lineHeight: 1.6 }}>Be the first — post what you're hunting for and let neighbours come to you.</div>
+          <div style={{ fontFamily: "'Bricolage Grotesque',sans-serif", fontWeight: 800, fontSize: 19, color: '#000000', marginBottom: 8 }}>{t('No open requests')}</div>
+          <div style={{ fontSize: 13.5, lineHeight: 1.6 }}>{t("Be the first — post what you're hunting for and let neighbours come to you.")}</div>
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -143,22 +145,22 @@ export default function RequestsView() {
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12.5, color: '#5F6063', fontWeight: 600, marginTop: 3, flexWrap: 'wrap' }}>
                     {r.requester_name}
                     {r.requester_verified && <Verified size={12} />}
-                    <span style={{ color: '#ABABA6' }}>· {timeAgo(r.created_at)}</span>
+                    <span style={{ color: '#ABABA6' }}>· {timeAgo(r.created_at, t)}</span>
                   </div>
                   {r.description && <div style={{ fontSize: 13, color: '#4A4B4E', lineHeight: 1.55, marginTop: 7 }}>{r.description}</div>}
                   <div style={{ display: 'flex', gap: 7, flexWrap: 'wrap', marginTop: 9 }}>
-                    {r.category && <span style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 10, color: '#1E1E1E', background: '#ECECEA', padding: '4px 9px', borderRadius: 0 }}>{r.category.toUpperCase()}</span>}
-                    {r.budget_max != null && <span style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 10, color: '#8A6C34', background: '#F6F0E3', padding: '4px 9px', borderRadius: 0 }}>BUDGET · {rupiah(r.budget_max)}</span>}
+                    {r.category && <span style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 10, color: '#1E1E1E', background: '#ECECEA', padding: '4px 9px', borderRadius: 0 }}>{t(r.category).toUpperCase()}</span>}
+                    {r.budget_max != null && <span style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 10, color: '#8A6C34', background: '#F6F0E3', padding: '4px 9px', borderRadius: 0 }}>{t('BUDGET')} · {rupiah(r.budget_max)}</span>}
                   </div>
                 </div>
                 <div style={{ flex: 'none', display: 'flex', flexDirection: 'column', gap: 7 }}>
                   {r.mine ? (
                     <>
-                      <button disabled={busyId === r.id} onClick={() => close(r, 'fulfilled')} className="lok-btn" style={{ border: 'none', background: '#E7F1EA', color: '#1E9E5A', fontFamily: 'inherit', fontWeight: 700, fontSize: 12, padding: '9px 13px', borderRadius: 0, cursor: 'pointer' }}>Mark fulfilled ✓</button>
-                      <button disabled={busyId === r.id} onClick={() => close(r, 'closed')} className="lok-btn" style={{ border: '1px solid #D8D8D4', background: '#F5F5F3', color: '#8B8B86', fontFamily: 'inherit', fontWeight: 700, fontSize: 12, padding: '9px 13px', borderRadius: 0, cursor: 'pointer' }}>Remove</button>
+                      <button disabled={busyId === r.id} onClick={() => close(r, 'fulfilled')} className="lok-btn" style={{ border: 'none', background: '#E7F1EA', color: '#1E9E5A', fontFamily: 'inherit', fontWeight: 700, fontSize: 12, padding: '9px 13px', borderRadius: 0, cursor: 'pointer' }}>{t('Mark fulfilled ✓')}</button>
+                      <button disabled={busyId === r.id} onClick={() => close(r, 'closed')} className="lok-btn" style={{ border: '1px solid #D8D8D4', background: '#F5F5F3', color: '#8B8B86', fontFamily: 'inherit', fontWeight: 700, fontSize: 12, padding: '9px 13px', borderRadius: 0, cursor: 'pointer' }}>{t('Remove')}</button>
                     </>
                   ) : (
-                    <button onClick={() => openRequestChat(r.user_id)} className="lok-btn" style={{ border: 'none', background: 'var(--accent,#000000)', color: '#F7F3EA', fontFamily: 'inherit', fontWeight: 700, fontSize: 12.5, padding: '10px 14px', borderRadius: 0, cursor: 'pointer' }}>I have this 💬</button>
+                    <button onClick={() => openRequestChat(r.user_id)} className="lok-btn" style={{ border: 'none', background: 'var(--accent,#000000)', color: '#F7F3EA', fontFamily: 'inherit', fontWeight: 700, fontSize: 12.5, padding: '10px 14px', borderRadius: 0, cursor: 'pointer' }}>{t('I have this 💬')}</button>
                   )}
                 </div>
               </div>

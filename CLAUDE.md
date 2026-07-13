@@ -176,10 +176,27 @@ Also shipped (Grid Market / Noir & Gold era, 2026-07-12/13):
 - Desktop sidebar: category list removed (chips above the grid own filtering) —
   replaced by QUICK ACTIONS (Sell / Saved) + MARKET PULSE (live listings, online count).
 
+Also shipped (growth batch, 2026-07-13):
+- **Share links**: every listing has a public deep link `/app?item=<id>`. RequireSession
+  drops link visitors into read-only guest mode (no login wall). DetailModal share kit:
+  WhatsApp (wa.me), copy link, native share sheet. Share text goes out in the user's language.
+- **Recently viewed**: last 8 opened listing ids in localStorage (`lokita_recent`,
+  `state.recents`), homepage row resolved against the live feed (sold items drop out).
+- **Chat quick replies**: one-tap presets above the composer, different sets for the
+  seller vs buyer side (`ConversationRow.i_am_seller`); `sendMsg(text?)` sends directly.
+- **Bahasa Indonesia (i18n)**: `src/i18n.tsx` (LangProvider/useLang/LangToggle) +
+  `src/i18n-id.ts` (EN string = key → ID translation; ~460 entries; missing keys fall
+  back to English). Toggle in the desktop top bar, in the phone profile dropdown, and on
+  the auth screens. RULES: never translate DB-bound values — `<option value={code}>`
+  keeps the code, only the label goes through `t()`. Admin Control Room and /terms +
+  /privacy intentionally stay English. New user-visible strings MUST be wrapped in t()
+  with an ID entry added.
+
 Remaining / nice-to-have:
 - **Real Midtrans QRIS** — deliberately last; blocked on the owner signing up for
   Midtrans. api/qris scaffolding exists; currently prototype/static-QR mode.
-- Owner-side toggles: enable Vercel Analytics in the dashboard; custom domain.
+- Owner-side toggles: enable Vercel Analytics in the dashboard; custom domain
+  (owner buys e.g. lokita.id, then add it in Vercel → Domains).
 
 Context: the user pitched LOKITA with a PPT (slide 6 = the revenue model above). The project
 may continue from the user's personal Claude account — this file is the handoff; trust it over

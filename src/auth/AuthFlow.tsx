@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ACCENT, ACCENT_DEEP } from '../theme'
 import { BRAND_LOGO_URL, MASCOT_URL } from '../brand'
+import { useLang, LangToggle } from '../i18n'
 import {
   signInWithEmail,
   signUpWithEmail,
@@ -143,6 +144,7 @@ const authRootStyle = {
 
 export default function AuthFlow() {
   const navigate = useNavigate()
+  const { t } = useLang()
   // "?signup=1" (from guest mode's sign-up prompts) skips the splash and opens
   // the signup form directly.
   const wantSignup = useRef(new URLSearchParams(window.location.search).has('signup')).current
@@ -280,9 +282,12 @@ export default function AuthFlow() {
   const cpMismatch = f.cp.length > 0 && f.np !== f.cp
   const btn = (key: string, idle: string) => (loading === key ? <Spinner /> : idle)
 
+  // errors are stored as English keys (or raw Supabase messages, which fall
+  // through t() unchanged) and translated at render time so a language switch
+  // re-translates a visible banner
   const errorBanner = error ? (
     <div style={{ background: '#FBEEE9', border: '1px solid #E4C4B8', color: '#B23A1B', fontSize: 12.5, fontWeight: 600, borderRadius: 0, padding: '10px 13px', marginBottom: 16, lineHeight: 1.45 }}>
-      {error}
+      {t(error)}
     </div>
   ) : null
 
@@ -315,9 +320,15 @@ export default function AuthFlow() {
           <div style={{ position: 'absolute', bottom: 72, width: 180, height: 3, borderRadius: 0, background: 'rgba(255,255,255,.2)', overflow: 'hidden' }}>
             <div style={{ height: '100%', background: '#F5F1E8', borderRadius: 0, animation: 'lok-load 1.9s cubic-bezier(.5,0,.2,1) forwards' }} />
           </div>
-          <div style={{ position: 'absolute', bottom: 44, fontFamily: "'Spline Sans Mono',monospace", fontSize: 10, color: 'rgba(245,241,232,.55)', letterSpacing: '.12em' }}>SETTING UP YOUR NEIGHBOURHOOD…</div>
+          <div style={{ position: 'absolute', bottom: 44, fontFamily: "'Spline Sans Mono',monospace", fontSize: 10, color: 'rgba(245,241,232,.55)', letterSpacing: '.12em' }}>{t('SETTING UP YOUR NEIGHBOURHOOD…')}</div>
         </div>
       )}
+
+      {/* language switch — pinned top-right over the light form panel so a
+          visitor can pick EN/ID before logging in (splash sits above it) */}
+      <div style={{ position: 'absolute', top: 18, right: 22, zIndex: 40 }}>
+        <LangToggle />
+      </div>
 
       {/* ================= AUTH (split) ================= */}
       <div style={{ height: '100%', display: 'flex', animation: 'lok-fade .5s ease both' }}>
@@ -341,23 +352,23 @@ export default function AuthFlow() {
             <div style={{ flex: 1, minHeight: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '6px 0', position: 'relative' }}>
               <img
                 src={MASCOT_URL}
-                alt="Kapi, the LOKITA capybara"
-                title="Kapi — LOKITA's capybara. Always ready to help you move stuff."
+                alt={t('Kapi, the LOKITA capybara')}
+                title={t("Kapi — LOKITA's capybara. Always ready to help you move stuff.")}
                 className="lok-mascot"
                 style={{ height: 'min(320px, 100%)', maxWidth: '100%', objectFit: 'contain' }}
               />
             </div>
           )}
           <div style={{ marginTop: 'auto', position: 'relative' }}>
-            <div style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 11, color: 'rgba(245,241,232,.7)', letterSpacing: '.1em', marginBottom: 12 }}>THE DORM MARKETPLACE · JIU CIKARANG</div>
-            <h1 style={{ fontFamily: "'Bricolage Grotesque',sans-serif", fontWeight: 800, fontSize: 35, lineHeight: 1.08, letterSpacing: '-.025em', margin: 0, color: '#F8F5EE' }}>Buy &amp; sell with the students next door.</h1>
-            <p style={{ fontSize: 14.5, lineHeight: 1.55, color: 'rgba(234,240,248,.82)', margin: '12px 0 0', maxWidth: 400 }}>Trade furniture, gadgets and textbooks with verified neighbours in your building. Pay in-app, pick up at the Security Post.</p>
+            <div style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 11, color: 'rgba(245,241,232,.7)', letterSpacing: '.1em', marginBottom: 12 }}>{t('THE DORM MARKETPLACE · JIU CIKARANG')}</div>
+            <h1 style={{ fontFamily: "'Bricolage Grotesque',sans-serif", fontWeight: 800, fontSize: 35, lineHeight: 1.08, letterSpacing: '-.025em', margin: 0, color: '#F8F5EE' }}>{t('Buy & sell with the students next door.')}</h1>
+            <p style={{ fontSize: 14.5, lineHeight: 1.55, color: 'rgba(234,240,248,.82)', margin: '12px 0 0', maxWidth: 400 }}>{t('Trade furniture, gadgets and textbooks with verified neighbours in your building. Pay in-app, pick up at the Security Post.')}</p>
           </div>
           <div style={{ marginTop: 20, display: 'flex', flexDirection: 'column', gap: 11, position: 'relative' }}>
             {perks.map((p, i) => (
               <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 13 }}>
                 <div style={{ width: 34, height: 34, borderRadius: '50%', background: 'rgba(255,255,255,.13)', display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 'none', color: '#F5F1E8' }}>{p.icon}</div>
-                <div style={{ fontSize: 13.5, fontWeight: 600, color: '#EAF0F8' }}>{p.label}</div>
+                <div style={{ fontSize: 13.5, fontWeight: 600, color: '#EAF0F8' }}>{t(p.label)}</div>
               </div>
             ))}
           </div>
@@ -368,19 +379,19 @@ export default function AuthFlow() {
           <div style={{ width: '100%', maxWidth: 396 }}>
             {view === 'login' && (
               <div style={{ animation: 'lok-rise-lg .4s ease both' }}>
-                <div style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 11, color: '#9A927F', letterSpacing: '.08em', marginBottom: 8 }}>WELCOME BACK</div>
-                <h2 style={{ fontFamily: "'Bricolage Grotesque',sans-serif", fontWeight: 800, fontSize: 28, letterSpacing: '-.02em', margin: '0 0 22px' }}>Log in to Lokita</h2>
+                <div style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 11, color: '#9A927F', letterSpacing: '.08em', marginBottom: 8 }}>{t('WELCOME BACK')}</div>
+                <h2 style={{ fontFamily: "'Bricolage Grotesque',sans-serif", fontWeight: 800, fontSize: 28, letterSpacing: '-.02em', margin: '0 0 22px' }}>{t('Log in to Lokita')}</h2>
 
                 {errorBanner}
-                <label style={labelStyle}>Email address</label>
+                <label style={labelStyle}>{t('Email address')}</label>
                 <div className="lok-in" style={{ ...fieldWrap, marginBottom: 15 }}>
                   <svg width={17} height={17} viewBox="0 0 24 24" fill="none" stroke="#9A9A94" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="5" width="18" height="14" rx="2.5" /><path d="m3 7 9 6 9-6" /></svg>
                   <input value={f.user} onChange={set('user')} type="email" autoComplete="username" placeholder="you@jiu.ac" style={inputStyle} onKeyDown={(e) => { if (e.key === 'Enter') doLogin() }} />
                 </div>
 
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 7 }}>
-                  <label style={{ fontSize: 12.5, fontWeight: 700, color: '#1E1E1E' }}>Password</label>
-                  <span onClick={goView('forgot')} className="lok-link" style={{ cursor: 'pointer', fontSize: 12, fontWeight: 700, color: 'var(--accent,#000000)' }}>Forgot password?</span>
+                  <label style={{ fontSize: 12.5, fontWeight: 700, color: '#1E1E1E' }}>{t('Password')}</label>
+                  <span onClick={goView('forgot')} className="lok-link" style={{ cursor: 'pointer', fontSize: 12, fontWeight: 700, color: 'var(--accent,#000000)' }}>{t('Forgot password?')}</span>
                 </div>
                 <div className="lok-in" style={{ ...fieldWrap, marginBottom: 22 }}>
                   <svg width={17} height={17} viewBox="0 0 24 24" fill="none" stroke="#9A9A94" strokeWidth={2} strokeLinecap="round"><rect x="4" y="10" width="16" height="10" rx="2.5" /><path d="M8 10V7a4 4 0 0 1 8 0v3" /></svg>
@@ -388,37 +399,37 @@ export default function AuthFlow() {
                   <span onClick={() => setShowPw(!showPw)} style={{ cursor: 'pointer', color: '#9A9A94', display: 'flex' }}>{showPw ? eyeOff : eyeOpen}</span>
                 </div>
 
-                <button className="lok-btn" onClick={doLogin} style={primaryBtn}>{btn('login', 'Log in')}</button>
+                <button className="lok-btn" onClick={doLogin} style={primaryBtn}>{btn('login', t('Log in'))}</button>
 
                 <div style={{ display: 'flex', alignItems: 'center', gap: 14, margin: '22px 0' }}>
                   <div style={{ flex: 1, height: 1, background: '#D8D8D4' }} />
-                  <span style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 10, color: '#9A9A94', letterSpacing: '.06em' }}>OR</span>
+                  <span style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 10, color: '#9A9A94', letterSpacing: '.06em' }}>{t('OR')}</span>
                   <div style={{ flex: 1, height: 1, background: '#D8D8D4' }} />
                 </div>
 
                 <button className="lok-btn" onClick={doGoogle} style={{ width: '100%', border: '1.5px solid #D8D8D4', background: '#FFFFFF', color: '#000000', fontFamily: 'inherit', fontWeight: 700, fontSize: 14, padding: 13, borderRadius: 0, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 11 }}>
                   <svg width={18} height={18} viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9 3.6l6.7-6.7C35.6 2.4 30.2 0 24 0 14.6 0 6.5 5.4 2.6 13.2l7.8 6.1C12.3 13.2 17.7 9.5 24 9.5z" /><path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.7c-.5 3-2.2 5.5-4.7 7.2l7.3 5.7C43.9 37.9 46.5 31.7 46.5 24.5z" /><path fill="#FBBC05" d="M10.4 28.3c-.5-1.4-.8-3-.8-4.3s.3-2.9.8-4.3l-7.8-6.1C.9 16.8 0 20.3 0 24s.9 7.2 2.6 10.4l7.8-6.1z" /><path fill="#34A853" d="M24 48c6.2 0 11.4-2 15.2-5.6l-7.3-5.7c-2 1.4-4.7 2.3-7.9 2.3-6.3 0-11.7-3.7-13.6-9.1l-7.8 6.1C6.5 42.6 14.6 48 24 48z" /></svg>
-                  Continue with Google
+                  {t('Continue with Google')}
                 </button>
 
-                <div style={{ textAlign: 'center', marginTop: 26, fontSize: 13.5, color: '#5F6063', fontWeight: 500 }}>New to Lokita? <span onClick={goView('signup')} className="lok-link" style={linkStyle}>Create an account</span></div>
-                <div style={{ textAlign: 'center', marginTop: 12, fontSize: 13, color: '#8B8B86', fontWeight: 500 }}>Just looking? <span onClick={browseAsGuest} className="lok-link" style={{ ...linkStyle, color: '#5F6063' }}>Browse as guest →</span></div>
+                <div style={{ textAlign: 'center', marginTop: 26, fontSize: 13.5, color: '#5F6063', fontWeight: 500 }}>{t('New to Lokita?')} <span onClick={goView('signup')} className="lok-link" style={linkStyle}>{t('Create an account')}</span></div>
+                <div style={{ textAlign: 'center', marginTop: 12, fontSize: 13, color: '#8B8B86', fontWeight: 500 }}>{t('Just looking?')} <span onClick={browseAsGuest} className="lok-link" style={{ ...linkStyle, color: '#5F6063' }}>{t('Browse as guest →')}</span></div>
               </div>
             )}
 
             {view === 'signup' && (
               <div style={{ animation: 'lok-rise-lg .4s ease both' }}>
-                <div style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 11, color: '#9A927F', letterSpacing: '.08em', marginBottom: 8 }}>JOIN YOUR DORM</div>
-                <h2 style={{ fontFamily: "'Bricolage Grotesque',sans-serif", fontWeight: 800, fontSize: 28, letterSpacing: '-.02em', margin: '0 0 22px' }}>Create your account</h2>
+                <div style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 11, color: '#9A927F', letterSpacing: '.08em', marginBottom: 8 }}>{t('JOIN YOUR DORM')}</div>
+                <h2 style={{ fontFamily: "'Bricolage Grotesque',sans-serif", fontWeight: 800, fontSize: 28, letterSpacing: '-.02em', margin: '0 0 22px' }}>{t('Create your account')}</h2>
 
                 {errorBanner}
-                <label style={labelStyle}>Full name</label>
+                <label style={labelStyle}>{t('Full name')}</label>
                 <div className="lok-in" style={{ ...fieldWrap, padding: '12px 15px', marginBottom: 13 }}>
                   <svg width={17} height={17} viewBox="0 0 24 24" fill="none" stroke="#9A9A94" strokeWidth={2} strokeLinecap="round"><circle cx="12" cy="8" r="4" /><path d="M5 21c0-4 3.5-6 7-6s7 2 7 6" /></svg>
                   <input value={f.name} onChange={set('name')} placeholder="Aldriano" style={inputStyle} />
                 </div>
 
-                <label style={labelStyle}>Email</label>
+                <label style={labelStyle}>{t('Email')}</label>
                 <div className="lok-in" style={{ ...fieldWrap, padding: '12px 15px', marginBottom: 13 }}>
                   <svg width={17} height={17} viewBox="0 0 24 24" fill="none" stroke="#9A9A94" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="5" width="18" height="14" rx="2.5" /><path d="m3 7 9 6 9-6" /></svg>
                   <input value={f.email} onChange={set('email')} type="email" autoComplete="email" placeholder="you@jiu.ac" style={inputStyle} />
@@ -426,50 +437,50 @@ export default function AuthFlow() {
 
                 <div style={{ display: 'flex', gap: 11, marginBottom: 22 }}>
                   <div style={{ flex: 1 }}>
-                    <label style={labelStyle}>Password</label>
+                    <label style={labelStyle}>{t('Password')}</label>
                     <div className="lok-in" style={{ display: 'flex', alignItems: 'center', background: '#FFFFFF', border: '1.5px solid #D8D8D4', borderRadius: 0, padding: '12px 14px' }}>
                       <input value={f.np} onChange={set('np')} type="password" autoComplete="new-password" placeholder="••••••" style={inputStyle} />
                     </div>
                   </div>
                   <div style={{ flex: 1 }}>
-                    <label style={labelStyle}>Confirm</label>
+                    <label style={labelStyle}>{t('Confirm')}</label>
                     <div className="lok-in" style={{ display: 'flex', alignItems: 'center', background: '#FFFFFF', border: `1.5px solid ${cpMismatch ? '#D4562F' : '#D8D8D4'}`, borderRadius: 0, padding: '12px 14px' }}>
                       <input value={f.cp} onChange={set('cp')} type="password" autoComplete="new-password" placeholder="••••••" style={inputStyle} />
                     </div>
                   </div>
                 </div>
 
-                <button className="lok-btn" onClick={doSignup} style={primaryBtn}>{btn('signup', 'Create account')}</button>
+                <button className="lok-btn" onClick={doSignup} style={primaryBtn}>{btn('signup', t('Create account'))}</button>
                 <div style={{ fontSize: 11, color: '#8B8B86', fontWeight: 500, textAlign: 'center', marginTop: 10, lineHeight: 1.5 }}>
-                  By creating an account you agree to LOKITA's{' '}
-                  <a href="/terms" target="_blank" rel="noreferrer" style={{ color: 'var(--accent,#000000)', fontWeight: 700 }}>Terms</a> and{' '}
-                  <a href="/privacy" target="_blank" rel="noreferrer" style={{ color: 'var(--accent,#000000)', fontWeight: 700 }}>Privacy Policy</a>.
+                  {t("By creating an account you agree to LOKITA's")}{' '}
+                  <a href="/terms" target="_blank" rel="noreferrer" style={{ color: 'var(--accent,#000000)', fontWeight: 700 }}>{t('Terms')}</a> {t('and')}{' '}
+                  <a href="/privacy" target="_blank" rel="noreferrer" style={{ color: 'var(--accent,#000000)', fontWeight: 700 }}>{t('Privacy Policy')}</a>.
                 </div>
 
-                <div style={{ fontSize: 11.5, color: '#9A927F', textAlign: 'center', marginTop: 14, lineHeight: 1.5 }}>By creating an account you agree to Lokita's <a href="#">Community Rules</a> &amp; dorm verification.</div>
-                <div style={{ textAlign: 'center', marginTop: 20, fontSize: 13.5, color: '#5F6063', fontWeight: 500 }}>Already a member? <span onClick={goView('login')} className="lok-link" style={linkStyle}>Log in</span></div>
-                <div style={{ textAlign: 'center', marginTop: 12, fontSize: 13, color: '#8B8B86', fontWeight: 500 }}>Just looking? <span onClick={browseAsGuest} className="lok-link" style={{ ...linkStyle, color: '#5F6063' }}>Browse as guest →</span></div>
+                <div style={{ fontSize: 11.5, color: '#9A927F', textAlign: 'center', marginTop: 14, lineHeight: 1.5 }}>{t("By creating an account you agree to Lokita's")} <a href="#">{t('Community Rules')}</a> {t('& dorm verification.')}</div>
+                <div style={{ textAlign: 'center', marginTop: 20, fontSize: 13.5, color: '#5F6063', fontWeight: 500 }}>{t('Already a member?')} <span onClick={goView('login')} className="lok-link" style={linkStyle}>{t('Log in')}</span></div>
+                <div style={{ textAlign: 'center', marginTop: 12, fontSize: 13, color: '#8B8B86', fontWeight: 500 }}>{t('Just looking?')} <span onClick={browseAsGuest} className="lok-link" style={{ ...linkStyle, color: '#5F6063' }}>{t('Browse as guest →')}</span></div>
               </div>
             )}
 
             {view === 'forgot' && (
               <div style={{ animation: 'lok-rise-lg .4s ease both' }}>
                 <span onClick={goView('login')} className="lok-link" style={{ cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12.5, fontWeight: 700, color: '#5F6063', marginBottom: 22 }}>
-                  <svg width={15} height={15} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6" /></svg>Back to log in
+                  <svg width={15} height={15} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6" /></svg>{t('Back to log in')}
                 </span>
                 <div style={{ width: 52, height: 52, borderRadius: 0, background: '#EEF3FA', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--accent,#000000)', marginBottom: 18 }}>
                   <svg width={24} height={24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round"><rect x="4" y="10" width="16" height="10" rx="2.5" /><path d="M8 10V7a4 4 0 0 1 8 0v3" /></svg>
                 </div>
-                <h2 style={{ fontFamily: "'Bricolage Grotesque',sans-serif", fontWeight: 800, fontSize: 27, letterSpacing: '-.02em', margin: '0 0 8px' }}>Forgot password?</h2>
-                <p style={{ fontSize: 14, color: '#5F6063', lineHeight: 1.6, margin: '0 0 24px' }}>Enter the email tied to your Lokita account and we'll send you a secure reset link.</p>
+                <h2 style={{ fontFamily: "'Bricolage Grotesque',sans-serif", fontWeight: 800, fontSize: 27, letterSpacing: '-.02em', margin: '0 0 8px' }}>{t('Forgot password?')}</h2>
+                <p style={{ fontSize: 14, color: '#5F6063', lineHeight: 1.6, margin: '0 0 24px' }}>{t("Enter the email tied to your Lokita account and we'll send you a secure reset link.")}</p>
 
                 {errorBanner}
-                <label style={labelStyle}>Registered email</label>
+                <label style={labelStyle}>{t('Registered email')}</label>
                 <div className="lok-in" style={{ ...fieldWrap, marginBottom: 22 }}>
                   <svg width={17} height={17} viewBox="0 0 24 24" fill="none" stroke="#9A9A94" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="5" width="18" height="14" rx="2.5" /><path d="m3 7 9 6 9-6" /></svg>
                   <input value={f.fEmail} onChange={set('fEmail')} type="email" autoComplete="email" placeholder="you@jiu.ac" style={inputStyle} />
                 </div>
-                <button className="lok-btn" onClick={doReset} style={primaryBtn}>{btn('reset', 'Send reset link')}</button>
+                <button className="lok-btn" onClick={doReset} style={primaryBtn}>{btn('reset', t('Send reset link'))}</button>
               </div>
             )}
 
@@ -478,11 +489,11 @@ export default function AuthFlow() {
                 <div style={{ width: 70, height: 70, borderRadius: '50%', background: '#E7F1EA', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#1E9E5A', margin: '0 auto 22px' }}>
                   <svg width={34} height={34} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="5" width="18" height="14" rx="2.5" /><path d="m3 7 9 6 9-6" /><path d="m14 15 2 2 4-4" stroke="#1E9E5A" /></svg>
                 </div>
-                <h2 style={{ fontFamily: "'Bricolage Grotesque',sans-serif", fontWeight: 800, fontSize: 26, letterSpacing: '-.02em', margin: '0 0 10px' }}>Check your inbox</h2>
-                <p style={{ fontSize: 14, color: '#5F6063', lineHeight: 1.65, margin: '0 0 8px' }}>We sent a password reset link to</p>
+                <h2 style={{ fontFamily: "'Bricolage Grotesque',sans-serif", fontWeight: 800, fontSize: 26, letterSpacing: '-.02em', margin: '0 0 10px' }}>{t('Check your inbox')}</h2>
+                <p style={{ fontSize: 14, color: '#5F6063', lineHeight: 1.65, margin: '0 0 8px' }}>{t('We sent a password reset link to')}</p>
                 <div style={{ fontWeight: 700, fontSize: 15, color: '#000000', marginBottom: 22, wordBreak: 'break-all' }}>{f.fEmail || 'you@jiu.ac'}</div>
-                <div style={{ background: '#FFFFFF', border: '1px solid #D8D8D4', borderRadius: 0, padding: '14px 16px', fontSize: 12.5, color: '#5F6063', lineHeight: 1.55, marginBottom: 24, textAlign: 'left' }}>The link expires in 30 minutes. Didn't get it? Check spam, or <span onClick={doReset} className="lok-link" style={linkStyle}>resend</span>.</div>
-                <button className="lok-btn" onClick={goView('login')} style={{ ...primaryBtn, boxShadow: '0 10px 24px -10px rgba(0,0,0,.8)' }}>Back to log in</button>
+                <div style={{ background: '#FFFFFF', border: '1px solid #D8D8D4', borderRadius: 0, padding: '14px 16px', fontSize: 12.5, color: '#5F6063', lineHeight: 1.55, marginBottom: 24, textAlign: 'left' }}>{t("The link expires in 30 minutes. Didn't get it? Check spam, or")} <span onClick={doReset} className="lok-link" style={linkStyle}>{t('resend')}</span>.</div>
+                <button className="lok-btn" onClick={goView('login')} style={{ ...primaryBtn, boxShadow: '0 10px 24px -10px rgba(0,0,0,.8)' }}>{t('Back to log in')}</button>
               </div>
             )}
           </div>

@@ -3,6 +3,7 @@ import { useM } from './context'
 import { fetchMyListings, fetchReviewsAboutMe, fetchMyWishlist, type DbListing, type ReviewRow } from '../lib/api'
 import { uploadVerificationDoc, updatePassword } from '../lib/auth'
 import { Camera, Edit, Logout, ShieldCheck, Verified } from '../components/Icons'
+import { useLang } from '../i18n'
 
 const rupiah = (n: number) => 'Rp ' + Number(n).toLocaleString('id-ID')
 const timeAgo = (iso: string) => {
@@ -19,17 +20,18 @@ const metaField = (label: string, value: string) => (
 
 // verification badge styled by status
 function VerifyBadge({ status }: { status?: string }) {
+  const { t } = useLang()
   if (status === 'verified') {
     return (
       <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, fontWeight: 800, color: '#8A6C34', background: '#F6F0E3', border: '1px solid #E2D3AF', padding: '6px 11px', borderRadius: 0 }}>
-        <Verified size={14} checkColor="#F6F0E3" /> Dorm-Verified Student
+        <Verified size={14} checkColor="#F6F0E3" /> {t('Dorm-Verified Student')}
       </span>
     )
   }
   if (status === 'rejected') {
-    return <span style={{ fontSize: 12, fontWeight: 800, color: '#B23A1B', background: '#FBEEE9', border: '1px solid #E4C4B8', padding: '6px 11px', borderRadius: 0 }}>Verification rejected</span>
+    return <span style={{ fontSize: 12, fontWeight: 800, color: '#B23A1B', background: '#FBEEE9', border: '1px solid #E4C4B8', padding: '6px 11px', borderRadius: 0 }}>{t('Verification rejected')}</span>
   }
-  return <span style={{ fontSize: 12, fontWeight: 800, color: '#9A6A12', background: '#FBF2DD', border: '1px solid #ECD8A6', padding: '6px 11px', borderRadius: 0 }}>Verification pending</span>
+  return <span style={{ fontSize: 12, fontWeight: 800, color: '#9A6A12', background: '#FBF2DD', border: '1px solid #ECD8A6', padding: '6px 11px', borderRadius: 0 }}>{t('Verification pending')}</span>
 }
 
 function SmallCard({ title, price, badge, badgeBg, badgeFg, dim, photoUrl, onClick }: { title: string; price: string; badge: string; badgeBg: string; badgeFg: string; dim?: boolean; photoUrl?: string | null; onClick?: () => void }) {
@@ -57,6 +59,7 @@ const emptyBox: React.CSSProperties = { background: '#FFFFFF', border: '1px dash
 // Change password + a plain-language privacy summary. Google-only accounts can
 // set a password here too (adds email login alongside Google).
 function AccountPrivacyCard() {
+  const { t } = useLang()
   const [pw, setPw] = useState('')
   const [pw2, setPw2] = useState('')
   const [pwState, setPwState] = useState<'idle' | 'saving' | 'done'>('idle')
@@ -65,8 +68,8 @@ function AccountPrivacyCard() {
   const savePw = async () => {
     if (pwState !== 'idle') return
     setPwErr(null)
-    if (pw.length < 8) return setPwErr('Password must be at least 8 characters.')
-    if (pw !== pw2) return setPwErr("The two passwords don't match.")
+    if (pw.length < 8) return setPwErr(t('Password must be at least 8 characters.'))
+    if (pw !== pw2) return setPwErr(t("The two passwords don't match."))
     setPwState('saving')
     try {
       await updatePassword(pw)
@@ -76,7 +79,7 @@ function AccountPrivacyCard() {
       setTimeout(() => setPwState('idle'), 2500)
     } catch (e) {
       setPwState('idle')
-      setPwErr(e instanceof Error ? e.message : 'Could not change the password.')
+      setPwErr(e instanceof Error ? e.message : t('Could not change the password.'))
     }
   }
 
@@ -87,32 +90,32 @@ function AccountPrivacyCard() {
       {/* what's visible to whom — plain language */}
       <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap', marginBottom: 18 }}>
         <div style={{ flex: '1 1 260px', background: '#F5F5F3', border: '1px solid #D8D8D4', borderRadius: 0, padding: '13px 15px' }}>
-          <div style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 10, color: '#9A9A94', letterSpacing: '.06em', marginBottom: 7 }}>👁️ OTHER MEMBERS SEE</div>
-          <div style={{ fontSize: 12.5, color: '#4A4B4E', lineHeight: 1.7, fontWeight: 500 }}>your name & photo · building + floor · batch & standing · rating, reviews & listings</div>
+          <div style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 10, color: '#9A9A94', letterSpacing: '.06em', marginBottom: 7 }}>{t('👁️ OTHER MEMBERS SEE')}</div>
+          <div style={{ fontSize: 12.5, color: '#4A4B4E', lineHeight: 1.7, fontWeight: 500 }}>{t('your name & photo · building + floor · batch & standing · rating, reviews & listings')}</div>
         </div>
         <div style={{ flex: '1 1 260px', background: '#F6F0E3', border: '1px solid #E2D3AF', borderRadius: 0, padding: '13px 15px' }}>
-          <div style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 10, color: '#4A8067', letterSpacing: '.06em', marginBottom: 7 }}>🔒 ONLY YOU SEE</div>
-          <div style={{ fontSize: 12.5, color: '#3E4F45', lineHeight: 1.7, fontWeight: 500 }}>WhatsApp number · student ID · email · room number — never shown to other members. All contact happens in-app.</div>
+          <div style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 10, color: '#4A8067', letterSpacing: '.06em', marginBottom: 7 }}>{t('🔒 ONLY YOU SEE')}</div>
+          <div style={{ fontSize: 12.5, color: '#3E4F45', lineHeight: 1.7, fontWeight: 500 }}>{t('WhatsApp number · student ID · email · room number — never shown to other members. All contact happens in-app.')}</div>
         </div>
       </div>
 
       {/* change password */}
-      <div style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 10, color: '#9A9A94', letterSpacing: '.06em', marginBottom: 9 }}>CHANGE PASSWORD</div>
+      <div style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 10, color: '#9A9A94', letterSpacing: '.06em', marginBottom: 9 }}>{t('CHANGE PASSWORD')}</div>
       <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
-        <input className="lok-field" type="password" autoComplete="new-password" value={pw} onChange={(e) => setPw(e.target.value)} placeholder="New password (min. 8 characters)" style={pwField} />
-        <input className="lok-field" type="password" autoComplete="new-password" value={pw2} onChange={(e) => setPw2(e.target.value)} placeholder="Repeat new password" style={pwField} />
+        <input className="lok-field" type="password" autoComplete="new-password" value={pw} onChange={(e) => setPw(e.target.value)} placeholder={t('New password (min. 8 characters)')} style={pwField} />
+        <input className="lok-field" type="password" autoComplete="new-password" value={pw2} onChange={(e) => setPw2(e.target.value)} placeholder={t('Repeat new password')} style={pwField} />
         <button
           onClick={savePw}
           disabled={pwState !== 'idle'}
           className="lok-btn"
           style={{ flex: 'none', border: 'none', background: pwState === 'done' ? '#3DBB6E' : 'var(--accent,#000000)', color: '#F7F3EA', fontFamily: 'inherit', fontWeight: 700, fontSize: 13, padding: '12px 20px', borderRadius: 0, cursor: pwState === 'idle' ? 'pointer' : 'default', transition: 'background .2s ease' }}
         >
-          {pwState === 'saving' ? 'Saving…' : pwState === 'done' ? 'Password changed ✓' : 'Change password'}
+          {pwState === 'saving' ? t('Saving…') : pwState === 'done' ? t('Password changed ✓') : t('Change password')}
         </button>
       </div>
       {pwErr && <div style={{ fontSize: 12, color: '#B23A1B', fontWeight: 600, marginTop: 8 }}>{pwErr}</div>}
       <div style={{ fontSize: 11.5, color: '#8B8B86', fontWeight: 500, marginTop: 10, lineHeight: 1.5 }}>
-        Signed in with Google? Setting a password here also lets you log in with your email.
+        {t('Signed in with Google? Setting a password here also lets you log in with your email.')}
       </div>
     </div>
   )
@@ -120,6 +123,7 @@ function AccountPrivacyCard() {
 
 export default function ProfileView() {
   const { state, openEdit, pickPhoto, logout, openSell, openItem, refetchProfile } = useM()
+  const { t } = useLang()
   // "Get verified": upload a student ID from the profile (was in onboarding)
   const idFileRef = useRef<HTMLInputElement>(null)
   const [idUploading, setIdUploading] = useState(false)
@@ -132,7 +136,7 @@ export default function ProfileView() {
       await uploadVerificationDoc(file)
       refetchProfile() // auto-verify trigger grants the badge
     } catch (err) {
-      alert('Upload failed: ' + (err instanceof Error ? err.message : 'unknown error'))
+      alert(t('Upload failed:') + ' ' + (err instanceof Error ? err.message : t('unknown error')))
     } finally {
       setIdUploading(false)
     }
@@ -176,7 +180,7 @@ export default function ProfileView() {
   if (s.profileError) {
     return (
       <div style={{ maxWidth: 480, margin: '60px auto', textAlign: 'center', background: '#FBEEE9', border: '1px solid #E4C4B8', borderRadius: 0, padding: 28, color: '#B23A1B', fontWeight: 600 }}>
-        Couldn't load your profile: {s.profileError}
+        {t("Couldn't load your profile:")} {s.profileError}
       </div>
     )
   }
@@ -184,10 +188,10 @@ export default function ProfileView() {
   const stats = s.stats
   const ratingLabel = stats && stats.avgRating != null ? stats.avgRating.toFixed(1) : '—'
   const statTiles = [
-    { value: String(stats?.selling ?? 0), label: 'Selling', color: 'var(--accent,#000000)' },
-    { value: String(stats?.sold ?? 0), label: 'Sold', color: '#1E9E5A' },
-    { value: String(stats?.buying ?? 0), label: 'Buying', color: '#000000' },
-    { value: ratingLabel, label: `${stats?.reviewCount ?? 0} reviews`, color: '#000000' },
+    { value: String(stats?.selling ?? 0), label: t('Selling'), color: 'var(--accent,#000000)' },
+    { value: String(stats?.sold ?? 0), label: t('Sold'), color: '#1E9E5A' },
+    { value: String(stats?.buying ?? 0), label: t('Buying'), color: '#000000' },
+    { value: ratingLabel, label: `${stats?.reviewCount ?? 0} ${t('reviews')}`, color: '#000000' },
   ]
   const activeListings = (listings || []).filter((l) => l.status === 'active')
   const soldListings = (listings || []).filter((l) => l.status === 'sold')
@@ -201,26 +205,26 @@ export default function ProfileView() {
           <div style={{ width: 96, height: 96, borderRadius: 0, background: 'var(--accent,#000000)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#F7F3EA', fontWeight: 800, fontSize: 38, fontFamily: "'Bricolage Grotesque',sans-serif", overflow: 'hidden' }}>
             {avatarUrl ? <img src={avatarUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : profileInitial}
           </div>
-          <button onClick={pickPhoto} className="lok-btn" title="Change photo" disabled={s.photoUploading} style={{ position: 'absolute', bottom: -7, right: -7, width: 34, height: 34, borderRadius: 0, border: '2.5px solid #FFFFFF', background: '#000000', color: '#F7F3EA', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+          <button onClick={pickPhoto} className="lok-btn" title={t('Change photo')} disabled={s.photoUploading} style={{ position: 'absolute', bottom: -7, right: -7, width: 34, height: 34, borderRadius: 0, border: '2.5px solid #FFFFFF', background: '#000000', color: '#F7F3EA', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
             {s.photoUploading ? <span className="lok-spin" style={{ width: 14, height: 14, border: '2px solid rgba(247,243,234,.4)', borderTopColor: '#F7F3EA', borderRadius: '50%', display: 'inline-block' }} /> : <Camera />}
           </button>
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-            <h1 style={{ fontFamily: "'Bricolage Grotesque',sans-serif", fontSize: 28, fontWeight: 800, letterSpacing: '-.02em', margin: 0 }}>{p.name || 'Your name'}</h1>
+            <h1 style={{ fontFamily: "'Bricolage Grotesque',sans-serif", fontSize: 28, fontWeight: 800, letterSpacing: '-.02em', margin: 0 }}>{p.name || t('Your name')}</h1>
             <VerifyBadge status={p.verification_status} />
           </div>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 26, marginTop: 16 }}>
-            {metaField('STUDENT ID', p.studentId)}
-            {metaField('WHATSAPP', p.whatsapp)}
-            {metaField('DORM & ROOM', p.building ? `${p.building}${p.room ? ' · ' + p.room : ''}` : '')}
-            {metaField('MEMBER SINCE', p.since)}
-            {metaField('BATCH / YEAR', p.batch)}
-            {metaField('CLASS STANDING', p.standing)}
+            {metaField(t('STUDENT ID'), p.studentId)}
+            {metaField(t('WHATSAPP'), p.whatsapp)}
+            {metaField(t('DORM & ROOM'), p.building ? `${p.building}${p.room ? ' · ' + p.room : ''}` : '')}
+            {metaField(t('MEMBER SINCE'), p.since)}
+            {metaField(t('BATCH / YEAR'), p.batch)}
+            {metaField(t('CLASS STANDING'), p.standing)}
           </div>
         </div>
         <button onClick={openEdit} className="lok-btn" style={{ flex: 'none', border: '1px solid #C9C9C5', background: '#F5F5F3', color: '#000000', fontFamily: 'inherit', fontWeight: 700, fontSize: 13.5, padding: '11px 16px', borderRadius: 0, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 7 }}>
-          <Edit /> Edit profile
+          <Edit /> {t('Edit profile')}
         </button>
       </div>
 
@@ -232,12 +236,12 @@ export default function ProfileView() {
         </div>
         <div style={{ flex: 1, color: '#EAF3EE', position: 'relative' }}>
           <div style={{ fontWeight: 800, fontSize: 14.5, color: '#fff' }}>
-            {p.verification_status === 'verified' ? 'Identity confirmed by campus records' : 'Get your Dorm-Verified badge'}
+            {p.verification_status === 'verified' ? t('Identity confirmed by campus records') : t('Get your Dorm-Verified badge')}
           </div>
           <div style={{ fontSize: 12.5, lineHeight: 1.5, marginTop: 2, color: '#C6DDD2' }}>
             {p.verification_status === 'verified'
-              ? `Verified student${p.building ? ' · ' + p.building + ' resident' : ''} · trades protected by in-app escrow.`
-              : 'Upload a photo of your student ID to earn the ✔ badge neighbours trust.'}
+              ? `${t('Verified student')}${p.building ? ' · ' + t('resident of') + ' ' + p.building : ''} · ${t('trades protected by in-app escrow.')}`
+              : t('Upload a photo of your student ID to earn the ✔ badge neighbours trust.')}
           </div>
         </div>
         {p.verification_status !== 'verified' && (
@@ -252,7 +256,7 @@ export default function ProfileView() {
               {idUploading ? (
                 <span className="lok-spin" style={{ width: 14, height: 14, border: '2px solid #C9D6E8', borderTopColor: 'var(--accent,#000000)', borderRadius: '50%', display: 'inline-block' }} />
               ) : (
-                'Upload student ID'
+                t('Upload student ID')
               )}
             </button>
           </>
@@ -261,15 +265,15 @@ export default function ProfileView() {
 
       {/* rating summary */}
       <div style={{ background: '#FFFFFF', border: '1px solid #D8D8D4', borderRadius: 0, padding: '20px 22px', marginBottom: 14 }}>
-        <div style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 10, color: '#9A9A94', letterSpacing: '.06em', marginBottom: 8 }}>RATING</div>
+        <div style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 10, color: '#9A9A94', letterSpacing: '.06em', marginBottom: 8 }}>{t('RATING')}</div>
         {stats && stats.reviewCount > 0 ? (
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 10 }}>
             <div style={{ fontFamily: "'Bricolage Grotesque',sans-serif", fontSize: 36, fontWeight: 800, lineHeight: 1, color: '#000000' }}>{ratingLabel}</div>
             <div style={{ fontSize: 16, color: '#E7A81E', letterSpacing: 2 }}>{'★'.repeat(Math.round(stats.avgRating || 0))}{'☆'.repeat(5 - Math.round(stats.avgRating || 0))}</div>
-            <div style={{ fontSize: 12.5, color: '#5F6063', fontWeight: 600 }}>from {stats.reviewCount} review{stats.reviewCount > 1 ? 's' : ''}</div>
+            <div style={{ fontSize: 12.5, color: '#5F6063', fontWeight: 600 }}>{t('from')} {stats.reviewCount} {stats.reviewCount > 1 ? t('reviews') : t('review')}</div>
           </div>
         ) : (
-          <div style={{ fontSize: 13.5, color: '#8B8B86', fontWeight: 600 }}>No ratings yet — your reviews will appear here after your first completed trade.</div>
+          <div style={{ fontSize: 13.5, color: '#8B8B86', fontWeight: 600 }}>{t('No ratings yet — your reviews will appear here after your first completed trade.')}</div>
         )}
       </div>
 
@@ -285,44 +289,44 @@ export default function ProfileView() {
 
       {/* wishlist */}
       <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 14 }}>
-        <h2 style={sectionH2}>Wishlist</h2>
-        <span style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 11, color: '#9A9A94' }}>SAVED FOR LATER</span>
+        <h2 style={sectionH2}>{t('Wishlist')}</h2>
+        <span style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 11, color: '#9A9A94' }}>{t('SAVED FOR LATER')}</span>
       </div>
       {wishlist && wishlist.length > 0 ? (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(200px,1fr))', gap: 16, marginBottom: 32 }}>
           {wishlist.map((it) => (
-            <SmallCard key={it.id} title={it.title} price={rupiah(it.price)} badge="SAVED" badgeBg="#F6F0E3" badgeFg="#8A6C34" photoUrl={it.photoUrl} onClick={() => openItem(dbListingToItem(it))} />
+            <SmallCard key={it.id} title={it.title} price={rupiah(it.price)} badge={t('SAVED')} badgeBg="#F6F0E3" badgeFg="#8A6C34" photoUrl={it.photoUrl} onClick={() => openItem(dbListingToItem(it))} />
           ))}
         </div>
       ) : (
-        <div style={emptyBox}>Tap the ♡ on any listing to save it here for later.</div>
+        <div style={emptyBox}>{t('Tap the ♡ on any listing to save it here for later.')}</div>
       )}
 
       {/* my listings */}
       <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 14 }}>
-        <h2 style={sectionH2}>My listings</h2>
-        <span style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 11, color: '#9A9A94' }}>{activeListings.length} ACTIVE · {soldListings.length} SOLD</span>
+        <h2 style={sectionH2}>{t('My listings')}</h2>
+        <span style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 11, color: '#9A9A94' }}>{activeListings.length} {t('ACTIVE')} · {soldListings.length} {t('SOLD')}</span>
       </div>
       {listings && listings.length > 0 ? (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(200px,1fr))', gap: 16, marginBottom: 32 }}>
           {activeListings.map((it) => (
-            <SmallCard key={it.id} title={it.title} price={rupiah(it.price)} badge="ACTIVE" badgeBg="#E7F1EA" badgeFg="#1E9E5A" photoUrl={it.photoUrl} onClick={() => openItem(dbListingToItem(it))} />
+            <SmallCard key={it.id} title={it.title} price={rupiah(it.price)} badge={t('ACTIVE')} badgeBg="#E7F1EA" badgeFg="#1E9E5A" photoUrl={it.photoUrl} onClick={() => openItem(dbListingToItem(it))} />
           ))}
           {soldListings.map((it) => (
-            <SmallCard key={it.id} title={it.title} price={rupiah(it.price)} badge="SOLD" badgeBg="#EFE7D9" badgeFg="#9A8A5E" photoUrl={it.photoUrl} dim />
+            <SmallCard key={it.id} title={it.title} price={rupiah(it.price)} badge={t('SOLD')} badgeBg="#EFE7D9" badgeFg="#9A8A5E" photoUrl={it.photoUrl} dim />
           ))}
         </div>
       ) : (
         <div style={{ ...emptyBox, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14 }}>
-          <div>You have no listings yet.</div>
-          <button onClick={openSell} className="lok-btn" style={{ border: 'none', background: 'var(--accent,#000000)', color: '#F7F3EA', fontFamily: 'inherit', fontWeight: 700, fontSize: 13.5, padding: '11px 18px', borderRadius: 0, cursor: 'pointer' }}>Post your first item</button>
+          <div>{t('You have no listings yet.')}</div>
+          <button onClick={openSell} className="lok-btn" style={{ border: 'none', background: 'var(--accent,#000000)', color: '#F7F3EA', fontFamily: 'inherit', fontWeight: 700, fontSize: 13.5, padding: '11px 18px', borderRadius: 0, cursor: 'pointer' }}>{t('Post your first item')}</button>
         </div>
       )}
 
       {/* reviews */}
       <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, marginBottom: 14 }}>
-        <h2 style={sectionH2}>Reviews</h2>
-        {stats && stats.reviewCount > 0 && <span style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 11, color: '#9A9A94' }}>{stats.reviewCount} TOTAL</span>}
+        <h2 style={sectionH2}>{t('Reviews')}</h2>
+        {stats && stats.reviewCount > 0 && <span style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 11, color: '#9A9A94' }}>{stats.reviewCount} {t('TOTAL')}</span>}
       </div>
       {reviews && reviews.length > 0 ? (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -341,24 +345,24 @@ export default function ProfileView() {
           ))}
         </div>
       ) : (
-        <div style={emptyBox}>No reviews yet. After a completed trade, buyers and sellers can rate each other here.</div>
+        <div style={emptyBox}>{t('No reviews yet. After a completed trade, buyers and sellers can rate each other here.')}</div>
       )}
 
       {/* account & privacy */}
       <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', margin: '32px 0 14px' }}>
-        <h2 style={sectionH2}>Account & privacy</h2>
-        <span style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 11, color: '#9A9A94' }}>YOUR DATA, YOUR RULES</span>
+        <h2 style={sectionH2}>{t('Account & privacy')}</h2>
+        <span style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 11, color: '#9A9A94' }}>{t('YOUR DATA, YOUR RULES')}</span>
       </div>
       <AccountPrivacyCard />
 
       <div style={{ marginTop: 32, paddingTop: 24, borderTop: '1px solid #D8D8D4', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14 }}>
         <button onClick={logout} className="lok-btn" style={{ border: '1px solid #E4C4B8', background: '#FBEEE9', color: '#C0492A', fontFamily: 'inherit', fontWeight: 700, fontSize: 14, padding: '12px 26px', borderRadius: 0, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 9 }}>
-          <Logout /> Log out
+          <Logout /> {t('Log out')}
         </button>
         <div style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 10, color: '#9A9A94', letterSpacing: '.06em' }}>
-          <a href="/terms" target="_blank" rel="noreferrer" style={{ color: '#8B8B86' }}>TERMS</a>
+          <a href="/terms" target="_blank" rel="noreferrer" style={{ color: '#8B8B86' }}>{t('TERMS')}</a>
           {' · '}
-          <a href="/privacy" target="_blank" rel="noreferrer" style={{ color: '#8B8B86' }}>PRIVACY</a>
+          <a href="/privacy" target="_blank" rel="noreferrer" style={{ color: '#8B8B86' }}>{t('PRIVACY')}</a>
           {' · LOKITA'}
         </div>
       </div>

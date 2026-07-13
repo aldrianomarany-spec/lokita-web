@@ -1,11 +1,13 @@
 import { useM } from './context'
 import { Plus } from '../components/Icons'
+import { useLang } from '../i18n'
 
 // App-style bottom navigation on phones (members only) — Home · Requests ·
 // Sell (raised accent button) · Messages · Profile. Replaces the floating
 // Post FAB; the top bar keeps search + notifications.
 export default function TabBar() {
   const { state, goHome, openRequests, openSell, openMessages, openProfile } = useM()
+  const { t } = useLang()
   const s = state
   const unread = s.convs.reduce((sum, c) => sum + c.unread, 0)
 
@@ -27,21 +29,21 @@ export default function TabBar() {
     <nav
       style={{ position: 'fixed', left: 0, right: 0, bottom: 0, zIndex: 45, background: '#000000', borderTop: '1px solid #222222', display: 'flex', alignItems: 'flex-end', paddingBottom: 'env(safe-area-inset-bottom)', boxShadow: '0 -6px 20px -12px rgba(0,0,0,.25)' }}
     >
-      {item('Home', '🏠', s.view === 'browse', goHome)}
-      {item('Requests', '🙋', s.view === 'requests', openRequests)}
+      {item(t('Home'), '🏠', s.view === 'browse', goHome)}
+      {item(t('Requests'), '🙋', s.view === 'requests', openRequests)}
       {/* raised Sell button */}
       <div style={{ flex: 1, display: 'flex', justifyContent: 'center' }}>
         <button
           onClick={openSell}
-          aria-label="Post an item"
+          aria-label={t('Post an item')}
           className="lok-btn"
           style={{ border: 'none', width: 50, height: 50, borderRadius: '50%', background: '#C8A96A', color: '#000000', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', marginTop: -22, boxShadow: '0 0 0 5px #000000' }}
         >
           <Plus size={22} />
         </button>
       </div>
-      {item('Messages', '💬', s.view === 'messages', openMessages, unread)}
-      {item('Profile', '👤', s.view === 'profile', openProfile)}
+      {item(t('Messages'), '💬', s.view === 'messages', openMessages, unread)}
+      {item(t('Profile'), '👤', s.view === 'profile', openProfile)}
     </nav>
   )
 }

@@ -1,8 +1,10 @@
 import { useM } from './context'
 import { MASCOT_URL } from '../brand'
+import { useLang } from '../i18n'
 
 export default function Sidebar() {
   const { state, openRequests, openPeople, openAdmin, openSell, toggleSavedView } = useM()
+  const { t } = useLang()
   const s = state
   const counts = s.categoryCounts
   const totalCount = Object.values(counts).reduce((a, n) => a + n, 0)
@@ -13,15 +15,15 @@ export default function Sidebar() {
       style={{ width: 236, flex: 'none', background: '#F5F5F3', borderRight: '1px solid #D8D8D4', padding: '20px 15px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 24 }}
     >
       <div>
-        <div style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 10, color: '#9A9A94', padding: '0 11px 9px', letterSpacing: '.1em' }}>COMMUNITY</div>
+        <div style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 10, color: '#9A9A94', padding: '0 11px 9px', letterSpacing: '.1em' }}>{t('COMMUNITY')}</div>
         <button
           onClick={openRequests}
           className="lok-navi"
           style={{ width: '100%', border: 'none', cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left', display: 'flex', alignItems: 'center', gap: 12, fontWeight: 600, fontSize: 14, padding: '10px 12px', borderRadius: 0, background: s.view === 'requests' ? '#F6F0E3' : 'transparent', color: s.view === 'requests' ? '#8A6C34' : '#3A3B3E', marginBottom: 2 }}
         >
           <span style={{ width: 26, height: 26, borderRadius: 0, background: '#E7EEF7', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, flex: 'none' }}>🙋</span>
-          <span style={{ flex: 1 }}>Requests</span>
-          <span style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 9, color: '#ABABA6', fontWeight: 500 }}>WANTED</span>
+          <span style={{ flex: 1 }}>{t('Requests')}</span>
+          <span style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 9, color: '#ABABA6', fontWeight: 500 }}>{t('WANTED')}</span>
         </button>
         {!s.guest && (
           <button
@@ -30,7 +32,7 @@ export default function Sidebar() {
             style={{ width: '100%', border: 'none', cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left', display: 'flex', alignItems: 'center', gap: 12, fontWeight: 600, fontSize: 14, padding: '10px 12px', borderRadius: 0, background: s.view === 'people' ? '#F6F0E3' : 'transparent', color: s.view === 'people' ? '#8A6C34' : '#3A3B3E', marginBottom: 2 }}
           >
             <span style={{ width: 26, height: 26, borderRadius: 0, background: '#E7F1EA', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, flex: 'none' }}>👋</span>
-            <span style={{ flex: 1 }}>People</span>
+            <span style={{ flex: 1 }}>{t('People')}</span>
             <span style={{ display: 'flex', alignItems: 'center', gap: 5, fontFamily: "'Spline Sans Mono',monospace", fontSize: 10, color: '#1E9E5A', fontWeight: 600 }}>
               <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#3DBB6E' }} />
               {s.onlineIds.length}
@@ -45,11 +47,11 @@ export default function Sidebar() {
             style={{ width: '100%', border: 'none', cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left', display: 'flex', alignItems: 'center', gap: 12, fontWeight: 600, fontSize: 14, padding: '10px 12px', borderRadius: 0, background: s.view === 'admin' ? '#F6F0E3' : 'transparent', color: s.view === 'admin' ? '#8A6C34' : '#3A3B3E', marginBottom: 2 }}
           >
             <span style={{ width: 26, height: 26, borderRadius: 0, background: '#F1E4E0', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, flex: 'none' }}>🛡️</span>
-            <span style={{ flex: 1 }}>Admin</span>
+            <span style={{ flex: 1 }}>{t('Admin')}</span>
             {s.openReports > 0 ? (
-              <span title={`${s.openReports} open report${s.openReports > 1 ? 's' : ''}`} style={{ minWidth: 19, height: 19, borderRadius: 0, background: '#D4562F', color: '#FFFFFF', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'Spline Sans Mono',monospace", fontSize: 10, fontWeight: 700, padding: '0 5px' }}>{s.openReports}</span>
+              <span title={`${s.openReports} ${s.openReports > 1 ? t('open reports') : t('open report')}`} style={{ minWidth: 19, height: 19, borderRadius: 0, background: '#D4562F', color: '#FFFFFF', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'Spline Sans Mono',monospace", fontSize: 10, fontWeight: 700, padding: '0 5px' }}>{s.openReports}</span>
             ) : (
-              <span style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 9, color: '#ABABA6', fontWeight: 500 }}>STAFF</span>
+              <span style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 9, color: '#ABABA6', fontWeight: 500 }}>{t('STAFF')}</span>
             )}
           </button>
         )}
@@ -57,13 +59,13 @@ export default function Sidebar() {
 
       {/* categories live as chips above the grid — this rail carries actions + live stats */}
       <div>
-        <div style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 10, color: '#9A9A94', padding: '0 11px 9px', letterSpacing: '.1em' }}>QUICK ACTIONS</div>
+        <div style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 10, color: '#9A9A94', padding: '0 11px 9px', letterSpacing: '.1em' }}>{t('QUICK ACTIONS')}</div>
         <button
           onClick={openSell}
           className="lok-btn"
           style={{ width: '100%', border: 'none', cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 9, fontWeight: 800, fontSize: 14, padding: '12px 12px', borderRadius: 0, background: '#000000', color: '#FFFFFF', marginBottom: 8 }}
         >
-          <span style={{ color: '#C8A96A', fontSize: 16, lineHeight: 1 }}>＋</span> Sell an item
+          <span style={{ color: '#C8A96A', fontSize: 16, lineHeight: 1 }}>＋</span> {t('Sell an item')}
         </button>
         {!s.guest && (
           <button
@@ -71,20 +73,20 @@ export default function Sidebar() {
             className="lok-navi"
             style={{ width: '100%', border: '1px solid #D8D8D4', cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 9, fontWeight: 700, fontSize: 13.5, padding: '11px 12px', borderRadius: 0, background: s.savedOnly ? '#F6F0E3' : '#FFFFFF', color: s.savedOnly ? '#8A6C34' : '#3A3B3E' }}
           >
-            ★ Saved items{Object.keys(s.saved).length > 0 ? ` (${Object.keys(s.saved).length})` : ''}
+            ★ {t('Saved items')}{Object.keys(s.saved).length > 0 ? ` (${Object.keys(s.saved).length})` : ''}
           </button>
         )}
       </div>
 
       <div>
-        <div style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 10, color: '#9A9A94', padding: '0 11px 9px', letterSpacing: '.1em' }}>MARKET PULSE</div>
+        <div style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 10, color: '#9A9A94', padding: '0 11px 9px', letterSpacing: '.1em' }}>{t('MARKET PULSE')}</div>
         <div style={{ background: '#FFFFFF', border: '1px solid #D8D8D4', padding: '4px 14px' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '11px 0', borderBottom: '1px solid #ECECEA' }}>
-            <span style={{ fontSize: 12.5, fontWeight: 600, color: '#3A3B3E' }}>Live listings</span>
+            <span style={{ fontSize: 12.5, fontWeight: 600, color: '#3A3B3E' }}>{t('Live listings')}</span>
             <span style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 700, fontSize: 15, color: '#000000' }}>{totalCount}</span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '11px 0' }}>
-            <span style={{ fontSize: 12.5, fontWeight: 600, color: '#3A3B3E' }}>Neighbours online</span>
+            <span style={{ fontSize: 12.5, fontWeight: 600, color: '#3A3B3E' }}>{t('Neighbours online')}</span>
             <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontFamily: "'Space Grotesk',sans-serif", fontWeight: 700, fontSize: 15, color: '#1E9E5A' }}>
               <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#3DBB6E' }} />
               {s.guest ? '—' : s.onlineIds.length}
@@ -98,9 +100,9 @@ export default function Sidebar() {
         {MASCOT_URL && <img src={MASCOT_URL} alt="" aria-hidden className="lok-mascot" style={{ position: 'absolute', right: -8, bottom: -12, width: 74, opacity: 0.95, transform: 'rotate(6deg)' }} />}
         <div style={{ display: 'flex', alignItems: 'center', gap: 7, fontSize: 13.5, fontWeight: 800, marginBottom: 7, color: '#fff' }}>
           <svg width={15} height={15} viewBox="0 0 24 24" fill="#fff"><path d="M12 2l2.4 1.8 3-.2 1 2.8 2.6 1.5-.7 2.9L23 12l-1.7 2.4.7 2.9-2.6 1.5-1 2.8-3-.2L12 22l-2.4-1.8-3 .2-1-2.8L2.7 16.3l.7-2.9L1 12l1.7-2.4L2 6.7l2.6-1.5 1-2.8 3 .2z" /></svg>
-          Dorm-Verified trading
+          {t('Dorm-Verified trading')}
         </div>
-        <div style={{ fontSize: 12, lineHeight: 1.55, color: '#C6DDD2' }}>Every seller is a checked-in student. Pay in-app, pick up at the Security Post — no risky meetups.</div>
+        <div style={{ fontSize: 12, lineHeight: 1.55, color: '#C6DDD2' }}>{t('Every seller is a checked-in student. Pay in-app, pick up at the Security Post — no risky meetups.')}</div>
       </div>
     </aside>
   )
