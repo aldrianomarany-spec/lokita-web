@@ -46,6 +46,9 @@ import {
   subscribeNotifications,
   countOpenReports,
   expireStaleOrders,
+  touchLastSeen,
+  uploadChatImage,
+  fetchMyActiveListings,
   expireFeatured,
   requestBoost,
   cleanupStaleData,
@@ -56,6 +59,7 @@ import {
   type NotifRow,
 } from '../lib/api'
 import type { EnrichedItem, Item, Profile } from '../types'
+import { protectionFee } from '../theme'
 
 // Payment modes, picked by env — no code changes needed to upgrade:
 //  1. VITE_QRIS_IMAGE_URL set          → show the owner's fixed QRIS image
@@ -131,6 +135,8 @@ export interface State {
   coStep: CoStep
   pay: 'cod' | 'qris'
   pickup: 'meet' | 'leave' | 'security'
+  // opt-in Buyer Protection for the order being checked out (fee from protectionFee())
+  protectOn: boolean
   // QRIS payment in progress (QR to display + which order it pays for).
   // manual=true → buyer confirms with a button (static/demo modes);
   // manual=false → Midtrans webhook confirms automatically.
@@ -209,6 +215,7 @@ const initialState: State = {
   coStep: 'options',
   pay: 'cod',
   pickup: 'security',
+  protectOn: false,
   qris: null,
   qrisLoading: false,
   memberId: null,
@@ -248,7 +255,7 @@ export interface MarketplaceApi {
   openAdmin: () => void
   openGuide: () => void
   refreshReports: () => void
-  openRequestChat: (requesterId: string) => Promise<void>
+  openRequestChat: (requesterId: string, category?: string) => Promise<void>
   selectSort: (k: Sort) => void
   toggleSavedView: () => void
   toggleSaveItem: (id: string) => void
@@ -271,6 +278,7 @@ export interface MarketplaceApi {
   boostListing: (days: 3 | 7) => Promise<void>
   setMsgDraft: (v: string) => void
   sendMsg: (text?: string) => void
+  sendImage: (file: File) => Promise<void>
   openNotifs: () => void
   selectNotifFilter: (k: string) => void
   markAllRead: () => void
@@ -451,6 +459,7 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
       // tidy stale wishlist rows + old notifications (fire-and-forget)
       cleanupStaleData().catch(() => {})
       expireFeatured().catch(() => {})
+      touchLastSeen()
       expireStaleOrders()
         .catch(() => {})
         .finally(() => loadOrders())
@@ -569,6 +578,12 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
     }
   }, [loadConversations, loadNotifications, loadMessages])
 
+  // "last seen" heartbeat every 4 minutes while the tab is open
+  useEffect(() => {
+    const t = window.setInterval(() => touchLastSeen(), 240_000)
+    return () => window.clearInterval(t)
+  }, [])
+
   const pickupCode = (p: State['pickup']) =>
     p === 'meet' ? 'meet_in_person' : p === 'leave' ? 'trusted_handoff' : 'security_post'
 
@@ -581,7 +596,14 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
       return null
     }
     try {
-      const id = await createOrder({ listingId: sel.id, sellerId: sel.ownerId, payment_method: state.pay, pickup_method: pickupCode(state.pickup) })
+      const id = await createOrder({
+        listingId: sel.id,
+        sellerId: sel.ownerId,
+        payment_method: state.pay,
+        pickup_method: pickupCode(state.pickup),
+        protection_enabled: state.protectOn,
+        protection_fee: state.protectOn ? protectionFee(sel.priceNum) : 0,
+      })
       const floorCode = state.profile.floor ? state.profile.floor.toLowerCase() : null
       await Promise.all([
         loadFeed({ cat: state.cat, cond: state.cond, sort: state.sort, query: state.query, building: state.bldg }, floorCode),
@@ -637,11 +659,21 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
       if (state.guest) return goSignup()
       patch({ view: 'people', menuOpen: false, sel: null })
     },
-    openRequestChat: async (requesterId) => {
+    openRequestChat: async (requesterId, category) => {
       if (state.guest) return goSignup()
       try {
         const cid = await getOrCreateRequestConversation(requesterId)
-        patch({ view: 'messages', activeConvId: cid, msgDraft: '', menuOpen: false, sel: null })
+        // "I have this" — queue the responder's own matching item so it rides
+        // on their first message (category match first, else newest listing)
+        let attach: State['pendingAttach'] = null
+        try {
+          const mine = await fetchMyActiveListings()
+          const pick = (category && mine.find((l) => (l.category || '').toLowerCase() === category.toLowerCase())) || mine[0]
+          if (pick) attach = { id: pick.id, title: pick.title, price: 'Rp ' + Number(pick.price).toLocaleString('id-ID'), photo: pick.photo }
+        } catch {
+          // no listings — chat opens without an attachment
+        }
+        patch({ view: 'messages', activeConvId: cid, msgDraft: '', menuOpen: false, sel: null, pendingAttach: attach })
         await Promise.all([loadConversations(), loadMessages(cid)])
       } catch (e) {
         alert('Could not open chat: ' + (e instanceof Error ? e.message : 'unknown error'))
@@ -816,6 +848,21 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
       }
     },
     setMsgDraft: (v) => patch({ msgDraft: v }),
+    sendImage: async (file) => {
+      const convId = state.activeConvId
+      if (!convId || state.guest) return
+      const attach = state.pendingAttach
+      try {
+        const url = await uploadChatImage(file)
+        await apiSendMessage(convId, state.msgDraft, attach?.id ?? null, url)
+        patch({ msgDraft: '', pendingAttach: null })
+        await loadMessages(convId)
+        loadConversations()
+      } catch (e) {
+        alert('Could not send the photo: ' + (e instanceof Error ? e.message : 'unknown error'))
+      }
+    },
+
     sendMsg: async (text) => {
       const convId = state.activeConvId
       const fromDraft = text == null
@@ -930,6 +977,7 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
     },
 
     openCheckout: () => {
+      patch({ protectOn: false })
       if (state.guest) return goSignup()
       patch({ checkoutOpen: true, coStep: 'options', pay: 'cod', pickup: 'security', qris: null, qrisLoading: false })
     },

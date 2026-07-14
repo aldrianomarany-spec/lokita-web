@@ -66,6 +66,11 @@ function OrderCard({ o }: { o: OrderRow }) {
         <div style={{ textAlign: 'right', flex: 'none' }}>
           <div style={{ fontFamily: "'Bricolage Grotesque',sans-serif", fontWeight: 800, fontSize: 18, color: 'var(--accent,#000000)' }}>{rupiah(o.listing_price)}</div>
           <span style={{ display: 'inline-block', marginTop: 5, fontFamily: "'Spline Sans Mono',monospace", fontSize: 10, fontWeight: 600, color: sm.fg, background: sm.bg, padding: '3px 8px', borderRadius: 0 }}>{t(sm.label)}</span>
+          {o.protection_enabled && (
+            <span style={{ display: 'inline-block', marginTop: 5, marginLeft: 6, fontFamily: "'Spline Sans Mono',monospace", fontSize: 9, fontWeight: 700, background: '#EDF5F9', color: '#27607A', padding: '3px 7px', border: '1px solid #BFDCE8', borderRadius: 0 }}>
+              🛡️ {t('Protected')}{(o.protection_fee ?? 0) > 0 ? ` · Rp ${(o.protection_fee as number).toLocaleString('id-ID')}` : ''}
+            </span>
+          )}
         </div>
       </div>
 
@@ -144,12 +149,19 @@ const chip: React.CSSProperties = { fontFamily: "'Spline Sans Mono',monospace", 
 const primaryBtn: React.CSSProperties = { border: 'none', background: 'var(--accent,#000000)', color: '#F7F3EA', fontFamily: 'inherit', fontWeight: 700, fontSize: 13, padding: '10px 16px', borderRadius: 0, cursor: 'pointer' }
 const ghostBtn: React.CSSProperties = { border: '1px solid #C9C9C5', background: '#F5F5F3', color: '#000000', fontFamily: 'inherit', fontWeight: 700, fontSize: 13, padding: '10px 16px', borderRadius: 0, cursor: 'pointer' }
 
+const SECTIONS: { title: string; statuses: OrderStatus[]; dim?: boolean }[] = [
+  { title: 'WAITING FOR SELLER', statuses: ['pending'] },
+  { title: 'IN PROCESS', statuses: ['paid'] },
+  { title: 'READY FOR PICKUP', statuses: ['dropped_off'] },
+  { title: 'COMPLETED', statuses: ['completed'] },
+  { title: 'CANCELLED', statuses: ['cancelled'], dim: true },
+]
+
 export default function OrdersView() {
   const { state } = useM()
   const { t } = useLang()
   const s = state
-  const buying = s.orders.filter((o) => o.role === 'buyer')
-  const selling = s.orders.filter((o) => o.role === 'seller')
+  const sections = SECTIONS.map((sec) => ({ ...sec, orders: s.orders.filter((o) => sec.statuses.includes(o.status)) })).filter((sec) => sec.orders.length > 0)
 
   return (
     <div style={{ animation: 'lok-fade .3s ease both', maxWidth: 760, margin: '0 auto' }}>
@@ -172,18 +184,12 @@ export default function OrdersView() {
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 22 }}>
-          {buying.length > 0 && (
-            <div>
-              <div style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 10, color: '#9A9A94', letterSpacing: '.06em', marginBottom: 10 }}>{t('BUYING')} ({buying.length})</div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>{buying.map((o) => <OrderCard key={o.id} o={o} />)}</div>
+          {sections.map((sec) => (
+            <div key={sec.title}>
+              <div style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 10, letterSpacing: '.1em', color: '#9A9A94', marginBottom: 10 }}>{t(sec.title)} ({sec.orders.length})</div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12, opacity: sec.dim ? 0.55 : 1 }}>{sec.orders.map((o) => <OrderCard key={o.id} o={o} />)}</div>
             </div>
-          )}
-          {selling.length > 0 && (
-            <div>
-              <div style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 10, color: '#9A9A94', letterSpacing: '.06em', marginBottom: 10 }}>{t('SELLING')} ({selling.length})</div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>{selling.map((o) => <OrderCard key={o.id} o={o} />)}</div>
-            </div>
-          )}
+          ))}
         </div>
       )}
     </div>

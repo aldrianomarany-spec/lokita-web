@@ -22,6 +22,20 @@ const timeAgo = (iso: string) => {
   return isNaN(d.getTime()) ? '' : d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
 }
 
+// Relative "last seen" label; null → older than 7 days / unknown.
+const lastSeenLabel = (iso: string | null, t: (s: string) => string): string | null => {
+  if (!iso) return null
+  const ms = Date.now() - new Date(iso).getTime()
+  if (Number.isNaN(ms)) return null
+  const mins = Math.floor(ms / 60000)
+  if (mins < 1) return t('just now')
+  if (mins < 60) return `${mins}m`
+  const hrs = Math.floor(mins / 60)
+  if (hrs < 24) return `${hrs}h`
+  const days = Math.floor(hrs / 24)
+  return days < 7 ? `${days}d` : null
+}
+
 const metaField = (label: string, value: string) =>
   value ? (
     <div>
@@ -69,6 +83,7 @@ export default function MemberProfileView() {
   }, [id])
 
   const isOnline = !!id && s.onlineIds.includes(id)
+  const seen = !isOnline && info ? lastSeenLabel(info.last_seen_at, t) : null
   const isMe = !!id && id === uid
   const avgRating = reviews && reviews.length ? reviews.reduce((a, r) => a + r.rating, 0) / reviews.length : null
   const rating = avgRating != null ? avgRating.toFixed(1) : '—'
@@ -105,10 +120,14 @@ export default function MemberProfileView() {
         <div style={{ flex: 1, minWidth: 220 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 9, flexWrap: 'wrap' }}>
             <h1 style={{ fontFamily: "'Bricolage Grotesque',sans-serif", fontSize: 26, fontWeight: 800, letterSpacing: '-.02em', margin: 0 }}>{info?.name || s.memberName || t('Member')}</h1>
-            {info?.verified && (
-              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12, fontWeight: 800, color: '#E8F2F7', background: 'var(--accent,#000000)', padding: '6px 11px', borderRadius: 0 }}>
-                <Verified size={13} checkColor="#E8F2F7" /> {t('Dorm-Verified')}
-              </span>
+            {info?.role === 'admin' ? (
+              <span style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 8.5, fontWeight: 700, background: '#519BB8', color: '#FFFFFF', padding: '2px 6px', letterSpacing: 1, borderRadius: 0 }}>🛡️ {t('ADMIN')}</span>
+            ) : (
+              info?.verified && (
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12, fontWeight: 800, color: '#E8F2F7', background: 'var(--accent,#000000)', padding: '6px 11px', borderRadius: 0 }}>
+                  <Verified size={13} checkColor="#E8F2F7" /> {t('Dorm-Verified')}
+                </span>
+              )
             )}
             {isTopSeller && (
               <span title={t('5+ completed sales with a 4.5★+ rating')} style={{ background: '#519BB8', color: '#FFFFFF', fontFamily: "'Spline Sans Mono',monospace", fontSize: 9, fontWeight: 700, padding: '3px 8px', letterSpacing: 1, borderRadius: 0 }}>
@@ -117,6 +136,9 @@ export default function MemberProfileView() {
             )}
           </div>
           <div style={{ fontSize: 12.5, fontWeight: 700, marginTop: 5, color: isOnline ? '#1E9E5A' : '#8B8B86' }}>{isOnline ? '● ' + t('Online now') : '● ' + t('Offline')}</div>
+          {!isOnline && seen && (
+            <div style={{ fontSize: 11.5, fontWeight: 600, marginTop: 2, color: '#8B8B86' }}>{t('Last seen')} {seen}</div>
+          )}
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 22, marginTop: 14 }}>
             {metaField(t('BUILDING'), info ? [info.building, info.floor].filter(Boolean).join(' · ') : '')}
             {metaField(t('BATCH'), info?.batch || '')}

@@ -6,6 +6,22 @@ import { useLang } from '../i18n'
 
 // Every member of the marketplace with live presence: green dot = online right
 // now, grey = offline. Members-only (guests are routed to signup before here).
+
+// Relative "last seen" label; null → older than 7 days / unknown (caller keeps
+// the plain offline display).
+const lastSeenLabel = (iso: string | null, t: (s: string) => string): string | null => {
+  if (!iso) return null
+  const ms = Date.now() - new Date(iso).getTime()
+  if (Number.isNaN(ms)) return null
+  const mins = Math.floor(ms / 60000)
+  if (mins < 1) return t('just now')
+  if (mins < 60) return `${mins}m`
+  const hrs = Math.floor(mins / 60)
+  if (hrs < 24) return `${hrs}h`
+  const days = Math.floor(hrs / 24)
+  return days < 7 ? `${days}d` : null
+}
+
 export default function PeopleView() {
   const { state, openMember, openRequestChat } = useM()
   const { t } = useLang()
@@ -54,6 +70,7 @@ export default function PeopleView() {
           {sorted.map((m) => {
             const isOnline = online.has(m.id)
             const isMe = m.id === uid
+            const seen = isOnline ? null : lastSeenLabel(m.last_seen_at, t)
             return (
               <div key={m.id} style={{ background: '#FFFFFF', border: '1px solid #D8D8D4', borderRadius: 0, padding: '13px 16px', display: 'flex', alignItems: 'center', gap: 13 }}>
                 <div style={{ position: 'relative', flex: 'none' }}>
@@ -68,11 +85,15 @@ export default function PeopleView() {
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 7, fontWeight: 700, fontSize: 14.5 }}>
                     <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{m.name}</span>
-                    {m.verified && <Verified size={13} />}
+                    {m.role === 'admin' ? (
+                      <span style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 8.5, fontWeight: 700, background: '#519BB8', color: '#FFFFFF', padding: '2px 6px', letterSpacing: 1, borderRadius: 0 }}>🛡️ {t('ADMIN')}</span>
+                    ) : (
+                      m.verified && <Verified size={13} />
+                    )}
                     {isMe && <span style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 9, color: '#8B8B86', background: '#ECECEA', padding: '2px 7px', borderRadius: 0, flex: 'none' }}>{t('YOU')}</span>}
                   </div>
                   <div style={{ fontSize: 12, color: '#8B8B86', fontWeight: 600, marginTop: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                    {isOnline ? <span style={{ color: '#1E9E5A' }}>{t('Online now')}</span> : t('Offline')}
+                    {isOnline ? <span style={{ color: '#1E9E5A' }}>{t('Online now')}</span> : seen ? `${t('Last seen')} ${seen}` : t('Offline')}
                     {m.building ? ` · ${m.building}` : ''}
                     {m.since ? ` · ${t('joined')} ${m.since}` : ''}
                   </div>

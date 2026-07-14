@@ -238,6 +238,24 @@ Also shipped (pro batch, 2026-07-13, migration 0027):
 - Ticker never pauses (decoration behaviour per owner request); banner
   button labels come from CTA presets dropdown (+ custom).
 
+Also shipped (marketplace polish batch, 2026-07-13, migration 0028):
+- Chat photo messages (messages.image_url; upload via uploadChatImage to
+  listing-photos/<uid>/chat/); 📎 button + image bubbles.
+- profiles.last_seen_at heartbeat (touchLastSeen on boot + 4-min interval);
+  People/member profiles show "Last seen Xh". public_profiles now also
+  exposes `role` — admins get the 🛡️ ADMIN chip (steel blue) INSTEAD of the
+  Verified icon everywhere (People, member profile, chat, seller card).
+- Orders grouped into process sections (waiting/in process/pickup/done/
+  cancelled); notifications grouped Today/Yesterday/This week/Older.
+- Requests: budget input live-formats id-ID thousands; category starts
+  blank; "I have this" auto-attaches the responder's matching active listing.
+- Control Room member rows show real avatars.
+- **Buyer Protection (OPT-IN, informational until a gateway)**:
+  `protectionFee()` in theme.ts (tiered: <50k→1k, <200k→2.5k, <1jt→1.5%,
+  else 1.75% cap 40k); checkout toggle sets transactions.protection_enabled
+  + protection_fee; OrdersView shows a 🛡️ Protected chip. Keep the JS tiers
+  authoritative — no DB trigger for this fee by design (not collected yet).
+
 Remaining / nice-to-have:
 - **Real Midtrans QRIS** — deliberately last; blocked on the owner signing up for
   Midtrans. api/qris scaffolding exists; currently prototype/static-QR mode.

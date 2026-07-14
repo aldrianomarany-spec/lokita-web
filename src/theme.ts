@@ -38,6 +38,21 @@ export type Category =
   | 'Books'
   | 'Bundles'
 
+// Tiered, OPT-IN Buyer Protection fee (chosen at checkout; COD-informational
+// for now — tracked on the transaction, not collected by a gateway):
+//   < Rp 50k          → flat Rp 1.000
+//   Rp 50k – 200k     → flat Rp 2.500
+//   Rp 200k – 1jt     → 1.5% of price
+//   Rp 1jt+           → 1.75% of price, capped at Rp 40.000
+// Rounded to the nearest Rp 500. Keep UI preview + DB rows consistent.
+export function protectionFee(price: number): number {
+  if (!(price > 0)) return 0
+  if (price < 50_000) return 1000
+  if (price < 200_000) return 2500
+  const pct = price < 1_000_000 ? 0.015 : 0.0175
+  return Math.min(40_000, Math.round((price * pct) / 500) * 500)
+}
+
 export const CATEGORIES: Category[] = [
   'All',
   'Furniture',
