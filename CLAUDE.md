@@ -418,6 +418,18 @@ decline notifications fire, plain moderation of active listings doesn't):
   ACTIVE while the seller watches.
 - NOTE: missing Approve buttons in prod = stale tab/old bundle — the code
   shipped in 0748d63; hard refresh after merge+deploy.
+- Sell flow is explicitly non-instant: SellModal has a REQUIRED consignment
+  agreement checkbox (Post disabled until ticked, label flips to "Tick the
+  agreement above to post ↑", links /terms) and posting no longer
+  auto-closes — listState 'done' renders a drop-off panel (desk location +
+  hours from state.handoverInfo) with "💬 Chat the team — arrange drop-off"
+  (context action chatAdminDropoff — admin thread + fresh-listing card
+  attach via state.justPosted {id,title,priceLabel} + draft "📦 Drop-off
+  please…") and "Done — I'll drop it by later". listTimers ref removed.
+- Free & Donations giveaway lock: opening Sell while state.freeOnly=true
+  forces giveawayOn and locks the toggle (🔒 + "always free" sub-label;
+  toggleGiveaway no-ops when freeOnly). Stale Security Post copy in
+  SellModal (location note + fee tooltip) rewritten for the LOKITA desk.
 - Pickup requests carry context: OrdersView "💬 Chat the team" now calls
   chatAdminPickup(order) (context action) — opens the admin thread with the
   item card attached (pendingAttach → messages.listing_id) and a draft

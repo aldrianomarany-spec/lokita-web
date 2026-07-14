@@ -190,6 +190,8 @@ export interface State {
   marketStats: number | null // completed trades — public trust counter
   // the member's own consignment shelf, live: items at the review desk vs on the market
   myShelf: { pending: number; active: number } | null
+  // the listing just posted this session — feeds the "arrange drop-off" chat step
+  justPosted: { id: string; title: string; priceLabel: string } | null
 }
 
 // recently viewed lives in localStorage — no DB weight, wiped with browser data
@@ -232,6 +234,7 @@ const initialState: State = {
   pendingAttach: null,
   marketStats: null,
   myShelf: null,
+  justPosted: null,
   orders: [],
   ordersLoading: false,
   ordersError: null,
@@ -301,6 +304,7 @@ export interface MarketplaceApi {
   toggleSaveItem: (id: string) => void
   chatAdmin: () => Promise<void>
   chatAdminPickup: (order: OrderRow) => Promise<void>
+  chatAdminDropoff: () => Promise<void>
   chatMember: (memberId: string) => Promise<void>
   blockMember: (id: string) => Promise<void>
   unblockMember: (id: string) => Promise<void>
@@ -371,7 +375,6 @@ export function useM(): MarketplaceApi {
 export function MarketplaceProvider({ children }: { children: React.ReactNode }) {
   const navigate = useNavigate()
   const [state, setState] = useState<State>(initialState)
-  const listTimers = useRef<number[]>([])
 
   const patch = useCallback(
     (p: Partial<State> | ((prev: State) => Partial<State>)) =>
@@ -831,6 +834,30 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
         alert('Could not open chat: ' + errText(e, 'unknown error'))
       }
     },
+    // seller → team drop-off request, right after posting: opens the admin
+    // thread with the fresh listing attached and a draft asking when to bring
+    // it to the desk. Also closes + resets the sell modal.
+    chatAdminDropoff: async () => {
+      const item = state.justPosted
+      try {
+        const adminId = await fetchAdminContactId()
+        if (!adminId) {
+          alert('The LOKITA team account was not found.')
+          return
+        }
+        const cid = await getOrCreateRequestConversation(adminId)
+        const draft = item ? `📦 Drop-off please — I just posted "${item.title}". When can I bring it to the desk?` : ''
+        const attach: State['pendingAttach'] = item ? { id: item.id, title: item.title, price: item.priceLabel, photo: null } : null
+        patch({
+          view: 'messages', activeConvId: cid, msgDraft: draft, menuOpen: false, sel: null, pendingAttach: attach,
+          sellOpen: false, listState: 'idle', bundleOn: false, giveawayOn: false, justPosted: null,
+          f: { title: '', price: '', cat: 'Furniture', cond: 'Good', loc: 'Thomas Building', floor: '', desc: '', bundleItems: '' },
+        })
+        await Promise.all([loadConversations(), loadMessages(cid)])
+      } catch (e) {
+        alert('Could not open chat: ' + errText(e, 'unknown error'))
+      }
+    },
     // open (or resume) a direct thread with any member — used by the Control
     // Room to reach a seller about their consignment drop-off
     chatMember: async (memberId) => {
@@ -939,7 +966,8 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
         patch({ view: 'profile', menuOpen: false, sel: null })
         return
       }
-      patch({ sellOpen: true, menuOpen: false, sel: null })
+      // posting from Free & Donations = always a giveaway (toggle locks on)
+      patch({ sellOpen: true, menuOpen: false, sel: null, giveawayOn: state.freeOnly ? true : state.giveawayOn })
     },
     closeSell: () =>
       patch({
@@ -947,6 +975,7 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
         listState: 'idle',
         bundleOn: false,
         giveawayOn: false,
+        justPosted: null,
         f: { title: '', price: '', cat: 'Furniture', cond: 'Good', loc: 'Thomas Building', floor: '', desc: '', bundleItems: '' },
       }),
     reloadFeed: () => {
@@ -960,7 +989,8 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
     },
     setF: (k, v) => patch((prev) => ({ f: { ...prev.f, [k]: v } })),
     toggleBundle: () => patch((prev) => ({ bundleOn: !prev.bundleOn })),
-    toggleGiveaway: () => patch((prev) => ({ giveawayOn: !prev.giveawayOn })),
+    // locked ON while browsing Free & Donations — that section is giveaways only
+    toggleGiveaway: () => patch((prev) => (prev.freeOnly ? {} : { giveawayOn: !prev.giveawayOn })),
     submitListing: async (photos: File[]) => {
       if (state.listState !== 'idle') return
       const f = state.f
@@ -976,7 +1006,7 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
       }
       patch({ listState: 'saving' })
       try {
-        await createListing(
+        const newId = await createListing(
           {
             title: f.title.trim(),
             priceNum,
@@ -993,13 +1023,21 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
           },
           photos,
         )
-        patch({ listState: 'done' })
+        // no auto-close: the modal flips to the drop-off step so the seller can
+        // chat the team about bringing the item over (consignment isn't instant)
+        patch({
+          listState: 'done',
+          justPosted: {
+            id: newId,
+            title: f.title.trim(),
+            priceLabel: state.giveawayOn ? 'FREE' : 'Rp ' + priceNum.toLocaleString('id-ID'),
+          },
+        })
         // refresh feed + profile stats + shelf tracker so the new listing shows immediately
         const floorCode = state.profile.floor ? state.profile.floor.toLowerCase() : null
         await loadFeed({ cat: state.cat, cond: state.cond, sort: state.sort, query: state.query, building: state.bldg }, floorCode)
         loadProfile()
         loadMyShelf()
-        listTimers.current.push(window.setTimeout(() => api.closeSell(), 900))
       } catch (e) {
         patch({ listState: 'idle' })
         alert('Could not post your listing: ' + (errText(e, 'unknown error')))
