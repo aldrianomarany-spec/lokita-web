@@ -149,7 +149,9 @@ export default function MemberProfileView() {
             {metaField(t('MEMBER SINCE'), info?.since || '')}
           </div>
         </div>
-        <div style={{ flex: 'none', display: 'flex', flexDirection: 'column', gap: 8 }}>
+        {/* action column: fixed beside the identity on desktop; wraps to a
+            full-width row of stretching buttons on phones */}
+        <div style={{ flex: '1 1 190px', maxWidth: 320, display: 'flex', flexDirection: 'column', gap: 8 }}>
           {!isMe && !isBlocked && (
             <button onClick={() => id && openRequestChat(id)} className="lok-btn" style={{ border: 'none', background: 'var(--accent,#000000)', color: '#F7F3EA', fontFamily: 'inherit', fontWeight: 700, fontSize: 13.5, padding: '12px 18px', borderRadius: 0, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, boxShadow: '0 6px 16px -6px rgba(0,0,0,.6)' }}>
               <MessageBubble size={15} />

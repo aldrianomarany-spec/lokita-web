@@ -118,7 +118,7 @@ export default function DetailModal() {
           <h2 style={{ fontFamily: "'Bricolage Grotesque',sans-serif", fontSize: 27, fontWeight: 800, letterSpacing: '-.02em', margin: '6px 0 8px', lineHeight: 1.12 }}>{sel.title}</h2>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 9, marginBottom: isOwner && (sel.platformFee || 0) > 0 ? 6 : 16 }}>
             <span style={{ fontFamily: "'Bricolage Grotesque',sans-serif", fontSize: 28, fontWeight: 800, color: sel.isGiveaway ? '#1E9E5A' : 'var(--accent,#000000)' }}>{sel.isGiveaway ? '💝 ' + t('FREE') : sel.price}</span>
-            {isOwner && (sel.viewCount ?? 0) > 0 && (
+            {(sel.viewCount ?? 0) > 0 && (
               <span title={t('How many neighbours opened this listing')} style={{ fontSize: 12.5, fontWeight: 700, color: '#2F6B85' }}>👁 {sel.viewCount} {t('views')}</span>
             )}
           </div>

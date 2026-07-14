@@ -85,7 +85,7 @@ function GridCard({ it, saved, onOpen, onSave }: { it: EnrichedItem; saved: bool
         </div>
         <div style={{ fontSize: 11, color: GRAY }}>
           {it.proxTag} · {it.cond.toLowerCase()}
-          {it.mine && (it.viewCount ?? 0) > 0 ? <span style={{ color: '#2F6B85', fontWeight: 600 }}> · 👁 {it.viewCount}</span> : null}
+          {(it.viewCount ?? 0) > 0 ? <span style={{ color: '#2F6B85', fontWeight: 600 }}> · 👁 {it.viewCount}</span> : null}
         </div>
       </div>
     </div>
@@ -392,6 +392,16 @@ export default function BrowseView() {
           {gridItems.map((it: EnrichedItem) => (
             <GridCard key={it.id} it={it} saved={!!s.saved[it.id]} onOpen={() => openItem(it)} onSave={() => save(it)} />
           ))}
+        </div>
+      ) : s.freeOnly && !q ? (
+        /* 💝 empty giveaway corner gets its own invitation, not "no matches" */
+        <div style={{ animation: 'lok-fade .3s ease both', maxWidth: 520, margin: '44px auto 0', textAlign: 'center', background: '#FFFFFF', border: `1px solid ${LINE}`, padding: '44px 36px' }}>
+          <div style={{ fontSize: 40, marginBottom: 14 }}>💝</div>
+          <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 600, fontSize: 20, marginBottom: 8, color: INK }}>{t('No giveaways right now')}</div>
+          <div style={{ fontSize: 14, color: GRAY, lineHeight: 1.6, marginBottom: 24 }}>
+            {t('Got something you no longer need? Give it to a neighbour — post it with the "Give it away for free" switch on.')}
+          </div>
+          <button onClick={openSell} style={{ border: 'none', background: '#1E9E5A', color: '#FFFFFF', fontFamily: "'Archivo',sans-serif", fontWeight: 600, fontSize: 13, padding: '12px 22px', cursor: 'pointer' }}>💝 {t('Give something away')}</button>
         </div>
       ) : filtersActive ? (
         <div style={{ animation: 'lok-fade .3s ease both', maxWidth: 520, margin: '44px auto 0', textAlign: 'center', background: '#FFFFFF', border: `1px solid ${LINE}`, padding: '44px 36px' }}>

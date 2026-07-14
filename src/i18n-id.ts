@@ -635,4 +635,7 @@ export const ID: Record<string, string> = {
   'Seller': 'Penjual',
   'Buyer': 'Pembeli',
   'Screenshot this as proof of your trade. Verifiable in My Orders on both accounts.': 'Screenshot ini sebagai bukti transaksimu. Bisa diverifikasi di Pesanan Saya di kedua akun.',
+  'No giveaways right now': 'Belum ada barang gratis saat ini',
+  'Got something you no longer need? Give it to a neighbour — post it with the "Give it away for free" switch on.': 'Punya barang yang sudah tidak terpakai? Berikan ke tetangga — pasang dengan tombol "Berikan gratis" menyala.',
+  'Give something away': 'Berikan sesuatu',
 }
