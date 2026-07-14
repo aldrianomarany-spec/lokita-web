@@ -1,6 +1,6 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useM } from '../context'
-import { attachBoostProof } from '../../lib/api'
+import { attachBoostProof, fetchAskCount } from '../../lib/api'
 import ManualFeePay from '../ManualFeePay'
 import { T } from '../../theme'
 import { tagStyle } from '../tagStyle'
@@ -20,6 +20,18 @@ export default function DetailModal() {
   const [offerVal, setOfferVal] = useState('')
   const [boostState, setBoostState] = useState<'idle' | 'busy' | 'pay' | 'sent'>('idle')
   const [boostPay, setBoostPay] = useState<{ id: string; amount: number } | null>(null)
+  // the giver's demand counter — how many hands are up for this giveaway
+  const [askCount, setAskCount] = useState(0)
+  const selId = state.sel?.id
+  const selIsMineGiveaway = !!state.sel?.mine && !!state.sel?.isGiveaway
+  useEffect(() => {
+    let live = true
+    setAskCount(0)
+    if (selId && selIsMineGiveaway) fetchAskCount(selId).then((n) => live && setAskCount(n)).catch(() => {})
+    return () => {
+      live = false
+    }
+  }, [selId, selIsMineGiveaway])
   const isPhone = useIsPhone()
   const { t } = useLang()
   const guest = state.guest
@@ -172,6 +184,11 @@ export default function DetailModal() {
             )}
             {!isOwner && sel.fulfillment === 'direct' && (
               <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12.5, fontWeight: 700, color: '#2F6B85', background: '#EDF5F9', border: '1px solid #BFDCE8', padding: '8px 12px', borderRadius: 0 }}>🤝 {t('The giver hands it over directly')}</span>
+            )}
+            {isOwner && sel.isGiveaway && askCount > 0 && (
+              <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12.5, fontWeight: 700, color: '#9A6A12', background: '#FBF2DD', border: '1px solid #EBD9A9', padding: '8px 12px', borderRadius: 0 }}>
+                🙋 {askCount} {t('asked — choose in My Orders')}
+              </span>
             )}
             <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12.5, fontWeight: 600, color: '#1E1E1E', background: '#ECECEA', padding: '8px 12px', borderRadius: 0 }}>{t('Condition')} · {t(sel.cond)}</span>
             <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12.5, fontWeight: 600, color: '#1E1E1E', background: '#ECECEA', padding: '8px 12px', borderRadius: 0 }}>

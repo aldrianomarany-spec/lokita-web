@@ -510,6 +510,19 @@ paid-direct blocked, 💝 review notify, direct approve notify, handover queue
 - Homepage tracker strip generalized: "post waiting for approval" (covers
   desk + direct-donation pendings).
 
+Control Room quality-of-life (2026-07-14, no new SQL — admin tx update
+rides tx_update_party's is_admin clause + admin bypass in protect trigger):
+- 🔍 one search box filters BOTH admin queues (moderation + handovers) by
+  item title / member name.
+- "Handed over ✓" on each handover row: confirm dialog → status 'completed'
+  (adminCompleteHandover, audit 'handover_completed') — the admin closes the
+  order at the desk without waiting for the buyer's tap.
+- 🙋 giveaway demand counter: DetailModal shows the OWNER "N asked — choose
+  in My Orders" (fetchAskCount; RLS scopes it to the giver).
+- 📈 Monday weekly digest in api/cron/cleanup.js step 6 (UTC day check):
+  new members / listings / completed trades / top category → admin
+  notification (rides push).
+
 Remaining / nice-to-have:
 - **Real Midtrans QRIS** — deliberately last; blocked on the owner signing up for
   Midtrans. api/qris scaffolding exists; currently prototype/static-QR mode.

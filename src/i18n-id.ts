@@ -786,4 +786,5 @@ export const ID: Record<string, string> = {
   'Your post is waiting for approval': 'Postinganmu menunggu persetujuan',
   'Desk items go live when the team receives them; donation posts right after a quick check — you’ll get a buzz.': 'Barang meja tayang saat tim menerimanya; postingan donasi setelah dicek sebentar — kamu langsung dapat notifikasi.',
   'The giver hands it over directly': 'Pemberi menyerahkannya langsung',
+  'asked — choose in My Orders': 'minta — pilih di Pesanan Saya',
 }

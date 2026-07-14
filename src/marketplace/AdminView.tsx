@@ -5,6 +5,7 @@ import {
   fetchAdminListings,
   subscribeListings,
   fetchAdminHandovers,
+  adminCompleteHandover,
   subscribeOrders,
   type AdminHandoverRow,
   fetchAdminMembers,
@@ -157,6 +158,7 @@ export default function AdminView() {
   const [stats, setStats] = useState<AdminStats | null>(null)
   const [listings, setListings] = useState<AdminListingRow[] | null>(null)
   const [handovers, setHandovers] = useState<AdminHandoverRow[] | null>(null)
+  const [qFilter, setQFilter] = useState('') // filters both queues by item/member
   const [members, setMembers] = useState<AdminMemberRow[] | null>(null)
   const [reports, setReports] = useState<AdminReportRow[] | null>(null)
   const [bannersA, setBannersA] = useState<BannerRow[] | null>(null)
@@ -389,6 +391,14 @@ export default function AdminView() {
       <div style={{ ...mono, marginBottom: 10 }}>
         LISTINGS · MODERATION {listings && listings.filter((l) => l.status === 'pending').length > 0 ? `· 📦 ${listings.filter((l) => l.status === 'pending').length} TO RECEIVE` : ''}
       </div>
+      {/* one search box filters BOTH queues (moderation + handovers) */}
+      <input
+        className="lok-field"
+        value={qFilter}
+        onChange={(e) => setQFilter(e.target.value)}
+        placeholder="🔍 Filter queues — item title or member name…"
+        style={{ width: '100%', boxSizing: 'border-box', background: '#FFFFFF', border: '1px solid #D8D8D4', borderRadius: 0, padding: '10px 12px', fontSize: 12.5, fontFamily: 'inherit', color: '#000000', marginBottom: 10 }}
+      />
       <div style={{ ...card, overflow: 'hidden', marginBottom: 26 }}>
         {listings === null ? (
           <div style={{ padding: 28, textAlign: 'center' }}>
@@ -398,7 +408,9 @@ export default function AdminView() {
           <div style={{ padding: '30px 20px', textAlign: 'center', color: '#8B8B86', fontSize: 13 }}>No listings yet.</div>
         ) : (
           // items waiting at the desk float to the top — they need a decision
-          [...listings].sort((a, b) => (a.status === 'pending' ? 0 : 1) - (b.status === 'pending' ? 0 : 1)).map((l) => {
+          [...listings]
+            .filter((l) => !qFilter.trim() || l.title.toLowerCase().includes(qFilter.trim().toLowerCase()) || l.seller_name.toLowerCase().includes(qFilter.trim().toLowerCase()))
+            .sort((a, b) => (a.status === 'pending' ? 0 : 1) - (b.status === 'pending' ? 0 : 1)).map((l) => {
             const chip = STATUS_CHIP[l.status] || STATUS_CHIP.active
             return (
               <div key={l.id} style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap', padding: '12px 16px', borderBottom: '1px solid #E6E6E3' }}>
@@ -455,7 +467,9 @@ export default function AdminView() {
             Nothing waiting. When a buyer pays for a desk item, it lands here — match their 🔑 code, hand the item over, and the buyer confirms in the app.
           </div>
         ) : (
-          handovers.map((h) => (
+          handovers
+            .filter((h) => !qFilter.trim() || [h.item_title, h.buyer_name, h.seller_name].some((x) => x.toLowerCase().includes(qFilter.trim().toLowerCase())))
+            .map((h) => (
             <div key={h.id} style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap', padding: '12px 16px', borderBottom: '1px solid #E6E6E3' }}>
               <span style={{ fontFamily: "'Spline Sans Mono',monospace", fontWeight: 700, fontSize: 13, letterSpacing: 2, color: '#27607A', background: '#EDF5F9', border: '1px dashed #519BB8', padding: '5px 9px', flex: 'none' }}>
                 🔑 {h.pickup_code || '——'}
@@ -469,6 +483,15 @@ export default function AdminView() {
               <div style={{ display: 'flex', gap: 7, flex: 'none', flexWrap: 'wrap' }}>
                 <SmallBtn label={`💬 ${h.buyer_name}`} onClick={() => chatMember(h.buyer_id)} />
                 <SmallBtn label={`💬 ${h.seller_name}`} onClick={() => chatMember(h.seller_id)} />
+                <SmallBtn
+                  label="Handed over ✓"
+                  tone="accent"
+                  busy={busyId === h.id}
+                  onClick={() => {
+                    if (!window.confirm(`Close this order? Confirm only after ${h.buyer_name} has the item in hand (code ${h.pickup_code || '—'}).`)) return
+                    act(h.id, () => adminCompleteHandover(h.id))
+                  }}
+                />
               </div>
             </div>
           ))

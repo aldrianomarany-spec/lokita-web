@@ -2085,6 +2085,29 @@ export async function fetchAdminHandovers(): Promise<AdminHandoverRow[]> {
   return (data as AdminHandoverRow[]) || []
 }
 
+// the desk hands the item over → the admin closes the order on the spot
+// (RLS: admins may update transactions; the protect trigger lets admins through)
+export async function adminCompleteHandover(id: string): Promise<void> {
+  const { error } = await supabase
+    .from('transactions')
+    .update({ status: 'completed', completed_at: new Date().toISOString() })
+    .eq('id', id)
+  if (error) throw error
+  logAdmin('handover_completed', id)
+}
+
+// how many members raised a hand for a giveaway — the OWNER's counter
+// (RLS: sellers see their own listing's transactions, so the count is exact
+// for the giver and 0 for everyone else)
+export async function fetchAskCount(listingId: string): Promise<number> {
+  const { count } = await supabase
+    .from('transactions')
+    .select('id', { count: 'exact', head: true })
+    .eq('listing_id', listingId)
+    .eq('status', 'pending')
+  return count || 0
+}
+
 // transfer-proof screenshots (boosts + protection) — compressed, own folder
 async function uploadProof(name: string, rawFile: File): Promise<string> {
   const user = await getUser()
