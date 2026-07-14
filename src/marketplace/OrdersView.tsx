@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
 import QRCode from 'qrcode'
 import { useM } from './context'
-import { fetchSellerPayment, uploadDropoffPhoto, type PaymentDetails, type OrderRow, type OrderStatus } from '../lib/api'
+import { fetchSellerPayment, uploadDropoffPhoto, attachProtectionProof, type PaymentDetails, type OrderRow, type OrderStatus } from '../lib/api'
+import ManualFeePay from './ManualFeePay'
 import { Verified } from '../components/Icons'
 import { useLang } from '../i18n'
 import { errText } from '../lib/err'
@@ -98,7 +99,7 @@ function OrderCard({ o }: { o: OrderRow }) {
           <span style={{ display: 'inline-block', marginTop: 5, fontFamily: "'Spline Sans Mono',monospace", fontSize: 10, fontWeight: 600, color: sm.fg, background: sm.bg, padding: '3px 8px', borderRadius: 0 }}>{t(sm.label)}</span>
           {o.protection_enabled && (
             <span style={{ display: 'inline-block', marginTop: 5, marginLeft: 6, fontFamily: "'Spline Sans Mono',monospace", fontSize: 9, fontWeight: 700, background: o.protection_paid ? '#EAF5EE' : '#FBF2DD', color: o.protection_paid ? '#1E9E5A' : '#9A6A12', padding: '3px 7px', border: `1px solid ${o.protection_paid ? '#BFE3CC' : '#ECD8A6'}`, borderRadius: 0 }}>
-              🛡️ {o.protection_paid ? t('Protected') : t('Protection · unpaid')}{(o.protection_fee ?? 0) > 0 ? ` · Rp ${(o.protection_fee as number).toLocaleString('id-ID')}` : ''}
+              🛡️ {o.protection_paid ? t('Protected') : o.protection_proof_url ? t('Protection · under review') : t('Protection · unpaid')}{(o.protection_fee ?? 0) > 0 ? ` · Rp ${(o.protection_fee as number).toLocaleString('id-ID')}` : ''}
             </span>
           )}
         </div>
@@ -131,6 +132,18 @@ function OrderCard({ o }: { o: OrderRow }) {
           <span style={{ fontSize: 11.5, color: '#2F6B85', fontWeight: 600, lineHeight: 1.45 }}>
             {o.role === 'buyer' ? t('Show this code at handover — the seller checks it matches.') : t("Ask for the buyer's code — hand it over only if it matches this.")}
           </span>
+        </div>
+      )}
+
+      {/* 🛡️ protection fee not settled yet → the buyer transfers + uploads proof here */}
+      {o.role === 'buyer' && o.protection_enabled && !o.protection_paid && !o.protection_proof_url && o.status !== 'cancelled' && (
+        <div style={{ marginBottom: 12 }}>
+          <ManualFeePay
+            title={'🛡️ ' + t('Activate Buyer Protection — transfer the fee')}
+            amount={o.protection_fee ?? 0}
+            uploaded={false}
+            onUpload={(file) => attachProtectionProof(o.id, file)}
+          />
         </div>
       )}
 

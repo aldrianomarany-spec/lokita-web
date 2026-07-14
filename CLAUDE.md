@@ -354,6 +354,27 @@ QRIS pay option was misleading and removed):
   pay in-app now" wording. QRIS coStep flow retained but unreachable for
   items; boosts + protection still pay by real Midtrans QRIS.
 
+Middleman launch mode (2026-07-14, **migration 0034** — validated; owner
+decisions: buyer pays seller directly at the desk, pickups by appointment):
+- Platform fee = DATA SWITCH via site_settings 'fees' (OFF now). The fee
+  trigger consults it; Control Room "💰 MONEY & HANDOVER DESK" card has the
+  ON/OFF toggle + admin payment info (gopay/bank → site_settings
+  'admin_pay') + handover desk editor (location/hours → 'handover',
+  defaults Union Building Room 303 / by appointment).
+- Checkout: ONLY 📦 LOKITA Handover offered (ENABLED_PICKUPS in
+  CheckoutModal — Security Post + Meet in person kept for one-line
+  re-enable); handover desk info box + 💬 chatAdmin() (context action →
+  getOrCreateRequestConversation with fetchAdminContactId()); platform-fee
+  row removed from the buy summary; SellModal shows "no fees during launch"
+  note when feesOn=false.
+- Boost + protection fees: MANUAL transfer to admin details + screenshot
+  proof (ManualFeePay.tsx shared component; attachBoostProof /
+  attachProtectionProof → proof_url / protection_proof_url). Control Room:
+  🛡️ PROTECTION PAYMENTS queue (admin_pending_protections /
+  admin_confirm_protection definer fns) + proof thumbnails on boost rows.
+  Protection chip: unpaid → under review → Protected. Midtrans code
+  (api/qris/fee.js + webhook branches) kept dormant for later automation.
+
 Remaining / nice-to-have:
 - **Real Midtrans QRIS** — deliberately last; blocked on the owner signing up for
   Midtrans. api/qris scaffolding exists; currently prototype/static-QR mode.

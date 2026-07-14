@@ -31,6 +31,12 @@ import {
   type ClientErrorRow,
   fetchMoveoutActive,
   adminSetMoveoutActive,
+  fetchOpsSettings,
+  adminSetOpsSetting,
+  fetchAdminProtections,
+  adminConfirmProtection,
+  type AdminProtectionRow,
+  type OpsSettings,
   type AdminStats,
   type AdminListingRow,
   type AdminMemberRow,
@@ -168,6 +174,22 @@ export default function AdminView() {
   const [auditOpen, setAuditOpen] = useState(false)
   const [cErrors, setCErrors] = useState<ClientErrorRow[] | null>(null)
   const [errOpen, setErrOpen] = useState(false)
+  // 💰 launch-mode ops: fee switch, handover desk, admin payment info, 🛡️ queue
+  const [ops, setOps] = useState<OpsSettings | null>(null)
+  const [opsSaving, setOpsSaving] = useState(false)
+  const [protections, setProtections] = useState<AdminProtectionRow[] | null>(null)
+
+  const saveOps = async (key: 'fees' | 'handover' | 'admin_pay', value: Record<string, unknown>) => {
+    setOpsSaving(true)
+    try {
+      await adminSetOpsSetting(key, value)
+    } catch (e) {
+      alert('Could not save: ' + ((e as { message?: string })?.message || 'run migration 0034 first?'))
+      fetchOpsSettings().then(setOps).catch(() => {})
+    } finally {
+      setOpsSaving(false)
+    }
+  }
 
   const sendBroadcast = async () => {
     if (bcState === 'busy' || !bc.title.trim()) return
@@ -218,6 +240,8 @@ export default function AdminView() {
       fetchAdminBoosts().then(setBoosts).catch(() => setBoosts(null))
       fetchAdminTrends().then(setTrends).catch(() => setTrends(null)) // errors → hide the analytics section
       fetchMoveoutActive().then(setMoveoutOn).catch(() => setMoveoutOn(null))
+      fetchOpsSettings().then(setOps).catch(() => setOps(null))
+      fetchAdminProtections().then(setProtections).catch(() => setProtections(null))
       fetchAdminAudit().then(setAudit).catch(() => setAudit(null))
       fetchClientErrors().then(setCErrors).catch(() => setCErrors(null))
       setStats(s)
@@ -395,6 +419,82 @@ export default function AdminView() {
         </div>
       </div>
 
+      {/* 💰 launch-mode money settings */}
+      <div style={{ ...mono, marginBottom: 10 }}>💰 MONEY & HANDOVER DESK</div>
+      <div style={{ ...card, padding: '14px 16px', marginBottom: 26 }}>
+        {/* fee switch — the whole fee machine sleeps in the DB until this is ON */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginBottom: 14 }}>
+          <span style={{ ...mono, fontSize: 9.5 }}>PLATFORM FEE</span>
+          <button
+            onClick={() => {
+              if (!ops) return
+              const next = !ops.feesOn
+              if (!window.confirm(next ? 'Turn the platform fee ON? New listings will publish at ask + fee.' : 'Turn the platform fee OFF? New listings publish at exactly the ask.')) return
+              setOps({ ...ops, feesOn: next })
+              saveOps('fees', { enabled: next })
+            }}
+            disabled={!ops || opsSaving}
+            className="lok-btn"
+            style={{ border: `1px solid ${ops?.feesOn ? '#1E9E5A' : '#D8D8D4'}`, background: ops?.feesOn ? '#E7F1EA' : '#FFFFFF', color: ops?.feesOn ? '#1E9E5A' : '#3A3B3E', fontFamily: 'inherit', fontWeight: 800, fontSize: 12, padding: '7px 14px', borderRadius: 0, cursor: 'pointer' }}
+          >
+            {!ops ? '…' : ops.feesOn ? 'ON — fee added to new listings' : 'OFF — launch mode, everything free'}
+          </button>
+          <span style={{ fontSize: 11.5, color: '#8B8B86', fontWeight: 500 }}>Existing listings keep their published price either way.</span>
+        </div>
+        {/* where boost/protection transfers go — shown to payers */}
+        <div style={{ ...mono, fontSize: 9.5, marginBottom: 8 }}>YOUR PAYMENT DETAILS (shown when someone pays a boost / protection fee)</div>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 14 }}>
+          <input className="lok-field" value={ops?.adminPay.gopay ?? ''} onChange={(e) => ops && setOps({ ...ops, adminPay: { ...ops.adminPay, gopay: e.target.value } })} placeholder="GoPay number (e.g. 0812…)" style={{ flex: '1 1 160px', background: '#F5F5F3', border: '1px solid #D8D8D4', borderRadius: 0, padding: '10px 12px', fontSize: 12.5, fontFamily: 'inherit', color: '#000000' }} />
+          <input className="lok-field" value={ops?.adminPay.bank_name ?? ''} onChange={(e) => ops && setOps({ ...ops, adminPay: { ...ops.adminPay, bank_name: e.target.value } })} placeholder="Bank (e.g. BCA)" style={{ flex: '0 1 110px', background: '#F5F5F3', border: '1px solid #D8D8D4', borderRadius: 0, padding: '10px 12px', fontSize: 12.5, fontFamily: 'inherit', color: '#000000' }} />
+          <input className="lok-field" value={ops?.adminPay.bank_account ?? ''} onChange={(e) => ops && setOps({ ...ops, adminPay: { ...ops.adminPay, bank_account: e.target.value } })} placeholder="Account number" style={{ flex: '1 1 150px', background: '#F5F5F3', border: '1px solid #D8D8D4', borderRadius: 0, padding: '10px 12px', fontSize: 12.5, fontFamily: 'inherit', color: '#000000' }} />
+          <SmallBtn label={opsSaving ? 'Saving…' : 'Save payment info'} tone="accent" busy={opsSaving} onClick={() => ops && saveOps('admin_pay', { ...ops.adminPay })} />
+        </div>
+        {/* the handover desk shown at checkout */}
+        <div style={{ ...mono, fontSize: 9.5, marginBottom: 8 }}>📦 HANDOVER DESK (shown at checkout)</div>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          <input className="lok-field" value={ops?.handover.location ?? ''} onChange={(e) => ops && setOps({ ...ops, handover: { ...ops.handover, location: e.target.value } })} placeholder="Location (e.g. Union Building Room 303)" style={{ flex: '1 1 200px', background: '#F5F5F3', border: '1px solid #D8D8D4', borderRadius: 0, padding: '10px 12px', fontSize: 12.5, fontFamily: 'inherit', color: '#000000' }} />
+          <input className="lok-field" value={ops?.handover.hours ?? ''} onChange={(e) => ops && setOps({ ...ops, handover: { ...ops.handover, hours: e.target.value } })} placeholder="Hours (e.g. By appointment — chat the team)" style={{ flex: '2 1 240px', background: '#F5F5F3', border: '1px solid #D8D8D4', borderRadius: 0, padding: '10px 12px', fontSize: 12.5, fontFamily: 'inherit', color: '#000000' }} />
+          <SmallBtn label={opsSaving ? 'Saving…' : 'Save desk info'} tone="accent" busy={opsSaving} onClick={() => ops && saveOps('handover', { ...ops.handover })} />
+        </div>
+      </div>
+
+      {/* 🛡️ protection payments awaiting your verification */}
+      <div style={{ ...mono, marginBottom: 10 }}>
+        🛡️ PROTECTION PAYMENTS {protections && protections.length > 0 ? `· ${protections.length} WAITING` : ''}
+      </div>
+      <div style={{ ...card, overflow: 'hidden', marginBottom: 26 }}>
+        {!protections || protections.length === 0 ? (
+          <div style={{ padding: '18px 20px', color: '#8B8B86', fontSize: 12.5 }}>
+            No protection fees waiting. When a buyer chooses 🛡️ Buyer Protection and uploads their transfer proof, it lands here — check your GoPay/bank, then Verify.
+          </div>
+        ) : (
+          protections.map((pr) => (
+            <div key={pr.id} style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap', padding: '12px 16px', borderBottom: '1px solid #E6E6E3' }}>
+              <span style={{ flex: 'none', fontSize: 16 }}>🛡️</span>
+              <div style={{ flex: '1 1 220px', minWidth: 0 }}>
+                <div style={{ fontWeight: 700, fontSize: 13.5, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{pr.item_title}</div>
+                <div style={{ fontSize: 11.5, color: '#8B8B86', fontWeight: 600, marginTop: 2 }}>
+                  {pr.buyer_name} · Rp {Number(pr.fee).toLocaleString('id-ID')}
+                  {!pr.proof_url && ' · no proof yet'}
+                </div>
+              </div>
+              {pr.proof_url && (
+                <a href={pr.proof_url} target="_blank" rel="noreferrer" style={{ flex: 'none', display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12, fontWeight: 700, color: '#2F6B85', textDecoration: 'none' }}>
+                  <img src={pr.proof_url} alt="" style={{ width: 34, height: 34, objectFit: 'cover', border: '1px solid #BFDCE8' }} />
+                  proof
+                </a>
+              )}
+              <SmallBtn
+                label="Verify ✓ (money arrived)"
+                tone="accent"
+                busy={busyId === pr.id}
+                onClick={() => act(pr.id, async () => { await adminConfirmProtection(pr.id); fetchAdminProtections().then(setProtections).catch(() => {}) })}
+              />
+            </div>
+          ))
+        )}
+      </div>
+
       {/* reports queue — open ones first, resolved/dismissed shown muted */}
       <div style={{ ...mono, marginBottom: 10 }}>
         REPORTS · QUEUE {reports && reports.filter((r) => r.status === 'open').length > 0 ? `· ${reports.filter((r) => r.status === 'open').length} OPEN` : ''}
@@ -459,7 +559,7 @@ export default function AdminView() {
           <div style={{ ...card, overflow: 'hidden', marginBottom: 26 }}>
             {boosts.length === 0 ? (
               <div style={{ padding: '18px 20px', color: '#8B8B86', fontSize: 12.5 }}>
-                No boost requests yet. When a seller taps 🚀 Boost on their listing, it lands here — confirm their payment in chat, then Approve to give them the FEATURED slot.
+                No boost requests yet. When a seller taps 🚀 Boost, they transfer the fee to your payment details and upload the receipt — it lands here for you to check and Approve.
               </div>
             ) : (
               [...boosts]
@@ -471,8 +571,15 @@ export default function AdminView() {
                       <div style={{ fontWeight: 700, fontSize: 13.5, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{b.listing_title}</div>
                       <div style={{ fontSize: 11.5, color: '#8B8B86', fontWeight: 600, marginTop: 2 }}>
                         {b.seller_name} · {b.days} days · Rp {b.amount.toLocaleString('id-ID')}
+                        {b.status === 'pending' && !b.proof_url && ' · no transfer proof yet'}
                       </div>
                     </div>
+                    {b.proof_url && (
+                      <a href={b.proof_url} target="_blank" rel="noreferrer" style={{ flex: 'none', display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12, fontWeight: 700, color: '#2F6B85', textDecoration: 'none' }}>
+                        <img src={b.proof_url} alt="" style={{ width: 34, height: 34, objectFit: 'cover', border: '1px solid #BFDCE8' }} />
+                        proof
+                      </a>
+                    )}
                     {b.status === 'pending' ? (
                       <div style={{ display: 'flex', gap: 7, flex: 'none' }}>
                         <SmallBtn label="Approve ✓ (paid)" tone="accent" busy={busyId === b.id} onClick={() => act(b.id, async () => { await adminResolveBoost(b, true); fetchAdminBoosts().then(setBoosts).catch(() => {}) })} />

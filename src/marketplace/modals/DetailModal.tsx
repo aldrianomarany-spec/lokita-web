@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useM } from '../context'
-import { createFeeCharge, fetchBoostStatus } from '../../lib/api'
+import { attachBoostProof } from '../../lib/api'
+import ManualFeePay from '../ManualFeePay'
 import { T } from '../../theme'
 import { tagStyle } from '../tagStyle'
 import { useIsPhone } from '../useIsMobile'
@@ -17,18 +18,8 @@ export default function DetailModal() {
   const [copied, setCopied] = useState(false)
   const [offerOpen, setOfferOpen] = useState(false)
   const [offerVal, setOfferVal] = useState('')
-  const [boostState, setBoostState] = useState<'idle' | 'busy' | 'pay' | 'sent' | 'active'>('idle')
-  const [boostPay, setBoostPay] = useState<{ id: string; qrUrl: string; amount: number } | null>(null)
-  // while the boost QR is on screen, poll until the webhook approves it
-  useEffect(() => {
-    if (boostState !== 'pay' || !boostPay) return
-    const t = window.setInterval(() => {
-      fetchBoostStatus(boostPay.id).then((st) => {
-        if (st === 'approved') setBoostState('active')
-      })
-    }, 3000)
-    return () => window.clearInterval(t)
-  }, [boostState, boostPay])
+  const [boostState, setBoostState] = useState<'idle' | 'busy' | 'pay' | 'sent'>('idle')
+  const [boostPay, setBoostPay] = useState<{ id: string; amount: number } | null>(null)
   const isPhone = useIsPhone()
   const { t } = useLang()
   const guest = state.guest
@@ -230,19 +221,15 @@ export default function DetailModal() {
                 <div style={{ border: '1px solid #BFDCE8', background: '#EDF5F9', padding: '12px 14px' }}>
                   <div style={{ fontWeight: 800, fontSize: 13, marginBottom: 3 }}>🚀 {t('Boost this listing')}</div>
                   <div style={{ fontSize: 12, color: '#27607A', lineHeight: 1.5, marginBottom: 9 }}>
-                    {t('Get the FEATURED spot at the top of the homepage. The LOKITA team confirms payment with you in chat, then your boost goes live.')}
+                    {t('Get the FEATURED spot at the top of the homepage. Transfer the fee, upload your receipt, and the LOKITA team activates it after checking.')}
                   </div>
-                  {boostState === 'active' ? (
-                    <div style={{ fontWeight: 700, fontSize: 12.5, color: '#1E9E5A' }}>🚀 {t('Payment received — your listing is FEATURED now!')}</div>
-                  ) : boostState === 'pay' && boostPay ? (
-                    <div style={{ textAlign: 'center' }}>
-                      <img src={boostPay.qrUrl} alt="QRIS" style={{ width: 180, maxWidth: '100%', background: '#FFFFFF', border: '1px solid #BFDCE8', padding: 6 }} />
-                      <div style={{ fontWeight: 800, fontSize: 15, color: '#27607A', marginTop: 6 }}>Rp {boostPay.amount.toLocaleString('id-ID')}</div>
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, fontSize: 11.5, color: '#2F6B85', fontWeight: 600, marginTop: 4 }}>
-                        <span className="lok-spin" style={{ width: 12, height: 12, border: '2px solid #BFDCE8', borderTopColor: '#2F6B85', borderRadius: '50%', display: 'inline-block' }} />
-                        {t('Scan with any QRIS app — your boost activates automatically.')}
-                      </div>
-                    </div>
+                  {boostState === 'pay' && boostPay ? (
+                    <ManualFeePay
+                      title={'🚀 ' + t('Transfer the boost fee')}
+                      amount={boostPay.amount}
+                      uploaded={false}
+                      onUpload={(file) => attachBoostProof(boostPay.id, file)}
+                    />
                   ) : boostState === 'sent' ? (
                     <div style={{ fontWeight: 700, fontSize: 12.5, color: '#1E9E5A' }}>✓ {t('Boost requested — the LOKITA team will chat you shortly.')}</div>
                   ) : (
@@ -260,15 +247,8 @@ export default function DetailModal() {
                                 setBoostState('idle')
                                 return
                               }
-                              // real QRIS when the gateway is configured; the
-                              // manual admin flow stays as the fallback
-                              try {
-                                const charge = await createFeeCharge('boost', id)
-                                setBoostPay({ id, ...charge })
-                                setBoostState('pay')
-                              } catch {
-                                setBoostState('sent')
-                              }
+                              setBoostPay({ id, amount: o.amount })
+                              setBoostState('pay')
                             } catch (e) {
                               setBoostState('idle')
                               alert(t('Could not request the boost:') + ' ' + (errText(e, t('unknown error'))))

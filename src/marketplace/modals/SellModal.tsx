@@ -105,8 +105,20 @@ export default function SellModal() {
             <input className="lok-field" value={f.price} onChange={(e) => setF('price', e.target.value.replace(/[^0-9]/g, ''))} placeholder={t('Your price in Rp (e.g. 150000)')} inputMode="numeric" style={fieldBase} />
           )}
 
+          {/* launch mode: fees OFF → sellers keep everything (toggle in the
+              Control Room wakes the fee machine back up) */}
+          {!s.giveawayOn && !s.feesOn && ask > 0 && (
+            <div style={{ background: '#EAF5EE', border: '1px solid #BFE3CC', borderRadius: 0, padding: '11px 14px', animation: 'lok-fade .25s ease both' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontSize: 12.5, fontWeight: 800 }}>{t('Listed at (buyers pay)')}</span>
+                <span style={{ fontFamily: "'Bricolage Grotesque',sans-serif", fontWeight: 800, fontSize: 16, color: '#1E9E5A' }}>{rp(ask)}</span>
+              </div>
+              <div style={{ fontSize: 11, color: '#2C6E49', fontWeight: 600, marginTop: 5 }}>🎉 {t('No platform fees during launch — you receive the full amount.')}</div>
+            </div>
+          )}
+
           {/* platform-fee breakdown — appears as soon as a price is typed */}
-          {!s.giveawayOn && ask > 0 && (
+          {!s.giveawayOn && s.feesOn && ask > 0 && (
             <div style={{ background: '#F5F5F3', border: '1px solid #D8D8D4', borderRadius: 0, padding: '11px 14px', animation: 'lok-fade .25s ease both' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12.5, fontWeight: 600, color: '#1E1E1E' }}>
                 <span>{t('Your price')}</span>

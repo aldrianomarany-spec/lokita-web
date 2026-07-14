@@ -61,7 +61,10 @@ import {
   createSearchAlert,
   deleteSearchAlert,
   fetchMoveoutActive,
+  fetchOpsSettings,
+  fetchAdminContactId,
   subscribeSettings,
+  type OpsSettings,
   type SearchAlertRow,
   type ProfileStats,
   type OrderRow,
@@ -124,6 +127,9 @@ export interface State {
   blockedIds: string[] // members this user blocked (hidden from feed + chats)
   alerts: SearchAlertRow[] // saved-search alerts ("tell me when … is posted")
   moveout: boolean // 🎓 moving-out season strip (admin toggle, site_settings)
+  feesOn: boolean // platform fee switch (0034) — OFF during launch
+  handoverInfo: OpsSettings['handover'] // LOKITA Handover desk (location + hours)
+  adminPay: OpsSettings['adminPay'] // where boosts/protection are transferred
   saved: Record<string, boolean>
   feed: EnrichedItem[]
   feedLoading: boolean
@@ -211,6 +217,9 @@ const initialState: State = {
   blockedIds: [],
   alerts: [],
   moveout: false,
+  feesOn: false,
+  handoverInfo: { location: 'Union Building Room 303', hours: 'By appointment — chat the LOKITA team to arrange a time' },
+  adminPay: { gopay: '', bank_name: '', bank_account: '' },
   saved: {},
   feed: [],
   feedLoading: true,
@@ -237,7 +246,7 @@ const initialState: State = {
   checkoutOpen: false,
   coStep: 'options',
   pay: 'cod',
-  pickup: 'security',
+  pickup: 'leave', // LOKITA Handover — the only method during launch
   protectOn: false,
   lastOrderId: null,
   meetSpot: 'Security Post area',
@@ -286,6 +295,7 @@ export interface MarketplaceApi {
   toggleSavedView: () => void
   toggleFreeView: () => void
   toggleSaveItem: (id: string) => void
+  chatAdmin: () => Promise<void>
   blockMember: (id: string) => Promise<void>
   unblockMember: (id: string) => Promise<void>
   addAlert: (query: string) => Promise<void>
@@ -589,9 +599,13 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
       loadBlocked()
       loadAlerts()
     })
-    fetchMoveoutActive().then((on) => patch({ moveout: on }))
-    // admin flips the season toggle → every homepage updates live
-    const unsub = subscribeSettings(() => fetchMoveoutActive().then((on) => patch({ moveout: on })))
+    const loadOps = () => {
+      fetchMoveoutActive().then((on) => patch({ moveout: on }))
+      fetchOpsSettings().then((ops) => patch({ feesOn: ops.feesOn, handoverInfo: ops.handover, adminPay: ops.adminPay }))
+    }
+    loadOps()
+    // admin edits any setting → every open tab updates live
+    const unsub = subscribeSettings(loadOps)
     return () => unsub()
   }, [loadBlocked, loadAlerts, patch])
 
@@ -764,6 +778,21 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
       patch((prev) => ({ savedOnly: !prev.savedOnly, freeOnly: false, cat: 'All', query: '', menuOpen: false, view: 'browse' })),
     toggleFreeView: () =>
       patch((prev) => ({ freeOnly: !prev.freeOnly, savedOnly: false, cat: 'All', query: '', menuOpen: false, view: 'browse' })),
+    chatAdmin: async () => {
+      if (state.guest) return goSignup()
+      try {
+        const adminId = await fetchAdminContactId()
+        if (!adminId) {
+          alert('The LOKITA team account was not found.')
+          return
+        }
+        const cid = await getOrCreateRequestConversation(adminId)
+        patch({ view: 'messages', activeConvId: cid, msgDraft: '', menuOpen: false, sel: null, checkoutOpen: false, pendingAttach: null })
+        await Promise.all([loadConversations(), loadMessages(cid)])
+      } catch (e) {
+        alert('Could not open chat: ' + errText(e, 'unknown error'))
+      }
+    },
     blockMember: async (id) => {
       if (state.guest) return goSignup()
       try {
@@ -1100,7 +1129,7 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
     openCheckout: () => {
       patch({ protectOn: false })
       if (state.guest) return goSignup()
-      patch({ checkoutOpen: true, coStep: 'options', pay: 'cod', pickup: 'security', qris: null, qrisLoading: false, lastOrderId: null })
+      patch({ checkoutOpen: true, coStep: 'options', pay: 'cod', pickup: 'leave', qris: null, qrisLoading: false, lastOrderId: null })
     },
     closeCheckout: () => patch({ checkoutOpen: false, coStep: 'options', sel: null, qris: null, qrisLoading: false, lastOrderId: null }),
     setPay: (v) => patch({ pay: v }),

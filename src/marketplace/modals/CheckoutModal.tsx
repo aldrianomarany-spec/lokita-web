@@ -1,67 +1,24 @@
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import { useM } from '../context'
 import { useLang } from '../../i18n'
 import { protectionFee } from '../../theme'
-import { createFeeCharge, fetchProtectionPaid, MEETUP_SPOTS } from '../../lib/api'
+import { attachProtectionProof, MEETUP_SPOTS } from '../../lib/api'
+import ManualFeePay from '../ManualFeePay'
 import Overlay, { stop } from './Overlay'
 import { Check } from '../../components/Icons'
 
-// 🛡️ collect the protection fee by real QRIS right after the order is placed.
-// Gateway not configured / charge fails → quiet informational fallback.
-function ProtectionPayBox({ orderId }: { orderId: string }) {
+// 🛡️ launch mode: the protection fee is transferred to the ADMIN's
+// GoPay/bank and verified by screenshot proof (Midtrans flow kept dormant).
+function ProtectionPayBox({ orderId, amount }: { orderId: string; amount: number }) {
   const { t } = useLang()
-  const [charge, setCharge] = useState<{ qrUrl: string; amount: number } | null>(null)
-  const [state, setState] = useState<'loading' | 'pay' | 'paid' | 'fallback'>('loading')
-  useEffect(() => {
-    let live = true
-    createFeeCharge('protection', orderId)
-      .then((c) => {
-        if (!live) return
-        setCharge(c)
-        setState('pay')
-      })
-      .catch(() => live && setState('fallback'))
-    return () => {
-      live = false
-    }
-  }, [orderId])
-  useEffect(() => {
-    if (state !== 'pay') return
-    const timer = window.setInterval(() => {
-      fetchProtectionPaid(orderId).then((ok) => ok && setState('paid'))
-    }, 3000)
-    return () => window.clearInterval(timer)
-  }, [state, orderId])
-
-  if (state === 'fallback') {
-    return (
-      <div style={{ background: '#EDF5F9', border: '1px solid #BFDCE8', padding: '11px 14px', marginBottom: 14, fontSize: 12, color: '#2F6B85', fontWeight: 600, lineHeight: 1.5, textAlign: 'left' }}>
-        🛡️ {t('Buyer Protection noted — the LOKITA team will collect the fee with your payment at pickup.')}
-      </div>
-    )
-  }
-  if (state === 'paid') {
-    return (
-      <div style={{ background: '#EAF5EE', border: '1px solid #BFE3CC', padding: '12px 14px', marginBottom: 14, fontSize: 13, color: '#1E9E5A', fontWeight: 800 }}>
-        🛡️ {t('Buyer Protection active — this trade is covered.')} ✓
-      </div>
-    )
-  }
   return (
-    <div style={{ background: '#EDF5F9', border: '1px solid #BFDCE8', padding: '14px', marginBottom: 14 }}>
-      <div style={{ fontWeight: 800, fontSize: 13, color: '#27607A', marginBottom: 8 }}>🛡️ {t('One last step — activate Buyer Protection')}</div>
-      {state === 'loading' || !charge ? (
-        <span className="lok-spin" style={{ width: 20, height: 20, border: '3px solid #BFDCE8', borderTopColor: '#2F6B85', borderRadius: '50%', display: 'inline-block' }} />
-      ) : (
-        <>
-          <img src={charge.qrUrl} alt="QRIS" style={{ width: 170, maxWidth: '100%', background: '#FFFFFF', border: '1px solid #BFDCE8', padding: 6 }} />
-          <div style={{ fontWeight: 800, fontSize: 15, color: '#27607A', marginTop: 6 }}>Rp {charge.amount.toLocaleString('id-ID')}</div>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, fontSize: 11.5, color: '#2F6B85', fontWeight: 600, marginTop: 4 }}>
-            <span className="lok-spin" style={{ width: 12, height: 12, border: '2px solid #BFDCE8', borderTopColor: '#2F6B85', borderRadius: '50%', display: 'inline-block' }} />
-            {t('Scan with any QRIS app — protection activates automatically.')}
-          </div>
-        </>
-      )}
+    <div style={{ marginBottom: 14 }}>
+      <ManualFeePay
+        title={'🛡️ ' + t('Activate Buyer Protection — transfer the fee')}
+        amount={amount}
+        uploaded={false}
+        onUpload={(file) => attachProtectionProof(orderId, file)}
+      />
     </div>
   )
 }
@@ -72,14 +29,18 @@ const s2 = (children: React.ReactNode) => (
   </svg>
 )
 
-const PICKUP_OPTS = [
+// launch mode: only LOKITA Handover is offered — Security Post and Meet in
+// person stay defined here for one-line re-enabling when volume grows
+const ENABLED_PICKUPS: Array<'security' | 'leave' | 'meet'> = ['leave']
+const PICKUP_OPTS_ALL = [
   { key: 'security' as const, label: 'Security Post', desc: 'Seller drops it off with 📸 photo proof — pick up anytime', ic: s2(<><path d="M12 2 4 6v6c0 5 3.4 8.2 8 10 4.6-1.8 8-5 8-10V6z" /><path d="M9 12l2 2 4-4" /></>) },
   { key: 'leave' as const, label: 'LOKITA Handover', desc: 'The LOKITA team keeps it safe until you collect it — FREE', ic: s2(<><path d="M21 8l-9-5-9 5v8l9 5 9-5z" /><path d="M3 8l9 5 9-5M12 13v9" /></>) },
   { key: 'meet' as const, label: 'Meet in person', desc: 'Pick a campus spot below — check the 🔑 code when you meet', ic: s2(<><path d="M12 21c4-4 7-7.4 7-11a7 7 0 1 0-14 0c0 3.6 3 7 7 11z" /><circle cx="12" cy="10" r="2.4" /></>) },
 ]
+const PICKUP_OPTS = PICKUP_OPTS_ALL.filter((o) => ENABLED_PICKUPS.includes(o.key))
 
 export default function CheckoutModal() {
-  const { state, patch, closeCheckout, setPickup, coContinue, confirmQrisPaid, cancelQrisPayment, openOrders } = useM()
+  const { state, patch, closeCheckout, setPickup, coContinue, confirmQrisPaid, cancelQrisPayment, openOrders, chatAdmin } = useM()
   const { t } = useLang()
   const s = state
   const sel = s.sel
@@ -129,12 +90,7 @@ export default function CheckoutModal() {
                 <div style={{ fontWeight: 700, fontSize: 14 }}>{sel.title}</div>
                 <div style={{ fontWeight: 600, fontSize: 13.5, color: isFree ? '#1E9E5A' : '#1E1E1E' }}>{isFree ? t('FREE') : rp(sel.priceNum)}</div>
               </div>
-              {!isFree && (
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 7 }}>
-                  <div style={{ fontSize: 12, color: '#8B8B86', fontWeight: 600 }}>{t('LOKITA platform fee')} <span title={t('Keeps LOKITA running — escrow, Security Post & support')} style={{ cursor: 'help' }}>ⓘ</span></div>
-                  <div style={{ fontSize: 12.5, color: '#3D7A54', fontWeight: 700 }}>{t('Included ✓')}</div>
-                </div>
-              )}
+              {/* platform-fee row hidden during launch (fees OFF via Control Room switch) */}
               {s.protectOn && (
                 <>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 7 }}>
@@ -172,6 +128,21 @@ export default function CheckoutModal() {
                 )
               })}
             </div>
+
+            {/* 📦 the LOKITA Handover desk — where and when */}
+            {s.pickup === 'leave' && (
+              <div style={{ background: '#EDF5F9', border: '1px solid #BFDCE8', padding: '12px 14px', marginBottom: 18 }}>
+                <div style={{ fontWeight: 800, fontSize: 13, color: '#27607A', marginBottom: 3 }}>📍 {t(s.handoverInfo.location)}</div>
+                <div style={{ fontSize: 12, color: '#2F6B85', fontWeight: 500, lineHeight: 1.55, marginBottom: 10 }}>{t(s.handoverInfo.hours)}</div>
+                <button
+                  onClick={chatAdmin}
+                  className="lok-btn"
+                  style={{ border: '1px solid #519BB8', background: '#FFFFFF', color: '#27607A', fontFamily: 'inherit', fontWeight: 700, fontSize: 12.5, padding: '9px 14px', borderRadius: 0, cursor: 'pointer' }}
+                >
+                  💬 {t('Chat the LOKITA team')}
+                </button>
+              </div>
+            )}
 
             {/* 📍 preset campus spot — meet in person picks it HERE, not in chat */}
             {s.pickup === 'meet' && (
@@ -260,7 +231,7 @@ export default function CheckoutModal() {
             </div>
             <div style={{ fontFamily: "'Bricolage Grotesque',sans-serif", fontWeight: 800, fontSize: 20, marginBottom: 9 }}>{t('Order placed')}</div>
             <div style={{ fontSize: 13.5, color: '#4A4B4E', lineHeight: 1.6, marginBottom: 12 }}>{doneMsg}</div>
-            {s.protectOn && s.lastOrderId && <ProtectionPayBox orderId={s.lastOrderId} />}
+            {s.protectOn && s.lastOrderId && <ProtectionPayBox orderId={s.lastOrderId} amount={fee} />}
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'center', marginBottom: 22 }}>
               <span style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 10, color: '#1E1E1E', background: '#ECECEA', padding: '5px 10px', borderRadius: 0 }}>{t(payLabel)}</span>
               <span style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 10, color: '#1E1E1E', background: '#ECECEA', padding: '5px 10px', borderRadius: 0 }}>{t(pickupLabel)}</span>
