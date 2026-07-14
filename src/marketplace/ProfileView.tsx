@@ -109,7 +109,10 @@ function PaymentDetailsCard({ onSaved }: { onSaved: () => void }) {
       setTimeout(() => setSaveState('idle'), 2000)
     } catch (e) {
       setSaveState('idle')
-      setErr(e instanceof Error ? e.message : t('Could not save. Please try again.'))
+      // Supabase errors are plain objects, not Error instances — surface the
+      // real message either way ("relation does not exist" beats "try again")
+      const msg = (e as { message?: string })?.message
+      setErr(msg || t('Could not save. Please try again.'))
     }
   }
 
