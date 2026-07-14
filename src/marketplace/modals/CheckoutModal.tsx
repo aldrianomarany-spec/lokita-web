@@ -67,14 +67,9 @@ export default function CheckoutModal() {
 
   const payLabel = 'Pay at handover'
   const pickupLabel = s.pickup === 'meet' ? 'Meet in person' : s.pickup === 'leave' ? 'LOKITA Handover' : 'Security Post'
-  const doneMsg =
-    t('You pay at handover — the seller will confirm your order first.') +
-    ' ' +
-    (s.pickup === 'security'
-      ? `${t('Collect it at the Security Post of')} ${sel.building || t('the campus')}.`
-      : s.pickup === 'leave'
-        ? t('The seller hands it to the LOKITA team — collect it from them with your 🔑 code.')
-        : `${t('Meet at')} ${t(s.meetSpot)} — ${t('check the 🔑 code before handing anything over.')}`)
+  const doneMsg = isFree
+    ? t('Claim confirmed — chat the LOKITA team to arrange your pickup.')
+    : t('Now transfer to the seller and upload your receipt in My Orders. Once the seller confirms the money arrived, chat the LOKITA team to collect your item.')
 
   return (
     <Overlay onClose={closeCheckout} z={90}>

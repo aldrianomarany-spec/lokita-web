@@ -877,6 +877,18 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
 
     openSell: () => {
       if (state.guest) return goSignup()
+      // consignment gates (DB enforces too — this is the friendly version)
+      const p = state.profile
+      if (!p.name || !p.building || !p.floor || !p.room || !p.whatsapp) {
+        alert('Complete your profile first (building, floor, room, WhatsApp) — then you can sell. Opening your profile now.')
+        patch({ view: 'profile', menuOpen: false, sel: null })
+        return
+      }
+      if (p.verification_status !== 'verified') {
+        alert('Selling needs your Dorm-Verified badge — upload your student ID from your profile (the team approves it quickly).')
+        patch({ view: 'profile', menuOpen: false, sel: null })
+        return
+      }
       patch({ sellOpen: true, menuOpen: false, sel: null })
     },
     closeSell: () =>
@@ -1129,6 +1141,12 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
     openCheckout: () => {
       patch({ protectOn: false })
       if (state.guest) return goSignup()
+      const p = state.profile
+      if (!p.name || !p.building || !p.floor || !p.whatsapp) {
+        alert('Complete your profile first (building, floor, WhatsApp) — then you can buy. Opening your profile now.')
+        patch({ view: 'profile', menuOpen: false, sel: null })
+        return
+      }
       patch({ checkoutOpen: true, coStep: 'options', pay: 'cod', pickup: 'leave', qris: null, qrisLoading: false, lastOrderId: null })
     },
     closeCheckout: () => patch({ checkoutOpen: false, coStep: 'options', sel: null, qris: null, qrisLoading: false, lastOrderId: null }),

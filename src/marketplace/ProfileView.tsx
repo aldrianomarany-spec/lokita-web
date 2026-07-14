@@ -336,6 +336,7 @@ export default function ProfileView() {
     { value: ratingLabel, label: `${stats?.reviewCount ?? 0} ${t('reviews')}`, color: '#000000' },
   ]
   const activeListings = (listings || []).filter((l) => l.status === 'active')
+  const pendingListings = (listings || []).filter((l) => l.status === 'pending')
   const soldListings = (listings || []).filter((l) => l.status === 'sold')
   const avatarUrl = s.photo || p.profile_photo_url || null
 
@@ -457,10 +458,13 @@ export default function ProfileView() {
       {/* my listings */}
       <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 14 }}>
         <h2 style={sectionH2}>{t('My listings')}</h2>
-        <span style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 11, color: '#9A9A94' }}>{activeListings.length} {t('ACTIVE')} · {soldListings.length} {t('SOLD')}</span>
+        <span style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 11, color: '#9A9A94' }}>{pendingListings.length > 0 ? `${pendingListings.length} ${t('PENDING')} · ` : ''}{activeListings.length} {t('ACTIVE')} · {soldListings.length} {t('SOLD')}</span>
       </div>
       {listings && listings.length > 0 ? (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(200px,1fr))', gap: 16, marginBottom: 32 }}>
+          {pendingListings.map((it) => (
+            <SmallCard key={it.id} title={it.title} price={rupiah(it.price)} badge={'📦 ' + t('BRING TO DESK')} badgeBg="#FBF2DD" badgeFg="#9A6A12" photoUrl={it.photoUrl} onClick={() => openItem(dbListingToItem(it))} />
+          ))}
           {activeListings.map((it) => (
             <SmallCard key={it.id} title={it.title} price={rupiah(it.price)} badge={t('ACTIVE')} badgeBg="#E7F1EA" badgeFg="#1E9E5A" photoUrl={it.photoUrl} onClick={() => openItem(dbListingToItem(it))} />
           ))}

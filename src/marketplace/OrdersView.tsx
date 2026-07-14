@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import QRCode from 'qrcode'
 import { useM } from './context'
-import { fetchSellerPayment, uploadDropoffPhoto, attachProtectionProof, type PaymentDetails, type OrderRow, type OrderStatus } from '../lib/api'
+import { fetchSellerPayment, uploadDropoffPhoto, attachProtectionProof, attachPaymentProof, type PaymentDetails, type OrderRow, type OrderStatus } from '../lib/api'
 import ManualFeePay from './ManualFeePay'
 import { Verified } from '../components/Icons'
 import { useLang } from '../i18n'
@@ -11,8 +11,8 @@ const rupiah = (n: number) => 'Rp ' + Number(n).toLocaleString('id-ID')
 const when = (iso: string | null) => (iso && !isNaN(new Date(iso).getTime()) ? new Date(iso).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '')
 
 const STATUS_META: Record<OrderStatus, { label: string; bg: string; fg: string }> = {
-  pending: { label: 'Awaiting seller confirmation', bg: '#FBF2DD', fg: '#9A6A12' },
-  paid: { label: 'Accepted · awaiting drop-off', bg: '#EFEFDD', fg: '#7E8154' },
+  pending: { label: 'Pay the seller · awaiting confirmation', bg: '#FBF2DD', fg: '#9A6A12' },
+  paid: { label: 'Paid ✓ · arrange pickup with the team', bg: '#EFEFDD', fg: '#7E8154' },
   dropped_off: { label: 'Ready for pickup', bg: '#E7EEF7', fg: '#000000' },
   completed: { label: 'Completed', bg: '#E7F1EA', fg: '#1E9E5A' },
   cancelled: { label: 'Cancelled', bg: '#EFE7D9', fg: '#8B8B86' },
@@ -20,7 +20,7 @@ const STATUS_META: Record<OrderStatus, { label: string; bg: string; fg: string }
 const PICKUP_LABEL: Record<string, string> = { meet_in_person: 'Meet in person', trusted_handoff: 'LOKITA Handover', security_post: 'Security Post' }
 
 function OrderCard({ o }: { o: OrderRow }) {
-  const { acceptMyOrder, markOrderDropped, confirmOrderPickup, cancelMyOrder, submitReviewFor } = useM()
+  const { acceptMyOrder, markOrderDropped, confirmOrderPickup, cancelMyOrder, submitReviewFor, chatAdmin } = useM()
   const { t } = useLang()
   const [busy, setBusy] = useState(false)
   const [reviewing, setReviewing] = useState(false)
@@ -32,6 +32,7 @@ function OrderCard({ o }: { o: OrderRow }) {
 
   // handover code is live while the trade is in motion; receipt after
   const codeActive = !!o.pickup_code && (o.status === 'paid' || o.status === 'dropped_off')
+  const freeOrder = Number(o.listing_price) === 0
 
   // buyer with an ACTIVE accepted order sees how to pay the seller (RLS is
   // the real gate — this fetch simply returns nothing for anyone else)
@@ -39,7 +40,7 @@ function OrderCard({ o }: { o: OrderRow }) {
   const [qrOpen, setQrOpen] = useState(false)
   useEffect(() => {
     let live = true
-    if (o.role === 'buyer' && (o.status === 'paid' || o.status === 'dropped_off') && o.payment_method !== 'qris') {
+    if (o.role === 'buyer' && (o.status === 'pending' || o.status === 'paid' || o.status === 'dropped_off') && o.payment_method !== 'qris') {
       fetchSellerPayment(o.counterparty_id).then((p) => live && setSellerPay(p))
     } else {
       setSellerPay(null)
@@ -135,6 +136,44 @@ function OrderCard({ o }: { o: OrderRow }) {
         </div>
       )}
 
+      {/* 💸 pay-first: the buyer uploads their transfer receipt; the seller
+          can only confirm against it (DB-enforced) */}
+      {o.role === 'buyer' && o.status === 'pending' && !freeOrder && (
+        <div style={{ background: o.payment_proof_url ? '#EAF5EE' : '#FBF2DD', border: `1px solid ${o.payment_proof_url ? '#BFE3CC' : '#ECD8A6'}`, padding: '11px 14px', marginBottom: 12 }}>
+          {o.payment_proof_url ? (
+            <div style={{ fontSize: 12.5, fontWeight: 700, color: '#2C6E49' }}>✓ {t('Receipt sent — waiting for the seller to confirm your payment.')}</div>
+          ) : (
+            <>
+              <div style={{ fontSize: 12.5, fontWeight: 700, color: '#9A6A12', marginBottom: 8 }}>💸 {t('Transfer to the seller above, then upload your receipt — the seller confirms against it.')}</div>
+              <label className="lok-btn" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, border: 'none', background: '#519BB8', color: '#FFFFFF', fontFamily: 'inherit', fontWeight: 700, fontSize: 12.5, padding: '10px 16px', borderRadius: 0, cursor: busy ? 'default' : 'pointer', opacity: busy ? 0.6 : 1 }}>
+                📤 {busy ? t('Uploading…') : t('Upload transfer receipt')}
+                <input
+                  type="file"
+                  accept="image/*"
+                  disabled={busy}
+                  style={{ display: 'none' }}
+                  onChange={async (e) => {
+                    const file = e.target.files?.[0]
+                    e.target.value = ''
+                    if (!file || busy) return
+                    setBusy(true)
+                    try {
+                      await attachPaymentProof(o.id, file)
+                      window.location.hash = '' // no-op; list refreshes via realtime
+                      alert(t('Receipt sent — the seller will confirm shortly.'))
+                    } catch (err) {
+                      alert(errText(err, t('Something went wrong')))
+                    } finally {
+                      setBusy(false)
+                    }
+                  }}
+                />
+              </label>
+            </>
+          )}
+        </div>
+      )}
+
       {/* 🛡️ protection fee not settled yet → the buyer transfers + uploads proof here */}
       {o.role === 'buyer' && o.protection_enabled && !o.protection_paid && !o.protection_proof_url && o.status !== 'cancelled' && (
         <div style={{ marginBottom: 12 }}>
@@ -186,14 +225,28 @@ function OrderCard({ o }: { o: OrderRow }) {
       <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
         {o.status === 'pending' && o.role === 'seller' && (
           <>
-            <button disabled={busy} onClick={run(() => acceptMyOrder(o.id))} className="lok-btn" style={primaryBtn}>{t('Confirm payment & accept ✓')}</button>
+            {o.payment_proof_url && (
+              <a href={o.payment_proof_url} target="_blank" rel="noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, alignSelf: 'center', textDecoration: 'none', fontSize: 12, fontWeight: 700, color: '#2F6B85' }}>
+                <img src={o.payment_proof_url} alt="" style={{ width: 34, height: 34, objectFit: 'cover', border: '1px solid #BFDCE8' }} />
+                💸 {t("buyer's receipt")}
+              </a>
+            )}
+            <button
+              disabled={busy || (!freeOrder && !o.payment_proof_url)}
+              title={!freeOrder && !o.payment_proof_url ? t("Waiting for the buyer's transfer receipt") : undefined}
+              onClick={run(() => acceptMyOrder(o.id))}
+              className="lok-btn"
+              style={{ ...primaryBtn, opacity: !freeOrder && !o.payment_proof_url ? 0.5 : 1 }}
+            >
+              {freeOrder ? t('Accept ✓') : t('Money received — confirm ✓')}
+            </button>
             <button disabled={busy} onClick={run(() => cancelMyOrder(o.id))} className="lok-btn" style={ghostBtn}>{t('Decline')}</button>
           </>
         )}
-        {o.status === 'pending' && o.role === 'buyer' && (
-          <span style={{ fontSize: 12.5, color: '#9A6A12', fontWeight: 700, alignSelf: 'center' }}>{t('⏳ Waiting for the seller to confirm your order…')}</span>
+        {o.status === 'paid' && o.role === 'seller' && o.pickup_method === 'trusted_handoff' && (
+          <span style={{ fontSize: 12.5, color: '#1E9E5A', fontWeight: 700, alignSelf: 'center' }}>✓ {t('All set — the LOKITA team hands it to the buyer.')}</span>
         )}
-        {o.status === 'paid' && o.role === 'seller' && (
+        {o.status === 'paid' && o.role === 'seller' && o.pickup_method !== 'trusted_handoff' && (
           o.pickup_method === 'meet_in_person' ? (
             <button disabled={busy} onClick={run(() => markOrderDropped(o.id))} className="lok-btn" style={primaryBtn}>{t('We met — item handed over ✓')}</button>
           ) : (
@@ -225,7 +278,13 @@ function OrderCard({ o }: { o: OrderRow }) {
             </label>
           )
         )}
-        {o.status === 'paid' && o.role === 'buyer' && (
+        {o.status === 'paid' && o.role === 'buyer' && o.pickup_method === 'trusted_handoff' && (
+          <>
+            <button disabled={busy} onClick={() => chatAdmin()} className="lok-btn" style={primaryBtn}>💬 {t('Chat the team — arrange pickup')}</button>
+            <button disabled={busy} onClick={run(() => confirmOrderPickup(o.id))} className="lok-btn" style={ghostBtn}>{t('Got it — confirm pickup ✓')}</button>
+          </>
+        )}
+        {o.status === 'paid' && o.role === 'buyer' && o.pickup_method !== 'trusted_handoff' && (
           <span style={{ fontSize: 12.5, color: '#8B8B86', fontWeight: 600, alignSelf: 'center' }}>{t('Waiting for the seller to drop it off…')}</span>
         )}
         {o.status === 'dropped_off' && o.role === 'buyer' && (

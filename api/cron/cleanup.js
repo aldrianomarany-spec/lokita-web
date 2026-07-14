@@ -53,7 +53,7 @@ export default async function handler(req, res) {
         type: 'item_update',
         reference_id: l.id,
         title: `⏰ Still selling "${l.title}"?`,
-        body: 'It has been quiet for 2 weeks. Refresh the photos, drop the price a little, or mark it sold.',
+        body: 'It has been on the LOKITA shelf for 2 weeks. Drop the price a little — or collect it back from the desk to free your shelf slot.',
       })
       if (!error) {
         await db.from('listings').update({ last_nudged_at: new Date().toISOString() }).eq('id', l.id)
