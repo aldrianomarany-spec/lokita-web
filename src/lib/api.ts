@@ -330,6 +330,7 @@ interface SellerLite {
   profile_photo_url: string | null
   verification_status: string
   role?: string
+  last_seen_at?: string | null
 }
 
 function mapRow(r: FeedRow, seller: SellerLite | undefined, uid: string | undefined, viewerFloor: string | null, i: number): EnrichedItem {
@@ -398,7 +399,7 @@ export async function fetchFeed(opts: FeedOpts, viewerFloor: string | null): Pro
   const rows = (data as FeedRow[]) || []
   const sellerIds = [...new Set(rows.map((r) => r.seller_id))]
   const { data: people } = sellerIds.length
-    ? await supabase.from('public_profiles').select('id, name, profile_photo_url, verification_status, role').in('id', sellerIds)
+    ? await supabase.from('public_profiles').select('id, name, profile_photo_url, verification_status, role, last_seen_at').in('id', sellerIds)
     : { data: [] as SellerLite[] }
   const byId = new Map((people as SellerLite[] | null || []).map((p) => [p.id, p]))
   const items = rows.map((r, i) => mapRow(r, byId.get(r.seller_id), user?.id, viewerFloor, i))
@@ -706,6 +707,7 @@ export interface ConversationRow {
   other_photo: string | null
   other_verified: boolean
   other_role: string
+  other_last_seen: string | null
   i_am_seller: boolean // which side of the trade the viewer is on (picks quick replies)
   conv_ids: string[] // every conversation merged into this thread (one thread per person)
   last_content: string
@@ -742,7 +744,7 @@ export async function fetchConversations(): Promise<ConversationRow[]> {
   }
   const otherIds = [...new Set(rows.map((r) => (r.buyer_id === uid ? r.seller_id : r.buyer_id)).filter(Boolean))]
   const { data: people } = otherIds.length
-    ? await supabase.from('public_profiles').select('id, name, profile_photo_url, verification_status, role').in('id', otherIds)
+    ? await supabase.from('public_profiles').select('id, name, profile_photo_url, verification_status, role, last_seen_at').in('id', otherIds)
     : { data: [] as SellerLite[] }
   const byId = new Map(((people as SellerLite[] | null) || []).map((p) => [p.id, p]))
   const result: ConversationRow[] = rows.map((r) => {
@@ -758,6 +760,7 @@ export async function fetchConversations(): Promise<ConversationRow[]> {
       other_photo: other?.profile_photo_url || null,
       other_verified: other?.verification_status === 'verified',
       other_role: other?.role || 'user',
+      other_last_seen: other?.last_seen_at ?? null,
       i_am_seller: r.seller_id === uid,
       conv_ids: [r.id],
       last_content: last?.content || '',
@@ -1011,7 +1014,7 @@ export async function fetchRequests(): Promise<RequestRow[]> {
   const ids = [...new Set(rows.map((r) => r.user_id))]
   const { data: people } = await supabase
     .from('public_profiles')
-    .select('id, name, profile_photo_url, verification_status, role')
+    .select('id, name, profile_photo_url, verification_status, role, last_seen_at')
     .in('id', ids)
   const byId = new Map(((people as SellerLite[] | null) || []).map((p) => [p.id, p]))
   return rows.map((r) => {
@@ -1192,7 +1195,7 @@ export async function fetchMemberListings(id: string, viewerFloor: string | null
       .eq('seller_id', id)
       .eq('status', 'active')
       .order('created_at', { ascending: false }),
-    supabase.from('public_profiles').select('id, name, profile_photo_url, verification_status, role').eq('id', id).maybeSingle(),
+    supabase.from('public_profiles').select('id, name, profile_photo_url, verification_status, role, last_seen_at').eq('id', id).maybeSingle(),
   ])
   if (error) throw error
   const seller = (person as SellerLite | null) || undefined
@@ -1238,7 +1241,7 @@ export async function fetchListingById(id: string, viewerFloor: string | null): 
   const row = data as FeedRow
   const { data: person } = await supabase
     .from('public_profiles')
-    .select('id, name, profile_photo_url, verification_status, role')
+    .select('id, name, profile_photo_url, verification_status, role, last_seen_at')
     .eq('id', row.seller_id)
     .maybeSingle()
   return mapRow(row, (person as SellerLite | null) || undefined, user?.id, viewerFloor, 0)
