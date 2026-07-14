@@ -290,7 +290,7 @@ export default function SellModal() {
         {s.giveawayOn && (
           <>
             <div style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 9.5, color: '#9A9A94', letterSpacing: '.06em', margin: '14px 2px 6px' }}>{t('HOW WILL IT REACH THE RECEIVER?')}</div>
-            <div style={{ display: 'flex', gap: 8 }}>
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
               {([
                 { key: 'direct' as const, icon: '🤝', name: t('I keep the item'), desc: t('Once approved, neighbours who want it chat you — you hand it over yourself.') },
                 { key: 'desk' as const, icon: '📦', name: t('LOKITA desk'), desc: t('Drop it at the desk once — the team stores it and hands it over for you.') },
@@ -299,7 +299,7 @@ export default function SellModal() {
                   key={m.key}
                   onClick={() => setMode(m.key)}
                   className="lok-navi"
-                  style={{ flex: 1, textAlign: 'left', border: `1.5px solid ${mode === m.key ? '#519BB8' : '#D8D8D4'}`, background: mode === m.key ? '#EDF5F9' : '#F5F5F3', fontFamily: 'inherit', borderRadius: 0, padding: '11px 12px', cursor: 'pointer' }}
+                  style={{ flex: '1 1 170px', textAlign: 'left', border: `1.5px solid ${mode === m.key ? '#519BB8' : '#D8D8D4'}`, background: mode === m.key ? '#EDF5F9' : '#F5F5F3', fontFamily: 'inherit', borderRadius: 0, padding: '11px 12px', cursor: 'pointer' }}
                 >
                   <div style={{ fontSize: 13, fontWeight: 800, color: mode === m.key ? '#2F6B85' : '#1E1E1E', marginBottom: 3 }}>{m.icon} {m.name}</div>
                   <div style={{ fontSize: 10.5, color: '#8B8B86', fontWeight: 500, lineHeight: 1.45 }}>{m.desc}</div>

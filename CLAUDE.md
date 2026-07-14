@@ -523,6 +523,21 @@ rides tx_update_party's is_admin clause + admin bypass in protect trigger):
   new members / listings / completed trades / top category → admin
   notification (rides push).
 
+Launch-fresh polish (2026-07-14, no SQL migrations — reset script updated):
+- Free & Donations carries ZERO payment surface: OrdersView never fetches or
+  shows seller payment details for free orders (listing_price 0); checkout
+  and receipts were already payment-free for giveaways.
+- Control Room "📊 Market Pulse" cluster: bold group header, then
+  LISTINGS·MODERATION → 🤝 HANDOVER DESK QUEUE → 💰 MONEY & HANDOVER DESK,
+  all adjacent at the top (moved 💰 up from mid-page).
+- Guidebook: new "💝 FREE & DONATIONS — 3 STEPS" section + glossary entries
+  (🙋 Ask for it, 🔒 Members-only details).
+- supabase/ops/reset_for_launch.sql UPDATED for the current schema
+  (search_alerts, blocks, client_errors, admin_audit truncated; admin's
+  push subscription + payment details kept; storage step separated since
+  the protect trigger may block SQL deletes → dashboard fallback).
+- Mobile: sell mode cards wrap (flex 1 1 170px); admin rows already wrap.
+
 Remaining / nice-to-have:
 - **Real Midtrans QRIS** — deliberately last; blocked on the owner signing up for
   Midtrans. api/qris scaffolding exists; currently prototype/static-QR mode.

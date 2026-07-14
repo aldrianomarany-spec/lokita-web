@@ -40,7 +40,8 @@ function OrderCard({ o }: { o: OrderRow }) {
   const [qrOpen, setQrOpen] = useState(false)
   useEffect(() => {
     let live = true
-    if (o.role === 'buyer' && (o.status === 'pending' || o.status === 'paid' || o.status === 'dropped_off') && o.payment_method !== 'qris') {
+    // giveaways carry NO payment at all — never fetch or show payment details
+    if (o.role === 'buyer' && Number(o.listing_price) > 0 && (o.status === 'pending' || o.status === 'paid' || o.status === 'dropped_off') && o.payment_method !== 'qris') {
       fetchSellerPayment(o.counterparty_id).then((p) => live && setSellerPay(p))
     } else {
       setSellerPay(null)

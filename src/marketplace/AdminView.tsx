@@ -387,6 +387,10 @@ export default function AdminView() {
       {/* analytics — three mini weekly bar charts (hidden if the trends fetch failed) */}
       {trendCards}
 
+      {/* ——— MARKET PULSE: the daily operations cluster ——— */}
+      <div style={{ fontFamily: "'Bricolage Grotesque',sans-serif", fontWeight: 800, fontSize: 17, margin: '4px 0 12px', display: 'flex', alignItems: 'center', gap: 8 }}>
+        📊 Market Pulse <span style={{ ...mono, fontSize: 9.5 }}>· APPROVALS · HANDOVERS · MONEY</span>
+      </div>
       {/* listings moderation */}
       <div style={{ ...mono, marginBottom: 10 }}>
         LISTINGS · MODERATION {listings && listings.filter((l) => l.status === 'pending').length > 0 ? `· 📦 ${listings.filter((l) => l.status === 'pending').length} TO RECEIVE` : ''}
@@ -498,6 +502,62 @@ export default function AdminView() {
         )}
       </div>
 
+      {/* 💰 launch-mode money settings */}
+      <div style={{ ...mono, marginBottom: 10 }}>💰 MONEY & HANDOVER DESK</div>
+      <div style={{ ...card, padding: '14px 16px', marginBottom: 26 }}>
+        {/* fee switch — the whole fee machine sleeps in the DB until this is ON */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginBottom: 14 }}>
+          <span style={{ ...mono, fontSize: 9.5 }}>PLATFORM FEE</span>
+          <button
+            onClick={() => {
+              if (!ops) return
+              const next = !ops.feesOn
+              if (!window.confirm(next ? 'Turn the platform fee ON? New listings will publish at ask + fee.' : 'Turn the platform fee OFF? New listings publish at exactly the ask.')) return
+              setOps({ ...ops, feesOn: next })
+              saveOps('fees', { enabled: next })
+            }}
+            disabled={!ops || opsSaving}
+            className="lok-btn"
+            style={{ border: `1px solid ${ops?.feesOn ? '#1E9E5A' : '#D8D8D4'}`, background: ops?.feesOn ? '#E7F1EA' : '#FFFFFF', color: ops?.feesOn ? '#1E9E5A' : '#3A3B3E', fontFamily: 'inherit', fontWeight: 800, fontSize: 12, padding: '7px 14px', borderRadius: 0, cursor: 'pointer' }}
+          >
+            {!ops ? '…' : ops.feesOn ? 'ON — fee added to new listings' : 'OFF — launch mode, everything free'}
+          </button>
+          <span style={{ fontSize: 11.5, color: '#8B8B86', fontWeight: 500 }}>Existing listings keep their published price either way.</span>
+        </div>
+        {/* where boost/protection transfers go — shown to payers */}
+        <div style={{ ...mono, fontSize: 9.5, marginBottom: 8 }}>YOUR PAYMENT DETAILS (shown when someone pays a boost / protection fee)</div>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 14 }}>
+          <input className="lok-field" value={ops?.adminPay.gopay ?? ''} onChange={(e) => ops && setOps({ ...ops, adminPay: { ...ops.adminPay, gopay: e.target.value } })} placeholder="GoPay number (e.g. 0812…)" style={{ flex: '1 1 160px', background: '#F5F5F3', border: '1px solid #D8D8D4', borderRadius: 0, padding: '10px 12px', fontSize: 12.5, fontFamily: 'inherit', color: '#000000' }} />
+          <input className="lok-field" value={ops?.adminPay.bank_name ?? ''} onChange={(e) => ops && setOps({ ...ops, adminPay: { ...ops.adminPay, bank_name: e.target.value } })} placeholder="Bank (e.g. BCA)" style={{ flex: '0 1 110px', background: '#F5F5F3', border: '1px solid #D8D8D4', borderRadius: 0, padding: '10px 12px', fontSize: 12.5, fontFamily: 'inherit', color: '#000000' }} />
+          <input className="lok-field" value={ops?.adminPay.bank_account ?? ''} onChange={(e) => ops && setOps({ ...ops, adminPay: { ...ops.adminPay, bank_account: e.target.value } })} placeholder="Account number" style={{ flex: '1 1 150px', background: '#F5F5F3', border: '1px solid #D8D8D4', borderRadius: 0, padding: '10px 12px', fontSize: 12.5, fontFamily: 'inherit', color: '#000000' }} />
+          <SmallBtn label={opsSaving ? 'Saving…' : 'Save payment info'} tone="accent" busy={opsSaving} onClick={() => ops && saveOps('admin_pay', { ...ops.adminPay })} />
+        </div>
+        {/* the handover desk shown at checkout + after posting */}
+        <div style={{ ...mono, fontSize: 9.5, marginBottom: 8 }}>📦 HANDOVER DESK (shown at checkout & after posting)</div>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 10 }}>
+          <input className="lok-field" value={ops?.handover.location ?? ''} onChange={(e) => ops && setOps({ ...ops, handover: { ...ops.handover, location: e.target.value } })} placeholder="Location (e.g. Union Building Room 303)" style={{ flex: '1 1 200px', background: '#F5F5F3', border: '1px solid #D8D8D4', borderRadius: 0, padding: '10px 12px', fontSize: 12.5, fontFamily: 'inherit', color: '#000000' }} />
+          <input className="lok-field" value={ops?.handover.hours ?? ''} onChange={(e) => ops && setOps({ ...ops, handover: { ...ops.handover, hours: e.target.value } })} placeholder="Hours (e.g. By appointment — chat the team)" style={{ flex: '2 1 240px', background: '#F5F5F3', border: '1px solid #D8D8D4', borderRadius: 0, padding: '10px 12px', fontSize: 12.5, fontFamily: 'inherit', color: '#000000' }} />
+        </div>
+        {/* drop-off slots — sellers pick one right after posting (blank = chat only) */}
+        <div style={{ ...mono, fontSize: 9.5, marginBottom: 6 }}>🕐 DROP-OFF TIME SLOTS — one per line, sellers tap one after posting (leave empty for chat-only)</div>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'flex-start' }}>
+          <textarea
+            className="lok-field"
+            value={(ops?.handover.slots ?? []).join('\n')}
+            onChange={(e) => ops && setOps({ ...ops, handover: { ...ops.handover, slots: e.target.value.split('\n') } })}
+            placeholder={'Mon–Fri 16:00–18:00\nSat 10:00–12:00'}
+            style={{ flex: '1 1 280px', minHeight: 64, resize: 'vertical', background: '#F5F5F3', border: '1px solid #D8D8D4', borderRadius: 0, padding: '10px 12px', fontSize: 12.5, fontFamily: 'inherit', color: '#000000' }}
+          />
+          <SmallBtn
+            label={opsSaving ? 'Saving…' : 'Save desk info'}
+            tone="accent"
+            busy={opsSaving}
+            onClick={() => ops && saveOps('handover', { ...ops.handover, slots: ops.handover.slots.map((x) => x.trim()).filter(Boolean).slice(0, 12) })}
+          />
+        </div>
+      </div>
+
+
       {/* 📣 broadcast — one message → in-app notification + push buzz for everyone */}
       <div style={{ ...mono, marginBottom: 10 }}>📣 ANNOUNCE TO EVERYONE</div>
       <div style={{ ...card, padding: '14px 16px', marginBottom: 26 }}>
@@ -553,61 +613,6 @@ export default function AdminView() {
             {moveoutOn === null ? '…' : moveoutOn ? 'ON — strip showing' : 'OFF'}
           </button>
           <span style={{ fontSize: 11.5, color: '#8B8B86', fontWeight: 500 }}>Shows a 🎓 banner on every homepage pushing bundles — flip it on near semester end.</span>
-        </div>
-      </div>
-
-      {/* 💰 launch-mode money settings */}
-      <div style={{ ...mono, marginBottom: 10 }}>💰 MONEY & HANDOVER DESK</div>
-      <div style={{ ...card, padding: '14px 16px', marginBottom: 26 }}>
-        {/* fee switch — the whole fee machine sleeps in the DB until this is ON */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginBottom: 14 }}>
-          <span style={{ ...mono, fontSize: 9.5 }}>PLATFORM FEE</span>
-          <button
-            onClick={() => {
-              if (!ops) return
-              const next = !ops.feesOn
-              if (!window.confirm(next ? 'Turn the platform fee ON? New listings will publish at ask + fee.' : 'Turn the platform fee OFF? New listings publish at exactly the ask.')) return
-              setOps({ ...ops, feesOn: next })
-              saveOps('fees', { enabled: next })
-            }}
-            disabled={!ops || opsSaving}
-            className="lok-btn"
-            style={{ border: `1px solid ${ops?.feesOn ? '#1E9E5A' : '#D8D8D4'}`, background: ops?.feesOn ? '#E7F1EA' : '#FFFFFF', color: ops?.feesOn ? '#1E9E5A' : '#3A3B3E', fontFamily: 'inherit', fontWeight: 800, fontSize: 12, padding: '7px 14px', borderRadius: 0, cursor: 'pointer' }}
-          >
-            {!ops ? '…' : ops.feesOn ? 'ON — fee added to new listings' : 'OFF — launch mode, everything free'}
-          </button>
-          <span style={{ fontSize: 11.5, color: '#8B8B86', fontWeight: 500 }}>Existing listings keep their published price either way.</span>
-        </div>
-        {/* where boost/protection transfers go — shown to payers */}
-        <div style={{ ...mono, fontSize: 9.5, marginBottom: 8 }}>YOUR PAYMENT DETAILS (shown when someone pays a boost / protection fee)</div>
-        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 14 }}>
-          <input className="lok-field" value={ops?.adminPay.gopay ?? ''} onChange={(e) => ops && setOps({ ...ops, adminPay: { ...ops.adminPay, gopay: e.target.value } })} placeholder="GoPay number (e.g. 0812…)" style={{ flex: '1 1 160px', background: '#F5F5F3', border: '1px solid #D8D8D4', borderRadius: 0, padding: '10px 12px', fontSize: 12.5, fontFamily: 'inherit', color: '#000000' }} />
-          <input className="lok-field" value={ops?.adminPay.bank_name ?? ''} onChange={(e) => ops && setOps({ ...ops, adminPay: { ...ops.adminPay, bank_name: e.target.value } })} placeholder="Bank (e.g. BCA)" style={{ flex: '0 1 110px', background: '#F5F5F3', border: '1px solid #D8D8D4', borderRadius: 0, padding: '10px 12px', fontSize: 12.5, fontFamily: 'inherit', color: '#000000' }} />
-          <input className="lok-field" value={ops?.adminPay.bank_account ?? ''} onChange={(e) => ops && setOps({ ...ops, adminPay: { ...ops.adminPay, bank_account: e.target.value } })} placeholder="Account number" style={{ flex: '1 1 150px', background: '#F5F5F3', border: '1px solid #D8D8D4', borderRadius: 0, padding: '10px 12px', fontSize: 12.5, fontFamily: 'inherit', color: '#000000' }} />
-          <SmallBtn label={opsSaving ? 'Saving…' : 'Save payment info'} tone="accent" busy={opsSaving} onClick={() => ops && saveOps('admin_pay', { ...ops.adminPay })} />
-        </div>
-        {/* the handover desk shown at checkout + after posting */}
-        <div style={{ ...mono, fontSize: 9.5, marginBottom: 8 }}>📦 HANDOVER DESK (shown at checkout & after posting)</div>
-        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 10 }}>
-          <input className="lok-field" value={ops?.handover.location ?? ''} onChange={(e) => ops && setOps({ ...ops, handover: { ...ops.handover, location: e.target.value } })} placeholder="Location (e.g. Union Building Room 303)" style={{ flex: '1 1 200px', background: '#F5F5F3', border: '1px solid #D8D8D4', borderRadius: 0, padding: '10px 12px', fontSize: 12.5, fontFamily: 'inherit', color: '#000000' }} />
-          <input className="lok-field" value={ops?.handover.hours ?? ''} onChange={(e) => ops && setOps({ ...ops, handover: { ...ops.handover, hours: e.target.value } })} placeholder="Hours (e.g. By appointment — chat the team)" style={{ flex: '2 1 240px', background: '#F5F5F3', border: '1px solid #D8D8D4', borderRadius: 0, padding: '10px 12px', fontSize: 12.5, fontFamily: 'inherit', color: '#000000' }} />
-        </div>
-        {/* drop-off slots — sellers pick one right after posting (blank = chat only) */}
-        <div style={{ ...mono, fontSize: 9.5, marginBottom: 6 }}>🕐 DROP-OFF TIME SLOTS — one per line, sellers tap one after posting (leave empty for chat-only)</div>
-        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'flex-start' }}>
-          <textarea
-            className="lok-field"
-            value={(ops?.handover.slots ?? []).join('\n')}
-            onChange={(e) => ops && setOps({ ...ops, handover: { ...ops.handover, slots: e.target.value.split('\n') } })}
-            placeholder={'Mon–Fri 16:00–18:00\nSat 10:00–12:00'}
-            style={{ flex: '1 1 280px', minHeight: 64, resize: 'vertical', background: '#F5F5F3', border: '1px solid #D8D8D4', borderRadius: 0, padding: '10px 12px', fontSize: 12.5, fontFamily: 'inherit', color: '#000000' }}
-          />
-          <SmallBtn
-            label={opsSaving ? 'Saving…' : 'Save desk info'}
-            tone="accent"
-            busy={opsSaving}
-            onClick={() => ops && saveOps('handover', { ...ops.handover, slots: ops.handover.slots.map((x) => x.trim()).filter(Boolean).slice(0, 12) })}
-          />
         </div>
       </div>
 
