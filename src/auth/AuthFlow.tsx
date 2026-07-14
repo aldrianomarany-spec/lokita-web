@@ -389,7 +389,7 @@ export default function AuthFlow() {
                 <label style={labelStyle}>{t('Email address')}</label>
                 <div className="lok-in" style={{ ...fieldWrap, marginBottom: 15 }}>
                   <svg width={17} height={17} viewBox="0 0 24 24" fill="none" stroke="#9A9A94" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="5" width="18" height="14" rx="2.5" /><path d="m3 7 9 6 9-6" /></svg>
-                  <input value={f.user} onChange={set('user')} type="email" autoComplete="username" placeholder="you@jiu.ac" style={inputStyle} onKeyDown={(e) => { if (e.key === 'Enter') doLogin() }} />
+                  <input value={f.user} onChange={set('user')} type="email" autoComplete="username" placeholder="your@email.com" style={inputStyle} onKeyDown={(e) => { if (e.key === 'Enter') doLogin() }} />
                 </div>
 
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 7 }}>
@@ -435,7 +435,7 @@ export default function AuthFlow() {
                 <label style={labelStyle}>{t('Email')}</label>
                 <div className="lok-in" style={{ ...fieldWrap, padding: '12px 15px', marginBottom: 13 }}>
                   <svg width={17} height={17} viewBox="0 0 24 24" fill="none" stroke="#9A9A94" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="5" width="18" height="14" rx="2.5" /><path d="m3 7 9 6 9-6" /></svg>
-                  <input value={f.email} onChange={set('email')} type="email" autoComplete="email" placeholder="you@jiu.ac" style={inputStyle} />
+                  <input value={f.email} onChange={set('email')} type="email" autoComplete="email" placeholder="your@email.com" style={inputStyle} />
                 </div>
 
                 <div style={{ display: 'flex', gap: 11, marginBottom: 22 }}>
@@ -481,7 +481,7 @@ export default function AuthFlow() {
                 <label style={labelStyle}>{t('Registered email')}</label>
                 <div className="lok-in" style={{ ...fieldWrap, marginBottom: 22 }}>
                   <svg width={17} height={17} viewBox="0 0 24 24" fill="none" stroke="#9A9A94" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="5" width="18" height="14" rx="2.5" /><path d="m3 7 9 6 9-6" /></svg>
-                  <input value={f.fEmail} onChange={set('fEmail')} type="email" autoComplete="email" placeholder="you@jiu.ac" style={inputStyle} />
+                  <input value={f.fEmail} onChange={set('fEmail')} type="email" autoComplete="email" placeholder="your@email.com" style={inputStyle} />
                 </div>
                 <button className="lok-btn" onClick={doReset} style={primaryBtn}>{btn('reset', t('Send reset link'))}</button>
               </div>
@@ -494,7 +494,7 @@ export default function AuthFlow() {
                 </div>
                 <h2 style={{ fontFamily: "'Bricolage Grotesque',sans-serif", fontWeight: 800, fontSize: 26, letterSpacing: '-.02em', margin: '0 0 10px' }}>{t('Check your inbox')}</h2>
                 <p style={{ fontSize: 14, color: '#5F6063', lineHeight: 1.65, margin: '0 0 8px' }}>{t('We sent a password reset link to')}</p>
-                <div style={{ fontWeight: 700, fontSize: 15, color: '#000000', marginBottom: 22, wordBreak: 'break-all' }}>{f.fEmail || 'you@jiu.ac'}</div>
+                <div style={{ fontWeight: 700, fontSize: 15, color: '#000000', marginBottom: 22, wordBreak: 'break-all' }}>{f.fEmail || 'your@email.com'}</div>
                 <div style={{ background: '#FFFFFF', border: '1px solid #D8D8D4', borderRadius: 0, padding: '14px 16px', fontSize: 12.5, color: '#5F6063', lineHeight: 1.55, marginBottom: 24, textAlign: 'left' }}>{t("The link expires in 30 minutes. Didn't get it? Check spam, or")} <span onClick={doReset} className="lok-link" style={linkStyle}>{t('resend')}</span>.</div>
                 <button className="lok-btn" onClick={goView('login')} style={{ ...primaryBtn, boxShadow: '0 10px 24px -10px rgba(0,0,0,.8)' }}>{t('Back to log in')}</button>
               </div>

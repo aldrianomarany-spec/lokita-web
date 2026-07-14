@@ -3,7 +3,7 @@ import { MASCOT_URL } from '../brand'
 import { useLang } from '../i18n'
 
 export default function Sidebar() {
-  const { state, openRequests, openPeople, openAdmin, openGuide, openSell, toggleSavedView, toggleFreeView } = useM()
+  const { state, goHome, openRequests, openPeople, openAdmin, openGuide, openSell, toggleSavedView, toggleFreeView } = useM()
   const { t } = useLang()
   const s = state
   const counts = s.categoryCounts
@@ -16,6 +16,15 @@ export default function Sidebar() {
     >
       <div>
         <div style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 10, color: '#9A9A94', padding: '0 11px 9px', letterSpacing: '.1em' }}>{t('COMMUNITY')}</div>
+        <button
+          onClick={goHome}
+          className="lok-navi"
+          style={{ width: '100%', border: 'none', cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left', display: 'flex', alignItems: 'center', gap: 12, fontWeight: 600, fontSize: 14, padding: '10px 12px', borderRadius: 0, background: s.view === 'browse' && !s.freeOnly && !s.savedOnly ? '#E8F2F7' : 'transparent', color: s.view === 'browse' && !s.freeOnly && !s.savedOnly ? '#2F6B85' : '#3A3B3E', marginBottom: 2 }}
+        >
+          <span style={{ width: 26, height: 26, borderRadius: 0, background: '#F0EEE6', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, flex: 'none' }}>🏠</span>
+          <span style={{ flex: 1 }}>{t('Home')}</span>
+          <span style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 9, color: '#ABABA6', fontWeight: 500 }}>{t('BROWSE')}</span>
+        </button>
         <button
           onClick={openRequests}
           className="lok-navi"
@@ -122,12 +131,13 @@ export default function Sidebar() {
 
       <div style={{ marginTop: 'auto', background: 'var(--accent,#000000)', borderRadius: 0, padding: 17, color: '#EAF3EE', position: 'relative', overflow: 'hidden' }}>
         <div style={{ position: 'absolute', top: -20, right: -20, width: 80, height: 80, borderRadius: '50%', background: 'rgba(255,255,255,.07)' }} />
-        {MASCOT_URL && <img src={MASCOT_URL} alt="" aria-hidden className="lok-mascot" style={{ position: 'absolute', right: -8, bottom: -12, width: 74, opacity: 0.95, transform: 'rotate(6deg)' }} />}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 7, fontSize: 13.5, fontWeight: 800, marginBottom: 7, color: '#fff' }}>
+        {/* mascot tucked into the corner, small — the text keeps clear of it */}
+        {MASCOT_URL && <img src={MASCOT_URL} alt="" aria-hidden className="lok-mascot" style={{ position: 'absolute', right: -6, bottom: -8, width: 52, opacity: 0.9, transform: 'rotate(6deg)' }} />}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 7, fontSize: 13.5, fontWeight: 800, marginBottom: 7, color: '#fff', position: 'relative' }}>
           <svg width={15} height={15} viewBox="0 0 24 24" fill="#fff"><path d="M12 2l2.4 1.8 3-.2 1 2.8 2.6 1.5-.7 2.9L23 12l-1.7 2.4.7 2.9-2.6 1.5-1 2.8-3-.2L12 22l-2.4-1.8-3 .2-1-2.8L2.7 16.3l.7-2.9L1 12l1.7-2.4L2 6.7l2.6-1.5 1-2.8 3 .2z" /></svg>
           {t('Dorm-Verified trading')}
         </div>
-        <div style={{ fontSize: 12, lineHeight: 1.55, color: '#C6DDD2' }}>{t('Every seller is a checked-in student. Pay in-app, pick up at the Security Post — no risky meetups.')}</div>
+        <div style={{ fontSize: 12, lineHeight: 1.55, color: '#C6DDD2', position: 'relative', paddingRight: 44 }}>{t('Every seller is a checked-in student. Pay in-app, pick up at the Security Post — no risky meetups.')}</div>
       </div>
     </aside>
   )
