@@ -12,6 +12,7 @@ import { Terms, Privacy } from './pages/Legal'
 import { MASCOT_URL, BRAND_LOGO_URL } from './brand'
 import { LangProvider } from './i18n'
 import { initDark } from './lib/darkmode'
+import { initInstallCapture } from './lib/install'
 
 // browser-tab icon: use our mascot (fallback: the logo) instead of the default
 const faviconUrl = MASCOT_URL || BRAND_LOGO_URL
@@ -24,6 +25,7 @@ if (faviconUrl) {
 }
 
 initDark()
+initInstallCapture()
 
 const router = createBrowserRouter([
   { path: '/', element: <AuthFlow /> },

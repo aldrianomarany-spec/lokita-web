@@ -1,8 +1,9 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useM } from './context'
 import type { NotifRow, NotifType } from '../lib/api'
 import { enableSystemAlerts, systemAlertsGranted, systemAlertsSupported } from '../lib/alerts'
-import { enablePush } from '../lib/push'
+import { enablePush, pushStatus, type PushStatus } from '../lib/push'
+import { canInstall, onInstallable, promptInstall, isIOS, isStandalone } from '../lib/install'
 import { useLang } from '../i18n'
 
 const s2 = (children: React.ReactNode) => (
@@ -68,6 +69,13 @@ export default function NotificationsView() {
   const s = state
 
   const [alertsOn, setAlertsOn] = useState(systemAlertsGranted())
+  const [installable, setInstallable] = useState(canInstall())
+  const [diag, setDiag] = useState<PushStatus | null>(null)
+  const [diagOpen, setDiagOpen] = useState(false)
+  useEffect(() => onInstallable(() => setInstallable(true)), [])
+  useEffect(() => {
+    if (diagOpen) pushStatus().then(setDiag)
+  }, [diagOpen])
 
   const unread = (n: NotifRow) => !n.is_read
   const notifBadge = s.notifs.filter(unread).length
@@ -104,6 +112,51 @@ export default function NotificationsView() {
           🔔 {t('Enable popup alerts — get pinged even when LOKITA is in another tab.')}
         </button>
       )}
+
+      {/* install as an app — the real "keeps working after you switch apps" experience */}
+      {!isStandalone() && (installable || isIOS()) && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', border: '1px solid #D8D8D4', background: '#FFFFFF', padding: '11px 14px', marginBottom: 16 }}>
+          <span style={{ flex: '1 1 240px', fontSize: 12.5, fontWeight: 600, color: '#3A3B3E', lineHeight: 1.5 }}>
+            📲 {t('Install LOKITA as an app — notifications work best that way, even with everything closed.')}
+          </span>
+          {installable ? (
+            <button
+              className="lok-btn"
+              onClick={() => promptInstall().then((ok) => ok && setInstallable(false))}
+              style={{ flex: 'none', border: 'none', background: 'var(--accent,#000000)', color: '#FFFFFF', fontFamily: 'inherit', fontWeight: 700, fontSize: 12.5, padding: '9px 16px', borderRadius: 0, cursor: 'pointer' }}
+            >
+              {t('Install')}
+            </button>
+          ) : (
+            <span style={{ flex: 'none', fontSize: 11.5, color: '#8B8B86', fontWeight: 600 }}>{t('iPhone: Share → Add to Home Screen')}</span>
+          )}
+        </div>
+      )}
+
+      {/* self-diagnosis — which link of the push chain is broken on THIS device */}
+      <div style={{ marginBottom: 16 }}>
+        <button onClick={() => setDiagOpen((v) => !v)} className="lok-navi" style={{ border: 'none', background: 'none', cursor: 'pointer', fontFamily: "'Spline Sans Mono',monospace", fontSize: 10.5, color: '#8B8B86', padding: 0, letterSpacing: '.05em' }}>
+          🔧 {t('Check notification status')} {diagOpen ? '▴' : '▾'}
+        </button>
+        {diagOpen && (
+          <div style={{ marginTop: 8, border: '1px solid #D8D8D4', background: '#FFFFFF', padding: '10px 14px', fontSize: 12.5, fontWeight: 600, color: '#3A3B3E', display: 'flex', flexDirection: 'column', gap: 6 }}>
+            {!diag ? (
+              <span style={{ color: '#8B8B86' }}>…</span>
+            ) : (
+              <>
+                <span>{diag.swSupported && diag.pushManager ? '✅' : '❌'} {t('This browser supports push')}</span>
+                <span>{diag.keyLoaded ? '✅' : '❌'} {t('Push key loaded in this build')}{!diag.keyLoaded && ' — Vercel env + Redeploy missing'}</span>
+                <span>{diag.permission === 'granted' ? '✅' : '❌'} {t('Notification permission granted')} ({diag.permission})</span>
+                <span>{diag.subscribed ? '✅' : '❌'} {t('This device is registered')}</span>
+                <span>{diag.dbRows > 0 ? '✅' : '❌'} {t('Saved to your account')} ({diag.dbRows >= 0 ? diag.dbRows : '?'})</span>
+                <button onClick={() => enablePush().then(() => pushStatus().then(setDiag))} className="lok-btn" style={{ alignSelf: 'flex-start', marginTop: 4, border: '1px solid #519BB8', background: '#EDF5F9', color: '#27607A', fontFamily: 'inherit', fontWeight: 700, fontSize: 11.5, padding: '7px 12px', borderRadius: 0, cursor: 'pointer' }}>
+                  {t('Re-register this device')}
+                </button>
+              </>
+            )}
+          </div>
+        )}
+      </div>
 
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 20 }}>
         {FILTERS.map(([key, label]) => {

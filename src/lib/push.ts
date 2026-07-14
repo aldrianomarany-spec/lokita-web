@@ -51,3 +51,36 @@ export async function disablePushForThisDevice(): Promise<void> {
     // best effort — worst case the next push to this endpoint gets pruned by the sender
   }
 }
+
+// One-look diagnostics for the Notifications page — pinpoints which link in
+// the push chain is broken on THIS device.
+export interface PushStatus {
+  keyLoaded: boolean // VAPID public key baked into this build (Vercel env + redeploy)
+  swSupported: boolean
+  pushManager: boolean
+  permission: string
+  subscribed: boolean // this browser holds a push subscription
+  dbRows: number // subscriptions saved for the logged-in account (-1 = check failed)
+}
+
+export async function pushStatus(): Promise<PushStatus> {
+  const keyLoaded = !!VAPID_PUBLIC
+  const swSupported = 'serviceWorker' in navigator
+  const pushManager = 'PushManager' in window
+  const permission = 'Notification' in window ? Notification.permission : 'unsupported'
+  let subscribed = false
+  try {
+    const reg = swSupported ? await navigator.serviceWorker.getRegistration() : undefined
+    subscribed = !!(await reg?.pushManager.getSubscription())
+  } catch {
+    // stays false
+  }
+  let dbRows = -1
+  try {
+    const { count, error } = await supabase.from('push_subscriptions').select('endpoint', { count: 'exact', head: true })
+    if (!error) dbRows = count ?? 0
+  } catch {
+    // stays -1
+  }
+  return { keyLoaded, swSupported, pushManager, permission, subscribed, dbRows }
+}
