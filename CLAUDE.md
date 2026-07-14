@@ -256,6 +256,19 @@ Also shipped (marketplace polish batch, 2026-07-13, migration 0028):
   + protection_fee; OrdersView shows a 🛡️ Protected chip. Keep the JS tiers
   authoritative — no DB trigger for this fee by design (not collected yet).
 
+Launch prep (2026-07-14):
+- Web Push fully confirmed working end-to-end on the owner's phone (Vercel
+  fn api/push/send.js + Supabase DB webhook + sw.js). Install UX shipped:
+  always-visible 📲 card on Notifications + profile-menu row (hide when
+  standalone).
+- `supabase/ops/reset_for_launch.sql` — ONE-TIME pre-launch wipe: truncates
+  all content tables, deletes every non-admin auth user, deletes storage
+  files except admin folders (logo/mascot/banner art live there), keeps
+  site_settings. Validated in the local harness (seeded every table + fake
+  storage rows, asserted survivors). Do NOT re-run after launch.
+- `docs/EMAIL_TEMPLATES.md` — branded Confirm-signup + Reset-password HTML
+  for Supabase Auth → Email Templates (keep {{ .ConfirmationURL }} intact).
+
 Remaining / nice-to-have:
 - **Real Midtrans QRIS** — deliberately last; blocked on the owner signing up for
   Midtrans. api/qris scaffolding exists; currently prototype/static-QR mode.
