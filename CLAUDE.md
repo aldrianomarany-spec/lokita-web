@@ -315,6 +315,26 @@ MIDTRANS_SERVER_KEY + VITE_MIDTRANS_CLIENT_KEY).
   DetailModal seller card (sellerCashless via public_profiles flag);
   privacy-policy paragraph added.
 
+Payments phase 2 (2026-07-14, **migration 0031**): real Midtrans QRIS for
+LOKITA's OWN fees only (Option E — item money stays buyer→seller):
+- api/qris/fee.js: JWT-authed charge creation for kind boost|protection;
+  amounts read from DB rows (boost_requests.amount / transactions.
+  protection_fee), order ids lokitab-<id> / lokitap-<id>, refs stored for
+  webhook cross-check.
+- api/qris/webhook.js extended: settlement of lokitab- → boost approved +
+  listing featured + 🚀 notification + audit; lokitap- → protection_paid +
+  🛡️ notification. Item flow (lokita-) unchanged. ONE notification URL:
+  https://lokita.vercel.app/api/qris/webhook — must be set in BOTH Midtrans
+  dashboards (sandbox + production, Settings → Configuration).
+- UI: DetailModal boost card shows live QR + 3s polling → "FEATURED now!";
+  falls back to the manual admin flow if the gateway isn't configured.
+  CheckoutModal done step: ProtectionPayBox (QR + poll → active ✓, or
+  informational fallback). OrdersView protection chip: green paid / amber
+  "Protection · unpaid". requestBoost returns the row id now.
+- Env: MIDTRANS_SERVER_KEY (+ optional MIDTRANS_IS_PRODUCTION=true later);
+  VITE_MIDTRANS_CLIENT_KEY reserved for future Snap use.
+- Sandbox test: pay QRIS via https://simulator.sandbox.midtrans.com
+
 Remaining / nice-to-have:
 - **Real Midtrans QRIS** — deliberately last; blocked on the owner signing up for
   Midtrans. api/qris scaffolding exists; currently prototype/static-QR mode.

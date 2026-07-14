@@ -658,6 +658,7 @@ export interface OrderRow {
   reviewed: boolean
   protection_enabled?: boolean
   protection_fee?: number
+  protection_paid?: boolean // fee settled via QRIS (0031)
   pickup_code?: string // 6-char handover code both parties see (0029)
 }
 
@@ -1423,12 +1424,25 @@ export const BOOST_OPTIONS: { days: 3 | 7; amount: number }[] = [
   { days: 7, amount: 5000 },
 ]
 
-export async function requestBoost(listingId: string, days: 3 | 7): Promise<void> {
+export async function requestBoost(listingId: string, days: 3 | 7): Promise<string> {
   const uid = await getUserId()
   if (!uid) throw new Error('Not signed in')
   const amount = BOOST_OPTIONS.find((o) => o.days === days)?.amount ?? 3000
-  const { error } = await supabase.from('boost_requests').insert({ listing_id: listingId, seller_id: uid, days, amount })
+  const { data, error } = await supabase
+    .from('boost_requests')
+    .insert({ listing_id: listingId, seller_id: uid, days, amount })
+    .select('id')
+    .single()
   if (error) throw error
+  return (data as { id: string }).id
+}
+
+// QRIS payment status of my own boost request (RLS: own rows) — the webhook
+// flips it to 'approved' the moment Midtrans settles
+export async function fetchBoostStatus(id: string): Promise<'pending' | 'approved' | 'rejected' | null> {
+  const { data, error } = await supabase.from('boost_requests').select('status').eq('id', id).maybeSingle()
+  if (error || !data) return null
+  return (data as { status: 'pending' | 'approved' | 'rejected' }).status
 }
 
 export interface BoostRow {
@@ -1885,4 +1899,34 @@ export async function fetchSellerPayment(sellerId: string): Promise<PaymentDetai
   if (error || !data) return null
   const p = data as PaymentDetails
   return p.ewallet_number || p.bank_account || p.qris_data_url ? p : null
+}
+
+// ===========================================================================
+// 0031 — QRIS collection of LOKITA's own fees (boosts + protection).
+// The only money that flows through Midtrans; items stay buyer→seller.
+// ===========================================================================
+export interface FeeCharge {
+  qrUrl: string
+  amount: number
+}
+
+export async function createFeeCharge(kind: 'boost' | 'protection', refId: string): Promise<FeeCharge> {
+  const { data } = await supabase.auth.getSession()
+  const token = data.session?.access_token
+  if (!token) throw new Error('Not signed in')
+  const r = await fetch('/api/qris/fee', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+    body: JSON.stringify({ kind, refId }),
+  })
+  const j = (await r.json()) as FeeCharge & { error?: string }
+  if (!r.ok) throw new Error(j.error || 'Could not start the payment')
+  return j
+}
+
+// whether the protection fee of my order has settled (webhook flips it)
+export async function fetchProtectionPaid(orderId: string): Promise<boolean> {
+  const { data, error } = await supabase.from('transactions').select('protection_paid').eq('id', orderId).maybeSingle()
+  if (error || !data) return false
+  return !!(data as { protection_paid: boolean }).protection_paid
 }

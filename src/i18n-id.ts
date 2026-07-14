@@ -659,4 +659,12 @@ export const ID: Record<string, string> = {
   'Pay only when the item is in your hands. Money goes straight to the seller — LOKITA never holds it.': 'Bayar hanya saat barang sudah di tanganmu. Uang langsung ke penjual — LOKITA tidak pernah menahannya.',
   'Seller accepts cashless payment at handover': 'Penjual menerima pembayaran cashless saat serah terima',
   'Cashless ready': 'Siap cashless',
+  // ---- 0031 real QRIS for LOKITA fees ----
+  'Payment received — your listing is FEATURED now!': 'Pembayaran diterima — listinganmu jadi UNGGULAN sekarang!',
+  'Scan with any QRIS app — your boost activates automatically.': 'Scan dengan aplikasi QRIS apa pun — boost-mu aktif otomatis.',
+  'One last step — activate Buyer Protection': 'Satu langkah lagi — aktifkan Proteksi Pembeli',
+  'Scan with any QRIS app — protection activates automatically.': 'Scan dengan aplikasi QRIS apa pun — proteksi aktif otomatis.',
+  'Buyer Protection active — this trade is covered.': 'Proteksi Pembeli aktif — transaksi ini terlindungi.',
+  'Buyer Protection noted — the LOKITA team will collect the fee with your payment at pickup.': 'Proteksi Pembeli dicatat — tim LOKITA menagih biayanya bersama pembayaranmu saat pengambilan.',
+  'Protection · unpaid': 'Proteksi · belum dibayar',
 }

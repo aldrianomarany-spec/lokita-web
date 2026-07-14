@@ -96,8 +96,8 @@ function OrderCard({ o }: { o: OrderRow }) {
           <div style={{ fontFamily: "'Bricolage Grotesque',sans-serif", fontWeight: 800, fontSize: 18, color: 'var(--accent,#000000)' }}>{rupiah(o.listing_price)}</div>
           <span style={{ display: 'inline-block', marginTop: 5, fontFamily: "'Spline Sans Mono',monospace", fontSize: 10, fontWeight: 600, color: sm.fg, background: sm.bg, padding: '3px 8px', borderRadius: 0 }}>{t(sm.label)}</span>
           {o.protection_enabled && (
-            <span style={{ display: 'inline-block', marginTop: 5, marginLeft: 6, fontFamily: "'Spline Sans Mono',monospace", fontSize: 9, fontWeight: 700, background: '#EDF5F9', color: '#27607A', padding: '3px 7px', border: '1px solid #BFDCE8', borderRadius: 0 }}>
-              🛡️ {t('Protected')}{(o.protection_fee ?? 0) > 0 ? ` · Rp ${(o.protection_fee as number).toLocaleString('id-ID')}` : ''}
+            <span style={{ display: 'inline-block', marginTop: 5, marginLeft: 6, fontFamily: "'Spline Sans Mono',monospace", fontSize: 9, fontWeight: 700, background: o.protection_paid ? '#EAF5EE' : '#FBF2DD', color: o.protection_paid ? '#1E9E5A' : '#9A6A12', padding: '3px 7px', border: `1px solid ${o.protection_paid ? '#BFE3CC' : '#ECD8A6'}`, borderRadius: 0 }}>
+              🛡️ {o.protection_paid ? t('Protected') : t('Protection · unpaid')}{(o.protection_fee ?? 0) > 0 ? ` · Rp ${(o.protection_fee as number).toLocaleString('id-ID')}` : ''}
             </span>
           )}
         </div>
