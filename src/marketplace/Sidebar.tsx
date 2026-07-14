@@ -3,7 +3,7 @@ import { MASCOT_URL } from '../brand'
 import { useLang } from '../i18n'
 
 export default function Sidebar() {
-  const { state, goHome, openRequests, openPeople, openAdmin, openGuide, openSell, toggleSavedView, toggleFreeView } = useM()
+  const { state, goHome, openRequests, openPeople, openAdmin, openGuide, openSell, toggleSavedView, toggleFreeView, openProfile } = useM()
   const { t } = useLang()
   const s = state
   const counts = s.categoryCounts
@@ -121,10 +121,21 @@ export default function Sidebar() {
           </div>
           {/* credibility counter — total completed escrow trades, live */}
           {s.marketStats != null && (
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '11px 0' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '11px 0', borderBottom: !s.guest && (s.myShelf?.pending || 0) > 0 ? '1px solid #ECECEA' : 'none' }}>
               <span style={{ fontSize: 12.5, fontWeight: 600, color: '#3A3B3E' }}>{t('Trades completed')} ✅</span>
               <span style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 700, fontSize: 15, color: '#000000' }}>{s.marketStats}</span>
             </div>
+          )}
+          {/* the member's own consignment tracker — flips live when the desk approves */}
+          {!s.guest && (s.myShelf?.pending || 0) > 0 && (
+            <button
+              onClick={openProfile}
+              title={t('Your items waiting at the LOKITA desk — tap to track them')}
+              style={{ width: '100%', border: 'none', background: 'transparent', cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '11px 0', textAlign: 'left' }}
+            >
+              <span style={{ fontSize: 12.5, fontWeight: 600, color: '#9A6A12' }}>📦 {t('Under review')}</span>
+              <span style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 700, fontSize: 15, color: '#9A6A12' }}>{s.myShelf?.pending}</span>
+            </button>
           )}
         </div>
       </div>

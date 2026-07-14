@@ -290,6 +290,9 @@ export default function ProfileView() {
   const [reviews, setReviews] = useState<ReviewRow[] | null>(null)
   const [wishlist, setWishlist] = useState<DbListing[] | null>(null)
 
+  // reloads when the live shelf counts change too, so a desk approval flips
+  // the 📦 pending card to active while the seller is watching this page
+  const shelfKey = state.myShelf ? `${state.myShelf.pending}/${state.myShelf.active}` : ''
   useEffect(() => {
     let active = true
     Promise.all([fetchMyListings(), fetchReviewsAboutMe(), fetchMyWishlist()])
@@ -308,7 +311,7 @@ export default function ProfileView() {
     return () => {
       active = false
     }
-  }, [])
+  }, [shelfKey])
 
   // ---------- loading / error gates ----------
   if (s.profileLoading) {
