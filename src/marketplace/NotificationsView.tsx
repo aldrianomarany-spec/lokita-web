@@ -72,6 +72,7 @@ export default function NotificationsView() {
   const [installable, setInstallable] = useState(canInstall())
   const [diag, setDiag] = useState<PushStatus | null>(null)
   const [diagOpen, setDiagOpen] = useState(false)
+  const [howOpen, setHowOpen] = useState(false)
   useEffect(() => onInstallable(() => setInstallable(true)), [])
   useEffect(() => {
     if (diagOpen) pushStatus().then(setDiag)
@@ -113,22 +114,51 @@ export default function NotificationsView() {
         </button>
       )}
 
-      {/* install as an app — the real "keeps working after you switch apps" experience */}
-      {!isStandalone() && (installable || isIOS()) && (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', border: '1px solid #D8D8D4', background: '#FFFFFF', padding: '11px 14px', marginBottom: 16 }}>
-          <span style={{ flex: '1 1 240px', fontSize: 12.5, fontWeight: 600, color: '#3A3B3E', lineHeight: 1.5 }}>
-            📲 {t('Install LOKITA as an app — notifications work best that way, even with everything closed.')}
-          </span>
-          {installable ? (
-            <button
-              className="lok-btn"
-              onClick={() => promptInstall().then((ok) => ok && setInstallable(false))}
-              style={{ flex: 'none', border: 'none', background: 'var(--accent,#000000)', color: '#FFFFFF', fontFamily: 'inherit', fontWeight: 700, fontSize: 12.5, padding: '9px 16px', borderRadius: 0, cursor: 'pointer' }}
-            >
-              {t('Install')}
-            </button>
-          ) : (
-            <span style={{ flex: 'none', fontSize: 11.5, color: '#8B8B86', fontWeight: 600 }}>{t('iPhone: Share → Add to Home Screen')}</span>
+      {/* install as an app — always offered until installed; when the browser
+          won't volunteer its install prompt, show that browser's exact steps */}
+      {!isStandalone() && (
+        <div style={{ border: '1px solid #D8D8D4', background: '#FFFFFF', padding: '11px 14px', marginBottom: 16 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+            <span style={{ flex: '1 1 240px', fontSize: 12.5, fontWeight: 600, color: '#3A3B3E', lineHeight: 1.5 }}>
+              📲 {t('Install LOKITA as an app — notifications work best that way, even with everything closed.')}
+            </span>
+            {installable ? (
+              <button
+                className="lok-btn"
+                onClick={() => promptInstall().then((ok) => ok && setInstallable(false))}
+                style={{ flex: 'none', border: 'none', background: 'var(--accent,#000000)', color: '#FFFFFF', fontFamily: 'inherit', fontWeight: 700, fontSize: 12.5, padding: '9px 16px', borderRadius: 0, cursor: 'pointer' }}
+              >
+                {t('Install')}
+              </button>
+            ) : (
+              <button
+                className="lok-btn"
+                onClick={() => setHowOpen((v) => !v)}
+                style={{ flex: 'none', border: '1px solid #519BB8', background: '#EDF5F9', color: '#27607A', fontFamily: 'inherit', fontWeight: 700, fontSize: 12.5, padding: '9px 16px', borderRadius: 0, cursor: 'pointer' }}
+              >
+                {t('How to install')} {howOpen ? '▴' : '▾'}
+              </button>
+            )}
+          </div>
+          {howOpen && !installable && (
+            <div style={{ marginTop: 10, borderTop: '1px solid #ECECEA', paddingTop: 10, fontSize: 12.5, color: '#3A3B3E', lineHeight: 1.8 }}>
+              {isIOS() ? (
+                <>
+                  <b>iPhone (Safari)</b>
+                  <br />1. {t('Tap the Share button')} <span style={{ fontFamily: "'Spline Sans Mono',monospace" }}>⎋</span> {t('(square with an arrow, bottom of the screen)')}
+                  <br />2. {t('Scroll down and tap')} <b>{t('Add to Home Screen')}</b>
+                  <br />3. {t('Tap Add — then always open LOKITA from the new icon')}
+                </>
+              ) : (
+                <>
+                  <b>Chrome</b>: {t('tap the')} <b>⋮</b> {t('menu (top right)')} → <b>{t('Add to Home screen / Install app')}</b>
+                  <br />
+                  <b>Samsung Internet</b>: {t('tap')} <b>☰</b> {t('(bottom right)')} → <b>{t('Add page to')}</b> → <b>{t('Home screen')}</b>
+                  <br />
+                  {t('Then always open LOKITA from the new icon on your home screen.')}
+                </>
+              )}
+            </div>
           )}
         </div>
       )}
