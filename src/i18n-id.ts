@@ -638,4 +638,6 @@ export const ID: Record<string, string> = {
   'No giveaways right now': 'Belum ada barang gratis saat ini',
   'Got something you no longer need? Give it to a neighbour — post it with the "Give it away for free" switch on.': 'Punya barang yang sudah tidak terpakai? Berikan ke tetangga — pasang dengan tombol "Berikan gratis" menyala.',
   'Give something away': 'Berikan sesuatu',
+  'Things neighbours are giving away — first come, first served.': 'Barang yang diberikan gratis oleh tetangga — siapa cepat dia dapat.',
+  'Back to marketplace': 'Kembali ke marketplace',
 }

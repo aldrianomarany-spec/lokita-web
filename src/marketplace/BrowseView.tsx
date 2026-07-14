@@ -101,7 +101,11 @@ export default function BrowseView() {
   const totalCount = Object.values(counts).reduce((a, n) => a + n, 0)
 
   const q = s.query.trim().toLowerCase()
-  const list: EnrichedItem[] = s.savedOnly ? enrichedItems.filter((i) => s.saved[i.id]) : enrichedItems
+  // hard rule, enforced client-side too: giveaways render ONLY in the 💝
+  // section, priced items only on the homepage — regardless of what the
+  // fetch returned (stale cache, realtime race)
+  const pool = enrichedItems.filter((i) => (s.freeOnly ? !!i.isGiveaway : !i.isGiveaway))
+  const list: EnrichedItem[] = s.savedOnly ? pool.filter((i) => s.saved[i.id]) : pool
   const filtersActive = q !== '' || s.cat !== 'All' || s.cond !== 'All' || s.savedOnly || s.freeOnly
 
   // "🔔 alert me" state for the no-results screen
@@ -184,16 +188,17 @@ export default function BrowseView() {
           <button onClick={toggleSavedView} style={{ ...chip(s.savedOnly), flex: 'none' }}>★ {t('Saved')}</button>
           <button onClick={toggleFreeView} style={{ ...chip(s.freeOnly), flex: 'none' }}>💝 {t('Free')}</button>
           <button onClick={openGuide} style={{ ...chip(false), flex: 'none' }}>📖 {t('Guide')}</button>
-          {CATEGORIES.map((label: Category) => {
-            const active = s.cat === label && !s.savedOnly
-            const count = label === 'All' ? totalCount : counts[label] || 0
-            return (
-              <button key={label} onClick={() => selectCat(label)} style={{ ...chip(active), flex: 'none' }}>
-                {CAT_META[label]} {t(label)}
-                {count > 0 ? ` ${count}` : ''}
-              </button>
-            )
-          })}
+          {!s.freeOnly &&
+            CATEGORIES.map((label: Category) => {
+              const active = s.cat === label && !s.savedOnly
+              const count = label === 'All' ? totalCount : counts[label] || 0
+              return (
+                <button key={label} onClick={() => selectCat(label)} style={{ ...chip(active), flex: 'none' }}>
+                  {CAT_META[label]} {t(label)}
+                  {count > 0 ? ` ${count}` : ''}
+                </button>
+              )
+            })}
         </div>
       )}
 
@@ -338,8 +343,20 @@ export default function BrowseView() {
         </div>
       )}
 
+      {/* 💝 dedicated section header — no categories, just the giveaways */}
+      {s.freeOnly && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap', padding: '6px 0 16px' }}>
+          <div style={{ flex: '1 1 240px', minWidth: 0 }}>
+            <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 600, fontSize: 22, letterSpacing: '-.5px', color: INK }}>💝 {t('Free & Donations')}</div>
+            <div style={{ fontSize: 12.5, color: GRAY, fontWeight: 500, marginTop: 2 }}>{t('Things neighbours are giving away — first come, first served.')}</div>
+          </div>
+          <span style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 10, letterSpacing: 1, color: GRAY, flex: 'none' }}>{list.length} {list.length === 1 ? t('ITEM') : t('ITEMS')}</span>
+          <button onClick={toggleFreeView} style={{ ...chip(false), flex: 'none' }}>‹ {t('Back to marketplace')}</button>
+        </div>
+      )}
+
       {/* category chips (desktop — mobile has the strip above) */}
-      {!isNarrow && (
+      {!isNarrow && !s.freeOnly && (
         <div style={{ display: 'flex', gap: 8, padding: '4px 0 6px', flexWrap: 'wrap' }}>
           {CATEGORIES.map((label: Category) => {
             const active = s.cat === label && !s.savedOnly
@@ -359,7 +376,8 @@ export default function BrowseView() {
         </div>
       )}
 
-      {/* condition + sort rail */}
+      {/* condition + sort rail (hidden in the 💝 section — pure showcase there) */}
+      {!s.freeOnly && (
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', padding: '10px 0 14px' }}>
         <span style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 10, letterSpacing: 1, color: GRAY }}>{t('CONDITION')}</span>
         {CONDS.map((label) => (
@@ -377,6 +395,7 @@ export default function BrowseView() {
           <span style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 10, letterSpacing: 1, color: GRAY, marginLeft: 6 }}>{list.length} {list.length === 1 ? t('ITEM') : t('ITEMS')}</span>
         </div>
       </div>
+      )}
 
       {/* grid / loading / empty */}
       {s.feedLoading ? (
