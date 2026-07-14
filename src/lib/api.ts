@@ -1,7 +1,7 @@
 // Data-access layer: real Supabase queries + mappers between the DB row shapes
 // and the UI display shape the marketplace components already use.
 import { supabase } from './supabase'
-import { assertClean } from './moderation'
+import { assertClean, findContactLeak, CONTACT_LEAK_MESSAGE } from './moderation'
 import { compressImage, makeThumb } from './img'
 import { getUser, type Profile as DbProfile } from './auth'
 import type { Profile as UiProfile, EnrichedItem } from '../types'
@@ -544,9 +544,20 @@ export interface NewOrder {
   sellerId: string
   payment_method: PaymentMethod
   pickup_method: PickupMethod
+  meetup_spot?: string | null // preset campus spot (meet_in_person only, 0032)
   protection_enabled?: boolean
   protection_fee?: number
 }
+
+// preset safe meetup spots — public, on-campus, no free text
+export const MEETUP_SPOTS = [
+  'Security Post area',
+  'Thomas Building Lobby',
+  'Union Building Lobby',
+  'Elizabeth Building Lobby',
+  'Campus Canteen',
+  'Library entrance',
+] as const
 
 export async function createOrder(o: NewOrder): Promise<string> {
   const user = await getUser()
@@ -571,6 +582,7 @@ export async function createOrder(o: NewOrder): Promise<string> {
       // opt-in Buyer Protection (0028) — informational until a gateway exists
       protection_enabled: !!o.protection_enabled,
       protection_fee: o.protection_enabled ? o.protection_fee || 0 : 0,
+      meetup_spot: o.pickup_method === 'meet_in_person' ? o.meetup_spot || null : null,
     })
     .select('id')
     .single()
@@ -612,13 +624,23 @@ export async function acceptOrder(id: string): Promise<void> {
   if (error) throw error
 }
 
-export async function markDroppedOff(id: string): Promise<void> {
+export async function markDroppedOff(id: string, photoUrl?: string | null): Promise<void> {
   const now = Date.now()
-  const { error } = await supabase
-    .from('transactions')
-    .update({ status: 'dropped_off', dropped_off_at: new Date(now).toISOString(), pickup_deadline: new Date(now + 2 * DAY).toISOString() })
-    .eq('id', id)
+  const upd: Record<string, unknown> = { status: 'dropped_off', dropped_off_at: new Date(now).toISOString(), pickup_deadline: new Date(now + 2 * DAY).toISOString() }
+  if (photoUrl) upd.dropoff_photo_url = photoUrl
+  const { error } = await supabase.from('transactions').update(upd).eq('id', id)
   if (error) throw error
+}
+
+// 📸 proof photo for Security Post / LOKITA Handover drop-offs
+export async function uploadDropoffPhoto(orderId: string, rawFile: File): Promise<string> {
+  const user = await getUser()
+  if (!user) throw new Error('Not signed in')
+  const file = await compressImage(rawFile)
+  const path = `${user.id}/dropoff/${orderId}.jpg`
+  const { error } = await supabase.storage.from('listing-photos').upload(path, file, { upsert: true })
+  if (error) throw error
+  return supabase.storage.from('listing-photos').getPublicUrl(path).data.publicUrl
 }
 
 export async function confirmPickup(id: string): Promise<void> {
@@ -660,6 +682,8 @@ export interface OrderRow {
   protection_fee?: number
   protection_paid?: boolean // fee settled via QRIS (0031)
   pickup_code?: string // 6-char handover code both parties see (0029)
+  meetup_spot?: string | null // preset campus spot (0032)
+  dropoff_photo_url?: string | null // 📸 drop-off proof (0032)
 }
 
 export async function fetchMyOrders(): Promise<OrderRow[]> {
@@ -919,6 +943,19 @@ export async function sendMessage(conversationId: string, content: string, listi
   const trimmed = content.trim()
   if (!trimmed && !imageUrl) return
   assertClean(trimmed)
+  // anti fee-dodging: no phone numbers / chat-app links until the pair has a
+  // real order — that's what keeps trades (and protections) inside LOKITA
+  if (trimmed && findContactLeak(trimmed)) {
+    const { data: conv } = await supabase.from('conversations').select('buyer_id, seller_id').eq('id', conversationId).maybeSingle()
+    if (conv) {
+      const other = (conv as { buyer_id: string; seller_id: string }).buyer_id === uid ? (conv as { seller_id: string }).seller_id : (conv as { buyer_id: string }).buyer_id
+      const { count } = await supabase
+        .from('transactions')
+        .select('id', { count: 'exact', head: true })
+        .or(`and(buyer_id.eq.${uid},seller_id.eq.${other}),and(buyer_id.eq.${other},seller_id.eq.${uid})`)
+      if (!count) throw new Error(CONTACT_LEAK_MESSAGE)
+    }
+  }
   const row: Record<string, unknown> = { conversation_id: conversationId, sender_id: uid, content: trimmed || '📷' }
   if (listingId) row.listing_id = listingId
   if (imageUrl) row.image_url = imageUrl

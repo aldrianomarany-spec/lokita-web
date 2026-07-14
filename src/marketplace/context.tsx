@@ -153,6 +153,7 @@ export interface State {
   // opt-in Buyer Protection for the order being checked out (fee from protectionFee())
   protectOn: boolean
   lastOrderId: string | null // order just placed — the done step pays its protection fee
+  meetSpot: string // preset campus spot when pickup = meet in person (0032)
   // QRIS payment in progress (QR to display + which order it pays for).
   // manual=true → buyer confirms with a button (static/demo modes);
   // manual=false → Midtrans webhook confirms automatically.
@@ -238,6 +239,7 @@ const initialState: State = {
   pickup: 'security',
   protectOn: false,
   lastOrderId: null,
+  meetSpot: 'Security Post area',
   qris: null,
   qrisLoading: false,
   memberId: null,
@@ -331,7 +333,7 @@ export interface MarketplaceApi {
   cancelQrisPayment: () => void
   openOrders: () => void
   acceptMyOrder: (id: string) => Promise<void>
-  markOrderDropped: (id: string) => Promise<void>
+  markOrderDropped: (id: string, photoUrl?: string | null) => Promise<void>
   confirmOrderPickup: (id: string) => Promise<void>
   cancelMyOrder: (id: string) => Promise<void>
   submitReviewFor: (order: OrderRow, rating: number, comment: string) => Promise<void>
@@ -677,6 +679,7 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
         sellerId: sel.ownerId,
         payment_method: state.pay,
         pickup_method: pickupCode(state.pickup),
+        meetup_spot: state.pickup === 'meet' ? state.meetSpot : null,
         protection_enabled: state.protectOn,
         protection_fee: state.protectOn ? protectionFee(sel.priceNum) : 0,
       })
@@ -1176,8 +1179,8 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
       await acceptOrder(id)
       await loadOrders()
     },
-    markOrderDropped: async (id) => {
-      await markDroppedOff(id)
+    markOrderDropped: async (id, photoUrl) => {
+      await markDroppedOff(id, photoUrl)
       await loadOrders()
     },
     confirmOrderPickup: async (id) => {

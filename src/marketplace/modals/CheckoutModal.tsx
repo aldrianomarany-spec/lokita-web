@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useM } from '../context'
 import { useLang } from '../../i18n'
 import { protectionFee } from '../../theme'
-import { createFeeCharge, fetchProtectionPaid } from '../../lib/api'
+import { createFeeCharge, fetchProtectionPaid, MEETUP_SPOTS } from '../../lib/api'
 import Overlay, { stop } from './Overlay'
 import { Check } from '../../components/Icons'
 
@@ -73,17 +73,13 @@ const s2 = (children: React.ReactNode) => (
 )
 
 const PICKUP_OPTS = [
-  { key: 'meet' as const, label: 'Meet in person', desc: 'Agree a spot & time on campus', ic: s2(<><path d="M12 21c4-4 7-7.4 7-11a7 7 0 1 0-14 0c0 3.6 3 7 7 11z" /><circle cx="12" cy="10" r="2.4" /></>) },
-  { key: 'leave' as const, label: 'Leave with someone', desc: 'A trusted dorm-mate hands it over', ic: s2(<><circle cx="9" cy="8" r="3" /><path d="M3 20c0-3.2 2.7-5 6-5" /><circle cx="17" cy="9" r="2.4" /><path d="M14.5 20c0-2.4 1.7-4 3.5-4s3 1.6 3 4" /></>) },
-  { key: 'security' as const, label: 'Security Post', desc: 'Drop-off & pickup, no meetup', ic: s2(<><path d="M12 2 4 6v6c0 5 3.4 8.2 8 10 4.6-1.8 8-5 8-10V6z" /><path d="M9 12l2 2 4-4" /></>) },
-]
-const PAY_OPTS = [
-  { key: 'cod' as const, label: 'Cash on Delivery', desc: 'Pay in person at pickup', ic: s2(<><path d="M2 7h20v10H2z" /><circle cx="12" cy="12" r="2.3" /><path d="M6 7v10M18 7v10" /></>) },
-  { key: 'qris' as const, label: 'QRIS', desc: 'Scan & pay instantly', ic: s2(<><path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4z" /><path d="M14 14h3v3h-3zM18 18h2v2h-2z" /></>) },
+  { key: 'security' as const, label: 'Security Post', desc: 'Seller drops it off with 📸 photo proof — pick up anytime', ic: s2(<><path d="M12 2 4 6v6c0 5 3.4 8.2 8 10 4.6-1.8 8-5 8-10V6z" /><path d="M9 12l2 2 4-4" /></>) },
+  { key: 'leave' as const, label: 'LOKITA Handover', desc: 'The LOKITA team keeps it safe until you collect it — FREE', ic: s2(<><path d="M21 8l-9-5-9 5v8l9 5 9-5z" /><path d="M3 8l9 5 9-5M12 13v9" /></>) },
+  { key: 'meet' as const, label: 'Meet in person', desc: 'Pick a campus spot below — check the 🔑 code when you meet', ic: s2(<><path d="M12 21c4-4 7-7.4 7-11a7 7 0 1 0-14 0c0 3.6 3 7 7 11z" /><circle cx="12" cy="10" r="2.4" /></>) },
 ]
 
 export default function CheckoutModal() {
-  const { state, patch, closeCheckout, setPay, setPickup, coContinue, confirmQrisPaid, cancelQrisPayment, openOrders } = useM()
+  const { state, patch, closeCheckout, setPickup, coContinue, confirmQrisPaid, cancelQrisPayment, openOrders } = useM()
   const { t } = useLang()
   const s = state
   const sel = s.sel
@@ -108,16 +104,16 @@ export default function CheckoutModal() {
   const grand = total + (s.protectOn ? fee : 0)
   const rp = (n: number) => 'Rp ' + n.toLocaleString('id-ID')
 
-  const payLabel = s.pay === 'qris' ? 'QRIS' : 'Cash on Delivery'
-  const pickupLabel = s.pickup === 'meet' ? 'Meet in person' : s.pickup === 'leave' ? 'Leave with someone' : 'Security Post'
+  const payLabel = 'Pay at handover'
+  const pickupLabel = s.pickup === 'meet' ? 'Meet in person' : s.pickup === 'leave' ? 'LOKITA Handover' : 'Security Post'
   const doneMsg =
-    (s.pay === 'qris' ? t('Payment sent — the seller will verify it and accept your order.') : t('You’ll pay cash on pickup — the seller will confirm your order first.')) +
+    t('You pay at handover — the seller will confirm your order first.') +
     ' ' +
     (s.pickup === 'security'
       ? `${t('Collect it at the Security Post of')} ${sel.building || t('the campus')}.`
       : s.pickup === 'leave'
-        ? t('The seller will leave it with a trusted dorm-mate for you.')
-        : t('Arrange a spot & time with the seller in chat.'))
+        ? t('The seller hands it to the LOKITA team — collect it from them with your 🔑 code.')
+        : `${t('Meet at')} ${t(s.meetSpot)} — ${t('check the 🔑 code before handing anything over.')}`)
 
   return (
     <Overlay onClose={closeCheckout} z={90}>
@@ -176,19 +172,34 @@ export default function CheckoutModal() {
                 )
               })}
             </div>
-            {!isFree && <div style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 10, color: '#9A9A94', letterSpacing: '.06em', marginBottom: 10 }}>{t('PAYMENT')}</div>}
-            {!isFree && <div style={{ display: 'flex', gap: 9, marginBottom: 12 }}>
-              {PAY_OPTS.map((o) => {
-                const on = s.pay === o.key
-                return (
-                  <div key={o.key} onClick={() => setPay(o.key)} className="lok-btn" style={{ flex: 1, cursor: 'pointer', background: on ? '#E8F2F7' : '#F5F5F3', border: `1.5px solid ${on ? 'var(--accent,#000000)' : '#D8D8D4'}`, borderRadius: 0, padding: '14px 13px', textAlign: 'center' }}>
-                    <div style={{ width: 34, height: 34, borderRadius: 0, background: '#fff', color: 'var(--accent,#000000)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 8px' }}>{o.ic}</div>
-                    <div style={{ fontWeight: 700, fontSize: 13 }}>{t(o.label)}</div>
-                    <div style={{ fontSize: 11, color: '#5F6063', fontWeight: 500, marginTop: 2 }}>{t(o.desc)}</div>
-                  </div>
-                )
-              })}
-            </div>}
+
+            {/* 📍 preset campus spot — meet in person picks it HERE, not in chat */}
+            {s.pickup === 'meet' && (
+              <div style={{ marginBottom: 18 }}>
+                <div style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 10, color: '#9A9A94', letterSpacing: '.06em', marginBottom: 8 }}>📍 {t('WHERE TO MEET')}</div>
+                <select
+                  className="lok-field"
+                  value={s.meetSpot}
+                  onChange={(e) => patch({ meetSpot: e.target.value })}
+                  style={{ width: '100%', background: '#F5F5F3', border: '1.5px solid #D8D8D4', borderRadius: 0, padding: '12px 14px', fontSize: 13.5, fontFamily: 'inherit', fontWeight: 600, color: '#000000' }}
+                >
+                  {MEETUP_SPOTS.map((sp) => <option key={sp} value={sp}>{t(sp)}</option>)}
+                </select>
+                <div style={{ fontSize: 11, color: '#8B8B86', fontWeight: 500, marginTop: 6, lineHeight: 1.5 }}>
+                  {t('Always meet in a public campus spot. Check the item before paying, and match the 🔑 code on the order.')}
+                </div>
+              </div>
+            )}
+
+            {/* one honest payment rule: money moves at handover, never before */}
+            {!isFree && (
+              <div style={{ display: 'flex', gap: 11, alignItems: 'flex-start', background: '#F5F5F3', border: '1px solid #D8D8D4', padding: '12px 14px', marginBottom: 12 }}>
+                <span style={{ fontSize: 17, flex: 'none' }}>💵</span>
+                <div style={{ fontSize: 12, color: '#4A4B4E', fontWeight: 500, lineHeight: 1.55 }}>
+                  <b>{t('Pay at handover')}</b> — {t("cash, or scan the seller's QR / transfer to their e-wallet (shown to you after the seller accepts). Never pay before the item is in your hands.")}
+                </div>
+              </div>
+            )}
             {!isFree && <div
               onClick={() => patch({ protectOn: !s.protectOn })}
               className="lok-btn"

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import QRCode from 'qrcode'
 import { useM } from './context'
-import { fetchSellerPayment, type PaymentDetails, type OrderRow, type OrderStatus } from '../lib/api'
+import { fetchSellerPayment, uploadDropoffPhoto, type PaymentDetails, type OrderRow, type OrderStatus } from '../lib/api'
 import { Verified } from '../components/Icons'
 import { useLang } from '../i18n'
 
@@ -15,7 +15,7 @@ const STATUS_META: Record<OrderStatus, { label: string; bg: string; fg: string }
   completed: { label: 'Completed', bg: '#E7F1EA', fg: '#1E9E5A' },
   cancelled: { label: 'Cancelled', bg: '#EFE7D9', fg: '#8B8B86' },
 }
-const PICKUP_LABEL: Record<string, string> = { meet_in_person: 'Meet in person', trusted_handoff: 'Leave with someone', security_post: 'Security Post' }
+const PICKUP_LABEL: Record<string, string> = { meet_in_person: 'Meet in person', trusted_handoff: 'LOKITA Handover', security_post: 'Security Post' }
 
 function OrderCard({ o }: { o: OrderRow }) {
   const { acceptMyOrder, markOrderDropped, confirmOrderPickup, cancelMyOrder, submitReviewFor } = useM()
@@ -116,6 +116,7 @@ function OrderCard({ o }: { o: OrderRow }) {
             : t('Cash · Pay at pickup')}
         </span>
         <span style={chip}>{o.pickup_method ? t(PICKUP_LABEL[o.pickup_method]) : t('Pickup')}</span>
+        {o.meetup_spot && <span style={chip}>📍 {t(o.meetup_spot)}</span>}
         {o.status === 'paid' && o.dropoff_deadline && <span style={chip}>{t('Drop-off by')} {when(o.dropoff_deadline)}</span>}
         {o.status === 'dropped_off' && o.pickup_deadline && <span style={chip}>{t('Pick up by')} {when(o.pickup_deadline)}</span>}
         {o.status === 'completed' && o.completed_at && <span style={chip}>{t('Completed')} {when(o.completed_at)}</span>}
@@ -179,13 +180,48 @@ function OrderCard({ o }: { o: OrderRow }) {
           <span style={{ fontSize: 12.5, color: '#9A6A12', fontWeight: 700, alignSelf: 'center' }}>{t('⏳ Waiting for the seller to confirm your order…')}</span>
         )}
         {o.status === 'paid' && o.role === 'seller' && (
-          <button disabled={busy} onClick={run(() => markOrderDropped(o.id))} className="lok-btn" style={primaryBtn}>{t('Mark as dropped off')}</button>
+          o.pickup_method === 'meet_in_person' ? (
+            <button disabled={busy} onClick={run(() => markOrderDropped(o.id))} className="lok-btn" style={primaryBtn}>{t('We met — item handed over ✓')}</button>
+          ) : (
+            /* Security Post / LOKITA Handover: a 📸 photo proof is required —
+               it closes the "I dropped it off, trust me" loophole */
+            <label className="lok-btn" style={{ ...primaryBtn, display: 'inline-flex', alignItems: 'center', gap: 8, cursor: busy ? 'default' : 'pointer', opacity: busy ? 0.6 : 1 }}>
+              📸 {busy ? t('Uploading…') : t('Take photo & mark dropped off')}
+              <input
+                type="file"
+                accept="image/*"
+                capture="environment"
+                disabled={busy}
+                style={{ display: 'none' }}
+                onChange={async (e) => {
+                  const file = e.target.files?.[0]
+                  e.target.value = ''
+                  if (!file || busy) return
+                  setBusy(true)
+                  try {
+                    const url = await uploadDropoffPhoto(o.id, file)
+                    await markOrderDropped(o.id, url)
+                  } catch (err) {
+                    alert(err instanceof Error ? err.message : t('Something went wrong'))
+                  } finally {
+                    setBusy(false)
+                  }
+                }}
+              />
+            </label>
+          )
         )}
         {o.status === 'paid' && o.role === 'buyer' && (
           <span style={{ fontSize: 12.5, color: '#8B8B86', fontWeight: 600, alignSelf: 'center' }}>{t('Waiting for the seller to drop it off…')}</span>
         )}
         {o.status === 'dropped_off' && o.role === 'buyer' && (
           <button disabled={busy} onClick={run(() => confirmOrderPickup(o.id))} className="lok-btn" style={primaryBtn}>{t('Confirm I picked it up')}</button>
+        )}
+        {o.status === 'dropped_off' && o.dropoff_photo_url && (
+          <a href={o.dropoff_photo_url} target="_blank" rel="noreferrer" title={t('Drop-off proof photo')} style={{ display: 'inline-flex', alignItems: 'center', gap: 7, alignSelf: 'center', textDecoration: 'none', fontSize: 12, fontWeight: 700, color: '#2F6B85' }}>
+            <img src={o.dropoff_photo_url} alt="" style={{ width: 38, height: 38, objectFit: 'cover', border: '1px solid #BFDCE8' }} />
+            📸 {t('Drop-off proof')}
+          </a>
         )}
         {o.status === 'dropped_off' && o.role === 'seller' && (
           <span style={{ fontSize: 12.5, color: '#8B8B86', fontWeight: 600, alignSelf: 'center' }}>{t('Waiting for the buyer to collect…')}</span>
