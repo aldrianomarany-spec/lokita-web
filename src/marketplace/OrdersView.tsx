@@ -116,9 +116,11 @@ function OrderCard({ o }: { o: OrderRow }) {
                 : o.status === 'pending'
                   ? t('QRIS · Sent, to be confirmed')
                   : t('QRIS · Unpaid')
-            : o.pickup_method === 'trusted_handoff' && Number(o.listing_price) > 0
-              ? t('Transfer to the seller')
-              : t('Cash · Pay at pickup')}
+            : Number(o.listing_price) === 0
+              ? '💝 ' + t('Free — nothing to pay')
+              : o.pickup_method === 'trusted_handoff'
+                ? t('Transfer to the seller')
+                : t('Cash · Pay at pickup')}
         </span>
         <span style={chip}>{o.pickup_method ? t(PICKUP_LABEL[o.pickup_method]) : t('Pickup')}</span>
         {o.meetup_spot && <span style={chip}>📍 {t(o.meetup_spot)}</span>}
@@ -394,14 +396,39 @@ export default function OrdersView() {
   const { state } = useM()
   const { t } = useLang()
   const s = state
-  const sections = SECTIONS.map((sec) => ({ ...sec, orders: s.orders.filter((o) => sec.statuses.includes(o.status)) })).filter((sec) => sec.orders.length > 0)
+  // buying and selling read very differently — the tabs keep them apart
+  const [roleTab, setRoleTab] = useState<'all' | 'buyer' | 'seller'>('all')
+  const visible = roleTab === 'all' ? s.orders : s.orders.filter((o) => o.role === roleTab)
+  const sections = SECTIONS.map((sec) => ({ ...sec, orders: visible.filter((o) => sec.statuses.includes(o.status)) })).filter((sec) => sec.orders.length > 0)
+  const countBuy = s.orders.filter((o) => o.role === 'buyer' && o.status !== 'cancelled' && o.status !== 'completed').length
+  const countSell = s.orders.filter((o) => o.role === 'seller' && o.status !== 'cancelled' && o.status !== 'completed').length
 
   return (
     <div style={{ animation: 'lok-fade .3s ease both', maxWidth: 760, margin: '0 auto' }}>
-      <div style={{ marginBottom: 18 }}>
+      <div style={{ marginBottom: 14 }}>
         <div style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 11, color: '#9A9A94', letterSpacing: '.08em', marginBottom: 6 }}>{t('YOUR TRADES')}</div>
         <h1 style={{ fontFamily: "'Bricolage Grotesque',sans-serif", fontSize: 34, fontWeight: 800, letterSpacing: '-.025em', margin: 0, lineHeight: 1.02 }}>{t('My orders')}</h1>
       </div>
+
+      {s.orders.length > 0 && (
+        <div style={{ display: 'flex', gap: 8, marginBottom: 18, flexWrap: 'wrap' }}>
+          {([
+            { key: 'all' as const, label: t('All'), n: 0 },
+            { key: 'buyer' as const, label: '🛒 ' + t('Buying'), n: countBuy },
+            { key: 'seller' as const, label: '🏷️ ' + t('Selling'), n: countSell },
+          ]).map((tb) => (
+            <button
+              key={tb.key}
+              onClick={() => setRoleTab(tb.key)}
+              className="lok-chip"
+              style={{ cursor: 'pointer', fontFamily: 'inherit', fontWeight: 700, fontSize: 12.5, padding: '9px 15px', borderRadius: 0, border: `1px solid ${roleTab === tb.key ? '#000000' : '#D8D8D4'}`, background: roleTab === tb.key ? '#000000' : '#FFFFFF', color: roleTab === tb.key ? '#F7F3EA' : '#3A3B3E', display: 'flex', alignItems: 'center', gap: 6 }}
+            >
+              {tb.label}
+              {tb.n > 0 && <span style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 10, opacity: 0.75 }}>{tb.n}</span>}
+            </button>
+          ))}
+        </div>
+      )}
 
       {s.ordersLoading ? (
         <div style={{ height: '40vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -414,6 +441,10 @@ export default function OrdersView() {
           <div style={{ fontSize: 34, marginBottom: 10 }}>🧾</div>
           <div style={{ fontFamily: "'Bricolage Grotesque',sans-serif", fontWeight: 800, fontSize: 18, color: '#000000', marginBottom: 6 }}>{t('No orders yet')}</div>
           <div style={{ fontSize: 13.5 }}>{t("When you buy an item or make a sale, it'll show up here with its progress.")}</div>
+        </div>
+      ) : sections.length === 0 ? (
+        <div style={{ background: '#FFFFFF', border: '1px dashed #C9C9C5', borderRadius: 0, padding: '38px 28px', textAlign: 'center', color: '#8B8B86', fontSize: 13.5 }}>
+          {roleTab === 'buyer' ? t('No purchases here yet.') : t('No sales here yet.')}
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 22 }}>

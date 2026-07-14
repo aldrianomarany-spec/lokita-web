@@ -108,7 +108,7 @@ export default function RequestsView() {
       {formOpen && (
         <div style={{ background: '#FFFFFF', border: '1px solid #D8D8D4', borderRadius: 0, padding: '20px 22px', marginBottom: 20, animation: 'lok-rise .3s ease both' }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            <input className="lok-field" value={title} onChange={(e) => setTitle(e.target.value)} placeholder={t('What are you looking for? e.g. Mini fridge under 500k')} style={field} />
+            <input className="lok-field" value={title} onChange={(e) => setTitle(e.target.value)} placeholder={t('What are you looking for?')} style={field} />
             <div style={{ display: 'flex', gap: 10 }}>
               <select className="lok-field" value={cat} onChange={(e) => setCat(e.target.value)} style={{ ...field, flex: 1, fontWeight: 600 }}>
                 <option value="" disabled>{t('Select a category…')}</option>

@@ -502,10 +502,10 @@ export async function createListing(input: NewListing, photos: File[]): Promise<
       is_graduation_bundle: input.isBundle,
       bundle_items: input.isBundle && input.bundleItems.length ? input.bundleItems : null,
       is_giveaway: !!input.isGiveaway,
-      // desk (consignment, 0035): live only after the team receives the item.
-      // direct (0038): buyer & seller arrange the handover — live right away.
+      // every post is reviewed (0039): desk items go live when the team
+      // receives them, direct donations after the team checks the post
       fulfillment: input.fulfillment === 'direct' ? 'direct' : 'desk',
-      status: input.fulfillment === 'direct' ? 'active' : 'pending',
+      status: 'pending',
     })
     .select('id')
     .single()
@@ -773,9 +773,10 @@ export function subscribeListings(onChange: () => void, topic = 'listings-feed')
 }
 
 // Realtime: refetch on any change to the current user's transactions.
-export function subscribeOrders(userId: string, onChange: () => void): () => void {
+// topic must be unique per subscriber (same rule as subscribeListings).
+export function subscribeOrders(userId: string, onChange: () => void, topic?: string): () => void {
   const channel = supabase
-    .channel('orders-' + userId)
+    .channel(topic || 'orders-' + userId)
     .on('postgres_changes', { event: '*', schema: 'public', table: 'transactions' }, onChange)
     .subscribe()
   return () => {
@@ -1412,12 +1413,14 @@ export interface AdminListingRow {
   created_at: string
   seller_id: string
   seller_name: string
+  fulfillment?: 'desk' | 'direct'
+  is_giveaway?: boolean
 }
 
 export async function fetchAdminListings(): Promise<AdminListingRow[]> {
   const { data, error } = await supabase
     .from('listings')
-    .select('id, title, price, platform_fee, status, is_featured, created_at, seller_id')
+    .select('id, title, price, platform_fee, status, is_featured, created_at, seller_id, fulfillment, is_giveaway')
     .order('created_at', { ascending: false })
     .limit(200)
   if (error) throw error
@@ -2062,6 +2065,47 @@ export async function adminSetOpsSetting(key: 'fees' | 'handover' | 'admin_pay',
   const { error } = await supabase.from('site_settings').upsert({ key, value, updated_at: new Date().toISOString() })
   if (error) throw error
   logAdmin('setting_' + key, null, JSON.stringify(value).slice(0, 120))
+}
+
+// the admin's handover queue — every paid desk order, clearly separated (0039)
+export interface AdminHandoverRow {
+  id: string
+  item_title: string
+  price: number
+  pickup_code: string | null
+  buyer_id: string
+  buyer_name: string
+  seller_id: string
+  seller_name: string
+  paid_at: string | null
+}
+export async function fetchAdminHandovers(): Promise<AdminHandoverRow[]> {
+  const { data, error } = await supabase.rpc('admin_pending_handovers')
+  if (error) throw error
+  return (data as AdminHandoverRow[]) || []
+}
+
+// the desk hands the item over → the admin closes the order on the spot
+// (RLS: admins may update transactions; the protect trigger lets admins through)
+export async function adminCompleteHandover(id: string): Promise<void> {
+  const { error } = await supabase
+    .from('transactions')
+    .update({ status: 'completed', completed_at: new Date().toISOString() })
+    .eq('id', id)
+  if (error) throw error
+  logAdmin('handover_completed', id)
+}
+
+// how many members raised a hand for a giveaway — the OWNER's counter
+// (RLS: sellers see their own listing's transactions, so the count is exact
+// for the giver and 0 for everyone else)
+export async function fetchAskCount(listingId: string): Promise<number> {
+  const { count } = await supabase
+    .from('transactions')
+    .select('id', { count: 'exact', head: true })
+    .eq('listing_id', listingId)
+    .eq('status', 'pending')
+  return count || 0
 }
 
 // transfer-proof screenshots (boosts + protection) — compressed, own folder

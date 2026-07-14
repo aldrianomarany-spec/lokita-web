@@ -297,10 +297,10 @@ export default function BrowseView() {
           <div style={{ flex: 1, minWidth: 180 }}>
             <div style={{ fontWeight: 800, fontSize: 13.5, color: '#9A6A12' }}>
               {(s.myShelf?.pending || 0) > 1
-                ? `${s.myShelf?.pending} ${t('items waiting at the LOKITA desk')}`
-                : t('Your item is waiting at the LOKITA desk')}
+                ? `${s.myShelf?.pending} ${t('posts waiting for approval')}`
+                : t('Your post is waiting for approval')}
             </div>
-            <div style={{ fontSize: 12, color: '#5F6063', fontWeight: 500 }}>{t('Bring it over so the team can approve it — you’ll get a buzz the moment it goes live.')}</div>
+            <div style={{ fontSize: 12, color: '#5F6063', fontWeight: 500 }}>{t('Desk items go live when the team receives them; donation posts right after a quick check — you’ll get a buzz.')}</div>
           </div>
           <button onClick={openProfile} style={{ ...chip(false), flex: 'none' }}>{t('Track status')}</button>
         </div>

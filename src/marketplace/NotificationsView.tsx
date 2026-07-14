@@ -228,11 +228,19 @@ export default function NotificationsView() {
         </div>
       ) : filtered.length > 0 ? (
         <div>
-          {TIME_GROUPS.map((g) => ({ g, items: filtered.filter((n) => timeGroup(n.created_at) === g) }))
+          {/* "All" separates by CATEGORY (one clear block per kind); a picked
+              filter is already one category, so it groups by time instead */}
+          {(s.notifFilter === 'all'
+            ? (['new_message', 'order_update', 'item_update', 'price_drop', 'system'] as NotifType[])
+                .map((type) => ({ g: TYPE_META[type].filterLabel, items: filtered.filter((n) => n.type === type) }))
+            : TIME_GROUPS.map((g) => ({ g: g as string, items: filtered.filter((n) => timeGroup(n.created_at) === g) }))
+          )
             .filter(({ items }) => items.length > 0)
             .map(({ g, items }, gi) => (
               <div key={g}>
-                <div style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 10, letterSpacing: '.1em', color: '#9A9A94', margin: gi === 0 ? '0 0 8px' : '18px 0 8px' }}>{t(g)}</div>
+                <div style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 10, letterSpacing: '.1em', color: '#9A9A94', margin: gi === 0 ? '0 0 8px' : '18px 0 8px' }}>
+                  {t(g.toUpperCase())} ({items.length})
+                </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                   {items.map((n) => {
                     const m = TYPE_META[n.type]

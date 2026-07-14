@@ -4,6 +4,10 @@ import {
   fetchAdminStats,
   fetchAdminListings,
   subscribeListings,
+  fetchAdminHandovers,
+  adminCompleteHandover,
+  subscribeOrders,
+  type AdminHandoverRow,
   fetchAdminMembers,
   fetchAdminReports,
   fetchAdminTrends,
@@ -153,6 +157,8 @@ export default function AdminView() {
 
   const [stats, setStats] = useState<AdminStats | null>(null)
   const [listings, setListings] = useState<AdminListingRow[] | null>(null)
+  const [handovers, setHandovers] = useState<AdminHandoverRow[] | null>(null)
+  const [qFilter, setQFilter] = useState('') // filters both queues by item/member
   const [members, setMembers] = useState<AdminMemberRow[] | null>(null)
   const [reports, setReports] = useState<AdminReportRow[] | null>(null)
   const [bannersA, setBannersA] = useState<BannerRow[] | null>(null)
@@ -244,6 +250,7 @@ export default function AdminView() {
       fetchMoveoutActive().then(setMoveoutOn).catch(() => setMoveoutOn(null))
       fetchOpsSettings().then(setOps).catch(() => setOps(null))
       fetchAdminProtections().then(setProtections).catch(() => setProtections(null))
+      fetchAdminHandovers().then(setHandovers).catch(() => setHandovers(null))
       fetchAdminAudit().then(setAudit).catch(() => setAudit(null))
       fetchClientErrors().then(setCErrors).catch(() => setCErrors(null))
       setStats(s)
@@ -259,15 +266,21 @@ export default function AdminView() {
     if (isAdmin) load()
   }, [isAdmin, load])
 
-  // live queue: a new consignment drop (or a status flip) lands in the
-  // moderation list without a refresh — own realtime topic, see subscribeListings
+  // live queues: new consignment drops land in the moderation list, and paid
+  // desk orders land in the handover queue — own realtime topics per subscriber
   useEffect(() => {
     if (!isAdmin) return
-    const unsub = subscribeListings(() => {
+    const unsubL = subscribeListings(() => {
       fetchAdminListings().then(setListings).catch(() => {})
       fetchAdminStats().then(setStats).catch(() => {})
     }, 'listings-admin')
-    return () => unsub()
+    const unsubO = subscribeOrders('admin', () => {
+      fetchAdminHandovers().then(setHandovers).catch(() => {})
+    }, 'orders-admin-queue')
+    return () => {
+      unsubL()
+      unsubO()
+    }
   }, [isAdmin])
 
   const act = async (id: string, fn: () => Promise<void>) => {
@@ -373,6 +386,117 @@ export default function AdminView() {
 
       {/* analytics — three mini weekly bar charts (hidden if the trends fetch failed) */}
       {trendCards}
+
+      {/* listings moderation */}
+      <div style={{ ...mono, marginBottom: 10 }}>
+        LISTINGS · MODERATION {listings && listings.filter((l) => l.status === 'pending').length > 0 ? `· 📦 ${listings.filter((l) => l.status === 'pending').length} TO RECEIVE` : ''}
+      </div>
+      {/* one search box filters BOTH queues (moderation + handovers) */}
+      <input
+        className="lok-field"
+        value={qFilter}
+        onChange={(e) => setQFilter(e.target.value)}
+        placeholder="🔍 Filter queues — item title or member name…"
+        style={{ width: '100%', boxSizing: 'border-box', background: '#FFFFFF', border: '1px solid #D8D8D4', borderRadius: 0, padding: '10px 12px', fontSize: 12.5, fontFamily: 'inherit', color: '#000000', marginBottom: 10 }}
+      />
+      <div style={{ ...card, overflow: 'hidden', marginBottom: 26 }}>
+        {listings === null ? (
+          <div style={{ padding: 28, textAlign: 'center' }}>
+            <span className="lok-spin" style={{ width: 22, height: 22, border: '3px solid #D8D8D4', borderTopColor: 'var(--accent,#000000)', borderRadius: '50%', display: 'inline-block' }} />
+          </div>
+        ) : listings.length === 0 ? (
+          <div style={{ padding: '30px 20px', textAlign: 'center', color: '#8B8B86', fontSize: 13 }}>No listings yet.</div>
+        ) : (
+          // items waiting at the desk float to the top — they need a decision
+          [...listings]
+            .filter((l) => !qFilter.trim() || l.title.toLowerCase().includes(qFilter.trim().toLowerCase()) || l.seller_name.toLowerCase().includes(qFilter.trim().toLowerCase()))
+            .sort((a, b) => (a.status === 'pending' ? 0 : 1) - (b.status === 'pending' ? 0 : 1)).map((l) => {
+            const chip = STATUS_CHIP[l.status] || STATUS_CHIP.active
+            return (
+              <div key={l.id} style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap', padding: '12px 16px', borderBottom: '1px solid #E6E6E3' }}>
+                <div style={{ flex: '1 1 200px', minWidth: 0 }}>
+                  <div style={{ fontWeight: 700, fontSize: 13.5, display: 'flex', alignItems: 'center', gap: 7 }}>
+                    <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{l.title}</span>
+                    {l.is_featured && <span style={{ ...mono, fontSize: 8.5, color: '#9A6A12', background: '#FBF2DD', padding: '2px 6px', borderRadius: 0, flex: 'none' }}>FEATURED</span>}
+                  </div>
+                  <div style={{ fontSize: 11.5, color: '#8B8B86', fontWeight: 600, marginTop: 2 }}>
+                    {l.seller_name} · {l.is_giveaway ? 'FREE' : rp(l.price)}{l.platform_fee > 0 ? ` (fee ${rp(l.platform_fee)})` : ''}
+                    {l.fulfillment === 'direct' ? ' · 🤝 direct (giver keeps it)' : ' · 📦 desk'}
+                  </div>
+                </div>
+                <span style={{ ...mono, fontSize: 9, color: chip.fg, background: chip.bg, padding: '4px 9px', borderRadius: 0, flex: 'none' }}>{l.status.toUpperCase()}</span>
+                <div style={{ display: 'flex', gap: 7, flex: 'none', flexWrap: 'wrap' }}>
+                  {l.status === 'active' && (
+                    <SmallBtn label={l.is_featured ? '★ Unfeature' : '☆ Feature'} busy={busyId === l.id} onClick={() => act(l.id, () => adminSetFeatured(l.id, !l.is_featured))} />
+                  )}
+                  {l.status === 'pending' && (
+                    <>
+                      <SmallBtn label={l.fulfillment === 'direct' ? 'Approve ✓ (post checked)' : 'Approve ✓ (item received)'} tone="accent" busy={busyId === l.id} onClick={() => act(l.id, () => adminSetListingStatus(l.id, 'active', 'listing_approved'))} />
+                      <SmallBtn
+                        label="Decline ✗"
+                        tone="danger"
+                        busy={busyId === l.id}
+                        onClick={() => {
+                          if (!window.confirm(`Decline "${l.title}"? ${l.seller_name} will be notified — tell them why in chat.`)) return
+                          act(l.id, () => adminSetListingStatus(l.id, 'removed', 'listing_declined'))
+                        }}
+                      />
+                      <SmallBtn label="💬 Chat seller" busy={busyId === l.id} onClick={() => chatMember(l.seller_id)} />
+                    </>
+                  )}
+                  {l.status === 'active' && (
+                    <SmallBtn label="Remove" tone="danger" busy={busyId === l.id} onClick={() => act(l.id, () => adminSetListingStatus(l.id, 'removed'))} />
+                  )}
+                  {(l.status === 'removed' || l.status === 'flagged') && (
+                    <SmallBtn label="Restore" tone="accent" busy={busyId === l.id} onClick={() => act(l.id, () => adminSetListingStatus(l.id, 'active'))} />
+                  )}
+                </div>
+              </div>
+            )
+          })
+        )}
+      </div>
+
+      {/* 🤝 handover desk queue — every paid desk order, one tidy row each */}
+      <div style={{ ...mono, marginBottom: 10 }}>
+        🤝 HANDOVER DESK QUEUE {handovers && handovers.length > 0 ? `· ${handovers.length} TO HAND OVER` : ''}
+      </div>
+      <div style={{ ...card, overflow: 'hidden', marginBottom: 26 }}>
+        {!handovers || handovers.length === 0 ? (
+          <div style={{ padding: '18px 20px', color: '#8B8B86', fontSize: 12.5 }}>
+            Nothing waiting. When a buyer pays for a desk item, it lands here — match their 🔑 code, hand the item over, and the buyer confirms in the app.
+          </div>
+        ) : (
+          handovers
+            .filter((h) => !qFilter.trim() || [h.item_title, h.buyer_name, h.seller_name].some((x) => x.toLowerCase().includes(qFilter.trim().toLowerCase())))
+            .map((h) => (
+            <div key={h.id} style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap', padding: '12px 16px', borderBottom: '1px solid #E6E6E3' }}>
+              <span style={{ fontFamily: "'Spline Sans Mono',monospace", fontWeight: 700, fontSize: 13, letterSpacing: 2, color: '#27607A', background: '#EDF5F9', border: '1px dashed #519BB8', padding: '5px 9px', flex: 'none' }}>
+                🔑 {h.pickup_code || '——'}
+              </span>
+              <div style={{ flex: '1 1 220px', minWidth: 0 }}>
+                <div style={{ fontWeight: 700, fontSize: 13.5, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{h.item_title}</div>
+                <div style={{ fontSize: 11.5, color: '#8B8B86', fontWeight: 600, marginTop: 2 }}>
+                  {Number(h.price) > 0 ? rp(Number(h.price)) : 'FREE'} · {h.buyer_name} collects · sold by {h.seller_name}
+                </div>
+              </div>
+              <div style={{ display: 'flex', gap: 7, flex: 'none', flexWrap: 'wrap' }}>
+                <SmallBtn label={`💬 ${h.buyer_name}`} onClick={() => chatMember(h.buyer_id)} />
+                <SmallBtn label={`💬 ${h.seller_name}`} onClick={() => chatMember(h.seller_id)} />
+                <SmallBtn
+                  label="Handed over ✓"
+                  tone="accent"
+                  busy={busyId === h.id}
+                  onClick={() => {
+                    if (!window.confirm(`Close this order? Confirm only after ${h.buyer_name} has the item in hand (code ${h.pickup_code || '—'}).`)) return
+                    act(h.id, () => adminCompleteHandover(h.id))
+                  }}
+                />
+              </div>
+            </div>
+          ))
+        )}
+      </div>
 
       {/* 📣 broadcast — one message → in-app notification + push buzz for everyone */}
       <div style={{ ...mono, marginBottom: 10 }}>📣 ANNOUNCE TO EVERYONE</div>
@@ -766,65 +890,6 @@ export default function AdminView() {
           />
         </div>
         <BannerList items={(bannersA || []).filter((b) => b.placement === 'ticker')} busyId={busyId} act={act} refresh={() => fetchAdminBanners().then(setBannersA).catch(() => {})} />
-      </div>
-
-      {/* listings moderation */}
-      <div style={{ ...mono, marginBottom: 10 }}>
-        LISTINGS · MODERATION {listings && listings.filter((l) => l.status === 'pending').length > 0 ? `· 📦 ${listings.filter((l) => l.status === 'pending').length} TO RECEIVE` : ''}
-      </div>
-      <div style={{ ...card, overflow: 'hidden', marginBottom: 26 }}>
-        {listings === null ? (
-          <div style={{ padding: 28, textAlign: 'center' }}>
-            <span className="lok-spin" style={{ width: 22, height: 22, border: '3px solid #D8D8D4', borderTopColor: 'var(--accent,#000000)', borderRadius: '50%', display: 'inline-block' }} />
-          </div>
-        ) : listings.length === 0 ? (
-          <div style={{ padding: '30px 20px', textAlign: 'center', color: '#8B8B86', fontSize: 13 }}>No listings yet.</div>
-        ) : (
-          // items waiting at the desk float to the top — they need a decision
-          [...listings].sort((a, b) => (a.status === 'pending' ? 0 : 1) - (b.status === 'pending' ? 0 : 1)).map((l) => {
-            const chip = STATUS_CHIP[l.status] || STATUS_CHIP.active
-            return (
-              <div key={l.id} style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap', padding: '12px 16px', borderBottom: '1px solid #E6E6E3' }}>
-                <div style={{ flex: '1 1 200px', minWidth: 0 }}>
-                  <div style={{ fontWeight: 700, fontSize: 13.5, display: 'flex', alignItems: 'center', gap: 7 }}>
-                    <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{l.title}</span>
-                    {l.is_featured && <span style={{ ...mono, fontSize: 8.5, color: '#9A6A12', background: '#FBF2DD', padding: '2px 6px', borderRadius: 0, flex: 'none' }}>FEATURED</span>}
-                  </div>
-                  <div style={{ fontSize: 11.5, color: '#8B8B86', fontWeight: 600, marginTop: 2 }}>
-                    {l.seller_name} · {rp(l.price)}{l.platform_fee > 0 ? ` (fee ${rp(l.platform_fee)})` : ''}
-                  </div>
-                </div>
-                <span style={{ ...mono, fontSize: 9, color: chip.fg, background: chip.bg, padding: '4px 9px', borderRadius: 0, flex: 'none' }}>{l.status.toUpperCase()}</span>
-                <div style={{ display: 'flex', gap: 7, flex: 'none', flexWrap: 'wrap' }}>
-                  {l.status === 'active' && (
-                    <SmallBtn label={l.is_featured ? '★ Unfeature' : '☆ Feature'} busy={busyId === l.id} onClick={() => act(l.id, () => adminSetFeatured(l.id, !l.is_featured))} />
-                  )}
-                  {l.status === 'pending' && (
-                    <>
-                      <SmallBtn label="Approve ✓ (item received)" tone="accent" busy={busyId === l.id} onClick={() => act(l.id, () => adminSetListingStatus(l.id, 'active', 'listing_approved'))} />
-                      <SmallBtn
-                        label="Decline ✗"
-                        tone="danger"
-                        busy={busyId === l.id}
-                        onClick={() => {
-                          if (!window.confirm(`Decline "${l.title}"? ${l.seller_name} will be notified — tell them why in chat.`)) return
-                          act(l.id, () => adminSetListingStatus(l.id, 'removed', 'listing_declined'))
-                        }}
-                      />
-                      <SmallBtn label="💬 Chat seller" busy={busyId === l.id} onClick={() => chatMember(l.seller_id)} />
-                    </>
-                  )}
-                  {l.status === 'active' && (
-                    <SmallBtn label="Remove" tone="danger" busy={busyId === l.id} onClick={() => act(l.id, () => adminSetListingStatus(l.id, 'removed'))} />
-                  )}
-                  {(l.status === 'removed' || l.status === 'flagged') && (
-                    <SmallBtn label="Restore" tone="accent" busy={busyId === l.id} onClick={() => act(l.id, () => adminSetListingStatus(l.id, 'active'))} />
-                  )}
-                </div>
-              </div>
-            )
-          })
-        )}
       </div>
 
       {/* ID verification queue — members who uploaded a student ID and await review.

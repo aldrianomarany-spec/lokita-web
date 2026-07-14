@@ -146,5 +146,37 @@ export default async function handler(req, res) {
     report.digest = { members, listings, orders, admins: (admins || []).length }
   }
 
+  // 6. Monday extra: 📈 the week in review (top category included)
+  if (new Date().getUTCDay() === 1) {
+    const week = new Date(Date.now() - 7 * DAY).toISOString()
+    const countOf = async (table, filter) => {
+      let q = db.from(table).select('*', { count: 'exact', head: true })
+      q = filter(q)
+      const { count } = await q
+      return count || 0
+    }
+    const [wMembers, wListings, wTrades] = await Promise.all([
+      countOf('profiles', (q) => q.gte('created_at', week)),
+      countOf('listings', (q) => q.gte('created_at', week)),
+      countOf('transactions', (q) => q.eq('status', 'completed').gte('created_at', week)),
+    ])
+    const { data: cats } = await db.from('listings').select('category').gte('created_at', week).limit(500)
+    const tally = {}
+    for (const c of cats || []) {
+      if (c.category) tally[c.category] = (tally[c.category] || 0) + 1
+    }
+    const top = Object.entries(tally).sort((a, b) => b[1] - a[1])[0]
+    const { data: admins } = await db.from('profiles').select('id').eq('role', 'admin')
+    for (const a of admins || []) {
+      await db.from('notifications').insert({
+        user_id: a.id,
+        type: 'system',
+        title: `📈 LOKITA this week: ${wMembers} new member${wMembers === 1 ? '' : 's'} · ${wListings} listing${wListings === 1 ? '' : 's'} · ${wTrades} trade${wTrades === 1 ? '' : 's'} done`,
+        body: top ? `Top category: ${top[0]} (${top[1]} posts). Keep it rolling 💪` : 'A quiet week — maybe time for a broadcast? 📣',
+      })
+    }
+    report.weekly = { wMembers, wListings, wTrades }
+  }
+
   return res.status(200).json({ ok: true, ...report })
 }
