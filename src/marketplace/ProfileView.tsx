@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useM } from './context'
-import { fetchMyListings, fetchReviewsAboutMe, fetchMyWishlist, type DbListing, type ReviewRow } from '../lib/api'
+import { fetchMyListings, fetchReviewsAboutMe, fetchMyWishlist, fetchMyPaymentDetails, saveMyPaymentDetails, EWALLET_PROVIDERS, type PaymentDetails, type DbListing, type ReviewRow } from '../lib/api'
+import { fileToQrDataUrl } from '../lib/img'
 import { uploadVerificationDoc, updatePassword } from '../lib/auth'
 import { Camera, Edit, Logout, ShieldCheck, Verified } from '../components/Icons'
 import { useLang } from '../i18n'
@@ -66,6 +67,131 @@ function SmallCard({ title, price, badge, badgeBg, badgeFg, dim, photoUrl, onCli
 
 const sectionH2: React.CSSProperties = { fontFamily: "'Bricolage Grotesque',sans-serif", fontSize: 20, fontWeight: 800, letterSpacing: '-.02em', margin: 0 }
 const emptyBox: React.CSSProperties = { background: '#FFFFFF', border: '1px dashed #C9C9C5', borderRadius: 0, padding: 28, textAlign: 'center', marginBottom: 32, color: '#8B8B86', fontSize: 13.5 }
+
+// "How buyers can pay you" — display-only payment details for handover.
+// LOKITA never links to any wallet; it shows these to exactly one person:
+// a buyer whose order you've accepted (enforced by database RLS, mig 0030).
+function PaymentDetailsCard({ onSaved }: { onSaved: () => void }) {
+  const { t } = useLang()
+  const empty: PaymentDetails = { ewallet_provider: null, ewallet_number: null, bank_name: null, bank_account: null, qris_data_url: null }
+  const [d, setD] = useState<PaymentDetails>(empty)
+  const [loaded, setLoaded] = useState(false)
+  const [saveState, setSaveState] = useState<'idle' | 'saving' | 'done'>('idle')
+  const [err, setErr] = useState<string | null>(null)
+  const qrRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    let live = true
+    fetchMyPaymentDetails().then((p) => {
+      if (!live) return
+      if (p) setD(p)
+      setLoaded(true)
+    })
+    return () => {
+      live = false
+    }
+  }, [])
+
+  const save = async () => {
+    if (saveState !== 'idle') return
+    setErr(null)
+    setSaveState('saving')
+    try {
+      await saveMyPaymentDetails({
+        ...d,
+        ewallet_provider: d.ewallet_number ? d.ewallet_provider || 'GoPay' : null,
+        ewallet_number: d.ewallet_number?.trim() || null,
+        bank_name: d.bank_account ? d.bank_name?.trim() || null : null,
+        bank_account: d.bank_account?.trim() || null,
+      })
+      setSaveState('done')
+      onSaved() // refresh profile → 💳 chip state updates
+      setTimeout(() => setSaveState('idle'), 2000)
+    } catch (e) {
+      setSaveState('idle')
+      setErr(e instanceof Error ? e.message : t('Could not save. Please try again.'))
+    }
+  }
+
+  const onQrFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    e.target.value = ''
+    if (!file) return
+    const url = await fileToQrDataUrl(file)
+    if (url) setD((prev) => ({ ...prev, qris_data_url: url }))
+    else alert(t('Could not read that image — try a clear screenshot of your QR code.'))
+  }
+
+  const field: React.CSSProperties = { background: '#F5F5F3', border: '1.5px solid #D8D8D4', borderRadius: 0, padding: '12px 14px', fontSize: 13, fontFamily: 'inherit', fontWeight: 500, color: '#000000' }
+
+  return (
+    <div style={{ background: '#FFFFFF', border: '1px solid #D8D8D4', borderRadius: 0, padding: '20px 22px', marginBottom: 32 }}>
+      <div style={{ fontSize: 12.5, color: '#5F6063', fontWeight: 500, lineHeight: 1.6, marginBottom: 14 }}>
+        {t('All optional — leave empty to be paid in cash. Shown to exactly one person: a buyer whose order you accepted, only while the trade is active. Never on your public profile, never in notifications. LOKITA never touches the money.')}
+      </div>
+      <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 10 }}>
+        <select
+          className="lok-field"
+          value={d.ewallet_provider || 'GoPay'}
+          onChange={(e) => setD({ ...d, ewallet_provider: e.target.value })}
+          style={{ ...field, flex: '0 1 130px', fontWeight: 600 }}
+        >
+          {EWALLET_PROVIDERS.map((p) => <option key={p} value={p}>{p}</option>)}
+        </select>
+        <input
+          className="lok-field"
+          value={d.ewallet_number || ''}
+          onChange={(e) => setD({ ...d, ewallet_number: e.target.value.replace(/[^0-9+]/g, '').slice(0, 20) })}
+          placeholder={t('E-wallet phone number (e.g. 0812…)')}
+          inputMode="tel"
+          style={{ ...field, flex: '1 1 200px', minWidth: 0 }}
+        />
+      </div>
+      <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 12 }}>
+        <input
+          className="lok-field"
+          value={d.bank_name || ''}
+          onChange={(e) => setD({ ...d, bank_name: e.target.value.slice(0, 40) })}
+          placeholder={t('Bank (e.g. BCA)')}
+          style={{ ...field, flex: '0 1 130px' }}
+        />
+        <input
+          className="lok-field"
+          value={d.bank_account || ''}
+          onChange={(e) => setD({ ...d, bank_account: e.target.value.slice(0, 40) })}
+          placeholder={t('Account number')}
+          inputMode="numeric"
+          style={{ ...field, flex: '1 1 200px', minWidth: 0 }}
+        />
+      </div>
+      <div style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap', marginBottom: 14 }}>
+        <input ref={qrRef} type="file" accept="image/*" onChange={onQrFile} style={{ display: 'none' }} />
+        {d.qris_data_url ? (
+          <div style={{ position: 'relative', flex: 'none' }}>
+            <img src={d.qris_data_url} alt="QR" style={{ width: 92, height: 92, objectFit: 'contain', border: '1px solid #D8D8D4', background: '#FFFFFF' }} />
+            <button onClick={() => setD({ ...d, qris_data_url: null })} title={t('Remove')} style={{ position: 'absolute', top: -7, right: -7, width: 20, height: 20, border: 'none', background: '#000000', color: '#FFFFFF', fontSize: 11, cursor: 'pointer', lineHeight: 1 }}>✕</button>
+          </div>
+        ) : (
+          <button onClick={() => qrRef.current?.click()} className="lok-btn" style={{ flex: 'none', width: 92, height: 92, border: '1.5px dashed #C2C2BE', background: '#F5F5F3', color: '#9A9A94', cursor: 'pointer', fontSize: 11, fontFamily: 'inherit', fontWeight: 600, lineHeight: 1.4 }}>
+            + {t('My QR code')}
+          </button>
+        )}
+        <div style={{ flex: '1 1 220px', fontSize: 11.5, color: '#8B8B86', fontWeight: 500, lineHeight: 1.55 }}>
+          {t('Screenshot the "Receive money" QR from your GoPay/DANA/bank app. Buyers scan it at handover — fastest way to get paid.')}
+        </div>
+      </div>
+      {err && <div style={{ fontSize: 12, color: '#B23A1B', fontWeight: 600, marginBottom: 10 }}>{err}</div>}
+      <button
+        onClick={save}
+        disabled={!loaded || saveState !== 'idle'}
+        className="lok-btn"
+        style={{ border: 'none', background: saveState === 'done' ? '#3DBB6E' : 'var(--accent,#000000)', color: '#F7F3EA', fontFamily: 'inherit', fontWeight: 700, fontSize: 13, padding: '12px 20px', borderRadius: 0, cursor: saveState === 'idle' ? 'pointer' : 'default', transition: 'background .2s ease' }}
+      >
+        {saveState === 'saving' ? t('Saving…') : saveState === 'done' ? t('Saved ✓ — 💳 Cashless ready') : t('Save payment details')}
+      </button>
+    </div>
+  )
+}
 
 // Change password + a plain-language privacy summary. Google-only accounts can
 // set a password here too (adds email login alongside Google).
@@ -370,6 +496,13 @@ export default function ProfileView() {
       ) : (
         <div style={emptyBox}>{t('No reviews yet. After a completed trade, buyers and sellers can rate each other here.')}</div>
       )}
+
+      {/* how buyers can pay you — display-only, revealed to active buyers only */}
+      <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', margin: '32px 0 14px', gap: 10, flexWrap: 'wrap' }}>
+        <h2 style={sectionH2}>💳 {t('How buyers can pay you')}</h2>
+        <span style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 11, color: '#9A9A94' }}>{t('PRIVATE — ACTIVE BUYERS ONLY')}</span>
+      </div>
+      <PaymentDetailsCard onSaved={refetchProfile} />
 
       {/* account & privacy */}
       <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', margin: '32px 0 14px' }}>

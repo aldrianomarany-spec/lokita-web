@@ -300,6 +300,41 @@ local harness with functional tests for every mechanism):
   api/health.js (UptimeRobot target), docs/OPERATIONS.md (owner routines).
 - NOTE: user must run migration 0029 + add CRON_SECRET in Vercel + redeploy.
 
+Payments phase 1 (2026-07-14, **migration 0030** — validated in harness incl.
+all RLS states): Option E model — item money moves buyer→seller directly
+(cash or seller's own e-wallet/QR); only boosts+protection fees will flow
+through Midtrans (phase 2, awaiting owner's Sandbox keys in Vercel as
+MIDTRANS_SERVER_KEY + VITE_MIDTRANS_CLIENT_KEY).
+- payment_details table: e-wallet/bank/QR-as-data-url (NO storage bucket —
+  the QR lives inline in the RLS-protected row). Reveal policy: owner + a
+  buyer with an order in status paid/dropped_off ONLY. profiles.
+  accepts_cashless synced by trigger; public_profiles recreated with it.
+- UI: ProfileView "💳 How buyers can pay you" editor (fileToQrDataUrl in
+  img.ts); OrdersView buyer card shows seller payment methods + scannable QR
+  while active (hidden for qris-paid orders); 💳 chips on feed cards +
+  DetailModal seller card (sellerCashless via public_profiles flag);
+  privacy-policy paragraph added.
+
+Payments phase 2 (2026-07-14, **migration 0031**): real Midtrans QRIS for
+LOKITA's OWN fees only (Option E — item money stays buyer→seller):
+- api/qris/fee.js: JWT-authed charge creation for kind boost|protection;
+  amounts read from DB rows (boost_requests.amount / transactions.
+  protection_fee), order ids lokitab-<id> / lokitap-<id>, refs stored for
+  webhook cross-check.
+- api/qris/webhook.js extended: settlement of lokitab- → boost approved +
+  listing featured + 🚀 notification + audit; lokitap- → protection_paid +
+  🛡️ notification. Item flow (lokita-) unchanged. ONE notification URL:
+  https://lokita.vercel.app/api/qris/webhook — must be set in BOTH Midtrans
+  dashboards (sandbox + production, Settings → Configuration).
+- UI: DetailModal boost card shows live QR + 3s polling → "FEATURED now!";
+  falls back to the manual admin flow if the gateway isn't configured.
+  CheckoutModal done step: ProtectionPayBox (QR + poll → active ✓, or
+  informational fallback). OrdersView protection chip: green paid / amber
+  "Protection · unpaid". requestBoost returns the row id now.
+- Env: MIDTRANS_SERVER_KEY (+ optional MIDTRANS_IS_PRODUCTION=true later);
+  VITE_MIDTRANS_CLIENT_KEY reserved for future Snap use.
+- Sandbox test: pay QRIS via https://simulator.sandbox.midtrans.com
+
 Remaining / nice-to-have:
 - **Real Midtrans QRIS** — deliberately last; blocked on the owner signing up for
   Midtrans. api/qris scaffolding exists; currently prototype/static-QR mode.

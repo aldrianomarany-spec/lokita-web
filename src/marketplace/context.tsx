@@ -152,6 +152,7 @@ export interface State {
   pickup: 'meet' | 'leave' | 'security'
   // opt-in Buyer Protection for the order being checked out (fee from protectionFee())
   protectOn: boolean
+  lastOrderId: string | null // order just placed — the done step pays its protection fee
   // QRIS payment in progress (QR to display + which order it pays for).
   // manual=true → buyer confirms with a button (static/demo modes);
   // manual=false → Midtrans webhook confirms automatically.
@@ -236,6 +237,7 @@ const initialState: State = {
   pay: 'cod',
   pickup: 'security',
   protectOn: false,
+  lastOrderId: null,
   qris: null,
   qrisLoading: false,
   memberId: null,
@@ -302,7 +304,7 @@ export interface MarketplaceApi {
   deleteThread: (conv: ConversationRow) => Promise<void>
   cancelAttach: () => void
   sendOffer: (amount: number) => Promise<void> | void
-  boostListing: (days: 3 | 7) => Promise<void>
+  boostListing: (days: 3 | 7) => Promise<string | null>
   setMsgDraft: (v: string) => void
   sendMsg: (text?: string) => void
   sendImage: (file: File) => Promise<void>
@@ -937,8 +939,8 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
 
     boostListing: async (days) => {
       const sel = state.sel
-      if (!sel || state.guest) return
-      await requestBoost(sel.id, days)
+      if (!sel || state.guest) return null
+      return await requestBoost(sel.id, days)
     },
 
     sendOffer: async (amount) => {
@@ -1094,9 +1096,9 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
     openCheckout: () => {
       patch({ protectOn: false })
       if (state.guest) return goSignup()
-      patch({ checkoutOpen: true, coStep: 'options', pay: 'cod', pickup: 'security', qris: null, qrisLoading: false })
+      patch({ checkoutOpen: true, coStep: 'options', pay: 'cod', pickup: 'security', qris: null, qrisLoading: false, lastOrderId: null })
     },
-    closeCheckout: () => patch({ checkoutOpen: false, coStep: 'options', sel: null, qris: null, qrisLoading: false }),
+    closeCheckout: () => patch({ checkoutOpen: false, coStep: 'options', sel: null, qris: null, qrisLoading: false, lastOrderId: null }),
     setPay: (v) => patch({ pay: v }),
     setPickup: (v) => patch({ pickup: v }),
     coContinue: async () => {
@@ -1105,6 +1107,7 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
         // Midtrans charge; the webhook + realtime flip it to paid.
         const id = await placeOrder()
         if (!id) return
+        patch({ lastOrderId: id }) // the done step collects the protection fee
         const price = state.sel?.priceNum ?? 0
         const amount = price // published price — LOKITA's platform fee is already inside it
         // mode 1: the owner's fixed QRIS image
@@ -1144,7 +1147,8 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
         }
         return
       }
-      if (await placeOrder()) patch({ coStep: 'done' })
+      const codOrderId = await placeOrder()
+      if (codOrderId) patch({ coStep: 'done', lastOrderId: codOrderId })
     },
     confirmQrisPaid: () => {
       // buyer says they've sent the payment; the ORDER stays "awaiting seller

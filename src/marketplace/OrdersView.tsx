@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import QRCode from 'qrcode'
 import { useM } from './context'
-import type { OrderRow, OrderStatus } from '../lib/api'
+import { fetchSellerPayment, type PaymentDetails, type OrderRow, type OrderStatus } from '../lib/api'
 import { Verified } from '../components/Icons'
 import { useLang } from '../i18n'
 
@@ -30,6 +30,22 @@ function OrderCard({ o }: { o: OrderRow }) {
 
   // handover code is live while the trade is in motion; receipt after
   const codeActive = !!o.pickup_code && (o.status === 'paid' || o.status === 'dropped_off')
+
+  // buyer with an ACTIVE accepted order sees how to pay the seller (RLS is
+  // the real gate — this fetch simply returns nothing for anyone else)
+  const [sellerPay, setSellerPay] = useState<PaymentDetails | null>(null)
+  const [qrOpen, setQrOpen] = useState(false)
+  useEffect(() => {
+    let live = true
+    if (o.role === 'buyer' && (o.status === 'paid' || o.status === 'dropped_off') && o.payment_method !== 'qris') {
+      fetchSellerPayment(o.counterparty_id).then((p) => live && setSellerPay(p))
+    } else {
+      setSellerPay(null)
+    }
+    return () => {
+      live = false
+    }
+  }, [o.role, o.status, o.counterparty_id, o.payment_method])
   useEffect(() => {
     if (!receiptOpen || qrUrl) return
     const payload = `LOKITA RECEIPT\nOrder: ${o.id}\nItem: ${o.listing_title}\nPrice: Rp ${Number(o.listing_price).toLocaleString('id-ID')}\nCode: ${o.pickup_code || '-'}\nDate: ${o.completed_at || o.created_at}`
@@ -80,8 +96,8 @@ function OrderCard({ o }: { o: OrderRow }) {
           <div style={{ fontFamily: "'Bricolage Grotesque',sans-serif", fontWeight: 800, fontSize: 18, color: 'var(--accent,#000000)' }}>{rupiah(o.listing_price)}</div>
           <span style={{ display: 'inline-block', marginTop: 5, fontFamily: "'Spline Sans Mono',monospace", fontSize: 10, fontWeight: 600, color: sm.fg, background: sm.bg, padding: '3px 8px', borderRadius: 0 }}>{t(sm.label)}</span>
           {o.protection_enabled && (
-            <span style={{ display: 'inline-block', marginTop: 5, marginLeft: 6, fontFamily: "'Spline Sans Mono',monospace", fontSize: 9, fontWeight: 700, background: '#EDF5F9', color: '#27607A', padding: '3px 7px', border: '1px solid #BFDCE8', borderRadius: 0 }}>
-              🛡️ {t('Protected')}{(o.protection_fee ?? 0) > 0 ? ` · Rp ${(o.protection_fee as number).toLocaleString('id-ID')}` : ''}
+            <span style={{ display: 'inline-block', marginTop: 5, marginLeft: 6, fontFamily: "'Spline Sans Mono',monospace", fontSize: 9, fontWeight: 700, background: o.protection_paid ? '#EAF5EE' : '#FBF2DD', color: o.protection_paid ? '#1E9E5A' : '#9A6A12', padding: '3px 7px', border: `1px solid ${o.protection_paid ? '#BFE3CC' : '#ECD8A6'}`, borderRadius: 0 }}>
+              🛡️ {o.protection_paid ? t('Protected') : t('Protection · unpaid')}{(o.protection_fee ?? 0) > 0 ? ` · Rp ${(o.protection_fee as number).toLocaleString('id-ID')}` : ''}
             </span>
           )}
         </div>
@@ -113,6 +129,41 @@ function OrderCard({ o }: { o: OrderRow }) {
           <span style={{ fontSize: 11.5, color: '#2F6B85', fontWeight: 600, lineHeight: 1.45 }}>
             {o.role === 'buyer' ? t('Show this code at handover — the seller checks it matches.') : t("Ask for the buyer's code — hand it over only if it matches this.")}
           </span>
+        </div>
+      )}
+
+      {/* 💳 how to pay the seller — visible ONLY to this buyer while the order
+          is active (database-enforced). No details saved → cash at handover. */}
+      {sellerPay && (
+        <div style={{ background: '#EAF5EE', border: '1px solid #BFE3CC', padding: '11px 14px', marginBottom: 12 }}>
+          <div style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 9.5, letterSpacing: '.08em', color: '#2C6E49', marginBottom: 7 }}>
+            💳 {t('PAY THE SELLER DIRECTLY AT HANDOVER')}
+          </div>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+            {sellerPay.ewallet_number && (
+              <span style={{ fontSize: 12.5, fontWeight: 700, color: '#1E1E1E', background: '#FFFFFF', border: '1px solid #D8E8DC', padding: '7px 11px' }}>
+                {sellerPay.ewallet_provider || 'E-wallet'} · {sellerPay.ewallet_number}
+              </span>
+            )}
+            {sellerPay.bank_account && (
+              <span style={{ fontSize: 12.5, fontWeight: 700, color: '#1E1E1E', background: '#FFFFFF', border: '1px solid #D8E8DC', padding: '7px 11px' }}>
+                {sellerPay.bank_name || 'Bank'} · {sellerPay.bank_account}
+              </span>
+            )}
+            {sellerPay.qris_data_url && (
+              <button onClick={() => setQrOpen((v) => !v)} className="lok-btn" style={{ border: '1px solid #1E9E5A', background: qrOpen ? '#1E9E5A' : '#FFFFFF', color: qrOpen ? '#FFFFFF' : '#1E9E5A', fontFamily: 'inherit', fontWeight: 700, fontSize: 12, padding: '7px 12px', borderRadius: 0, cursor: 'pointer' }}>
+                {qrOpen ? t('Hide QR') : t('Scan their QR')}
+              </button>
+            )}
+          </div>
+          {qrOpen && sellerPay.qris_data_url && (
+            <div style={{ marginTop: 10, textAlign: 'center' }}>
+              <img src={sellerPay.qris_data_url} alt="Seller QR" style={{ width: 210, maxWidth: '100%', border: '1px solid #D8E8DC', background: '#FFFFFF', padding: 6 }} />
+            </div>
+          )}
+          <div style={{ fontSize: 10.5, color: '#4A5A50', fontWeight: 500, marginTop: 7, lineHeight: 1.5 }}>
+            {t('Pay only when the item is in your hands. Money goes straight to the seller — LOKITA never holds it.')}
+          </div>
         </div>
       )}
 

@@ -86,6 +86,7 @@ function GridCard({ it, saved, onOpen, onSave }: { it: EnrichedItem; saved: bool
         <div style={{ fontSize: 11, color: GRAY }}>
           {it.proxTag} · {it.cond.toLowerCase()}
           {(it.viewCount ?? 0) > 0 ? <span style={{ color: '#2F6B85', fontWeight: 600 }}> · 👁 {it.viewCount}</span> : null}
+          {it.sellerCashless ? <span title={t('Seller accepts cashless payment at handover')}> · 💳</span> : null}
         </div>
       </div>
     </div>

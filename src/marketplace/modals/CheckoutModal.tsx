@@ -1,9 +1,70 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useM } from '../context'
 import { useLang } from '../../i18n'
 import { protectionFee } from '../../theme'
+import { createFeeCharge, fetchProtectionPaid } from '../../lib/api'
 import Overlay, { stop } from './Overlay'
 import { Check } from '../../components/Icons'
+
+// 🛡️ collect the protection fee by real QRIS right after the order is placed.
+// Gateway not configured / charge fails → quiet informational fallback.
+function ProtectionPayBox({ orderId }: { orderId: string }) {
+  const { t } = useLang()
+  const [charge, setCharge] = useState<{ qrUrl: string; amount: number } | null>(null)
+  const [state, setState] = useState<'loading' | 'pay' | 'paid' | 'fallback'>('loading')
+  useEffect(() => {
+    let live = true
+    createFeeCharge('protection', orderId)
+      .then((c) => {
+        if (!live) return
+        setCharge(c)
+        setState('pay')
+      })
+      .catch(() => live && setState('fallback'))
+    return () => {
+      live = false
+    }
+  }, [orderId])
+  useEffect(() => {
+    if (state !== 'pay') return
+    const timer = window.setInterval(() => {
+      fetchProtectionPaid(orderId).then((ok) => ok && setState('paid'))
+    }, 3000)
+    return () => window.clearInterval(timer)
+  }, [state, orderId])
+
+  if (state === 'fallback') {
+    return (
+      <div style={{ background: '#EDF5F9', border: '1px solid #BFDCE8', padding: '11px 14px', marginBottom: 14, fontSize: 12, color: '#2F6B85', fontWeight: 600, lineHeight: 1.5, textAlign: 'left' }}>
+        🛡️ {t('Buyer Protection noted — the LOKITA team will collect the fee with your payment at pickup.')}
+      </div>
+    )
+  }
+  if (state === 'paid') {
+    return (
+      <div style={{ background: '#EAF5EE', border: '1px solid #BFE3CC', padding: '12px 14px', marginBottom: 14, fontSize: 13, color: '#1E9E5A', fontWeight: 800 }}>
+        🛡️ {t('Buyer Protection active — this trade is covered.')} ✓
+      </div>
+    )
+  }
+  return (
+    <div style={{ background: '#EDF5F9', border: '1px solid #BFDCE8', padding: '14px', marginBottom: 14 }}>
+      <div style={{ fontWeight: 800, fontSize: 13, color: '#27607A', marginBottom: 8 }}>🛡️ {t('One last step — activate Buyer Protection')}</div>
+      {state === 'loading' || !charge ? (
+        <span className="lok-spin" style={{ width: 20, height: 20, border: '3px solid #BFDCE8', borderTopColor: '#2F6B85', borderRadius: '50%', display: 'inline-block' }} />
+      ) : (
+        <>
+          <img src={charge.qrUrl} alt="QRIS" style={{ width: 170, maxWidth: '100%', background: '#FFFFFF', border: '1px solid #BFDCE8', padding: 6 }} />
+          <div style={{ fontWeight: 800, fontSize: 15, color: '#27607A', marginTop: 6 }}>Rp {charge.amount.toLocaleString('id-ID')}</div>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, fontSize: 11.5, color: '#2F6B85', fontWeight: 600, marginTop: 4 }}>
+            <span className="lok-spin" style={{ width: 12, height: 12, border: '2px solid #BFDCE8', borderTopColor: '#2F6B85', borderRadius: '50%', display: 'inline-block' }} />
+            {t('Scan with any QRIS app — protection activates automatically.')}
+          </div>
+        </>
+      )}
+    </div>
+  )
+}
 
 const s2 = (children: React.ReactNode) => (
   <svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
@@ -188,6 +249,7 @@ export default function CheckoutModal() {
             </div>
             <div style={{ fontFamily: "'Bricolage Grotesque',sans-serif", fontWeight: 800, fontSize: 20, marginBottom: 9 }}>{t('Order placed')}</div>
             <div style={{ fontSize: 13.5, color: '#4A4B4E', lineHeight: 1.6, marginBottom: 12 }}>{doneMsg}</div>
+            {s.protectOn && s.lastOrderId && <ProtectionPayBox orderId={s.lastOrderId} />}
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'center', marginBottom: 22 }}>
               <span style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 10, color: '#1E1E1E', background: '#ECECEA', padding: '5px 10px', borderRadius: 0 }}>{t(payLabel)}</span>
               <span style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 10, color: '#1E1E1E', background: '#ECECEA', padding: '5px 10px', borderRadius: 0 }}>{t(pickupLabel)}</span>

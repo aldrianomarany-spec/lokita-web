@@ -28,15 +28,66 @@ export default async function handler(req, res) {
       .digest('hex')
     if (expected !== signature_key) return res.status(403).json({ error: 'Invalid signature' })
 
-    if (!String(order_id).startsWith('lokita-')) return res.status(200).json({ ok: true, ignored: true })
-    const transactionId = String(order_id).slice('lokita-'.length)
-
+    const oid = String(order_id)
     const supabase = createClient(supabaseUrl, serviceKey, { auth: { persistSession: false } })
 
     const paid =
       (transaction_status === 'settlement' || transaction_status === 'capture') &&
       (!fraud_status || fraud_status === 'accept')
     const failed = ['expire', 'cancel', 'deny', 'failure'].includes(transaction_status)
+
+    // ---- 🚀 boost fee (lokitab-<boost id>): approve + feature automatically ----
+    if (oid.startsWith('lokitab-')) {
+      if (!paid) return res.status(200).json({ ok: true }) // pending/failed: admin flow still available
+      const boostId = oid.slice('lokitab-'.length)
+      const { data: b } = await supabase
+        .from('boost_requests')
+        .select('id, listing_id, seller_id, days, status, midtrans_ref')
+        .eq('id', boostId)
+        .eq('midtrans_ref', oid)
+        .single()
+      if (!b) return res.status(200).json({ ok: true, ignored: true })
+      if (b.status !== 'pending') return res.status(200).json({ ok: true, already: true })
+      const until = new Date(Date.now() + b.days * 86400000).toISOString()
+      await supabase.from('listings').update({ is_featured: true, featured_until: until }).eq('id', b.listing_id)
+      await supabase.from('boost_requests').update({ status: 'approved' }).eq('id', b.id)
+      await supabase.from('notifications').insert({
+        user_id: b.seller_id,
+        type: 'system',
+        reference_id: b.listing_id,
+        title: '🚀 Boost active!',
+        body: `Payment received — your listing is FEATURED for ${b.days} days.`,
+      })
+      await supabase.from('admin_audit').insert({ admin_id: null, action: 'boost_paid_qris', target: b.listing_id, detail: `${b.days}d via Midtrans` }).then(() => {}, () => {})
+      return res.status(200).json({ ok: true, boost: 'approved' })
+    }
+
+    // ---- 🛡️ protection fee (lokitap-<order id>): activate protection ----
+    if (oid.startsWith('lokitap-')) {
+      if (!paid) return res.status(200).json({ ok: true })
+      const txId = oid.slice('lokitap-'.length)
+      const { data: t } = await supabase
+        .from('transactions')
+        .select('id, buyer_id, protection_paid, protection_ref')
+        .eq('id', txId)
+        .eq('protection_ref', oid)
+        .single()
+      if (!t) return res.status(200).json({ ok: true, ignored: true })
+      if (t.protection_paid) return res.status(200).json({ ok: true, already: true })
+      await supabase.from('transactions').update({ protection_paid: true }).eq('id', t.id)
+      await supabase.from('notifications').insert({
+        user_id: t.buyer_id,
+        type: 'order_update',
+        reference_id: t.id,
+        title: '🛡️ Buyer Protection active',
+        body: 'Payment received — this trade is covered by LOKITA dispute mediation.',
+      })
+      return res.status(200).json({ ok: true, protection: 'active' })
+    }
+
+    // ---- item payment (lokita-<transaction id>): original flow ----
+    if (!oid.startsWith('lokita-')) return res.status(200).json({ ok: true, ignored: true })
+    const transactionId = oid.slice('lokita-'.length)
 
     if (paid) {
       await supabase

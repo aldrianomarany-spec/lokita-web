@@ -29,6 +29,7 @@ export interface Item {
   ownerId?: string
   isGiveaway?: boolean // Free & Donations — published at Rp 0, no fee
   viewCount?: number // opens by non-owners; shown to the owner only
+  sellerCashless?: boolean // seller saved payment details (💳 chip); details themselves stay locked
 }
 
 // item enriched with proximity fields at render time

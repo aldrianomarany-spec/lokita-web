@@ -29,6 +29,27 @@ export async function makeThumb(file: File): Promise<File | null> {
   }
 }
 
+// Personal QRIS photo → compact data-URL stored INSIDE the RLS-protected
+// payment_details row (no public bucket URL that could leak). ~500px is
+// plenty for any phone camera to scan.
+export async function fileToQrDataUrl(file: File): Promise<string | null> {
+  try {
+    const bitmap = await createImageBitmap(file)
+    const scale = Math.min(1, 500 / Math.max(bitmap.width, bitmap.height))
+    const canvas = document.createElement('canvas')
+    canvas.width = Math.max(1, Math.round(bitmap.width * scale))
+    canvas.height = Math.max(1, Math.round(bitmap.height * scale))
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return null
+    ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height)
+    bitmap.close()
+    const url = canvas.toDataURL('image/jpeg', 0.8)
+    return url.length <= 150000 ? url : canvas.toDataURL('image/jpeg', 0.55)
+  } catch {
+    return null
+  }
+}
+
 export async function compressImage(file: File): Promise<File> {
   // GIFs would lose animation; tiny files aren't worth re-encoding
   if (file.type === 'image/gif' || file.size < 150_000) return file
