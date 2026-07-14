@@ -1,6 +1,7 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { useM } from './context'
 import { useIsPhone } from './useIsMobile'
+import { useClickOutside } from '../lib/useClickOutside'
 import { Search, MessageBubble, Bell, Verified } from '../components/Icons'
 import { BUILDINGS } from '../theme'
 import { BRAND_LOGO_URL } from '../brand'
@@ -69,6 +70,11 @@ export default function TopBar() {
   const { state, patch, goHome, goSignup, goLogin, selectBldg, setQuery, clearQuery, openSell, toggleSavedView, openMessages, openNotifs, toggleMenu, openProfile, openOrders, logout } = useM()
   const [bldgOpen, setBldgOpen] = useState(false)
   const { t } = useLang()
+  // tap/click anywhere else (or Escape) dismisses the floating menus
+  const bldgRef = useRef<HTMLDivElement>(null)
+  const menuRef = useRef<HTMLDivElement>(null)
+  const avatarRef = useRef<HTMLDivElement>(null)
+  useClickOutside([bldgRef], () => setBldgOpen(false), bldgOpen)
   // Anti-autofill: Chrome's password manager targets this box (the page's main
   // text input) and injects saved emails. readOnly-until-focused blocks all
   // programmatic fills — browsers never autofill readonly inputs.
@@ -76,6 +82,7 @@ export default function TopBar() {
   const s = state
   const isPhone = useIsPhone()
   const guest = s.guest
+  useClickOutside([menuRef, avatarRef], () => patch({ menuOpen: false }), !guest && s.menuOpen)
 
   const savedCount = Object.keys(s.saved).length
   const unreadCount = s.convs.reduce((sum, c) => sum + c.unread, 0)
@@ -127,7 +134,7 @@ export default function TopBar() {
 
       {/* building filter — the homepage shows only the chosen building's items */}
       {!isPhone && (
-        <div style={{ position: 'relative', flex: 'none' }}>
+        <div ref={bldgRef} style={{ position: 'relative', flex: 'none' }}>
           <button
             className="lok-btn"
             onClick={() => setBldgOpen((v) => !v)}
@@ -232,7 +239,7 @@ export default function TopBar() {
         </button>
 
         {/* avatar */}
-        <div onClick={toggleMenu} title={t('Account')} style={{ width: 42, height: 42, cursor: 'pointer', position: 'relative', flex: 'none' }}>
+        <div ref={avatarRef} onClick={toggleMenu} title={t('Account')} style={{ width: 42, height: 42, cursor: 'pointer', position: 'relative', flex: 'none' }}>
           <Avatar photo={s.photo} initial={profileInitial} size={42} radius="50%" fontSize={16} />
           <span style={{ position: 'absolute', bottom: 0, right: 0, width: 11, height: 11, borderRadius: '50%', background: '#3DBB6E', border: '2px solid #FFFFFF' }} />
         </div>
@@ -242,6 +249,7 @@ export default function TopBar() {
       {/* profile dropdown */}
       {!guest && s.menuOpen && (
         <div
+          ref={menuRef}
           style={{ position: 'absolute', top: 64, right: 22, width: 264, background: '#FFFFFF', border: '1px solid #D8D8D4', borderRadius: 0, boxShadow: '0 24px 50px -18px rgba(0,0,0,.4)', padding: 16, zIndex: 60, animation: 'lok-pop .18s ease both' }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, paddingBottom: 13, borderBottom: '1px solid #E6E6E3' }}>

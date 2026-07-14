@@ -249,15 +249,17 @@ export default function CompleteProfile() {
             </div>
           </div>
 
-          <div style={{ display: 'flex', gap: 11 }}>
-            <div style={{ flex: 1 }}>
+          {/* the dial-code + number combo needs ~220px — on narrow phones it
+              wraps to its own full-width row instead of cropping the number */}
+          <div style={{ display: 'flex', gap: 11, flexWrap: 'wrap' }}>
+            <div style={{ flex: '1 1 140px' }}>
               <div style={cap}>{t('CLASS STANDING')}</div>
               <select value={standing} onChange={(e) => setStanding(e.target.value as ClassStanding)} className="lok-field" style={{ ...field, fontWeight: 600 }}>
                 <option value="">{t('Select…')}</option>
                 {STANDINGS.map((s) => <option key={s.v} value={s.v}>{t(s.label)}</option>)}
               </select>
             </div>
-            <div style={{ flex: 1 }}>
+            <div style={{ flex: '1 1 220px' }}>
               <div style={cap}>{t('WHATSAPP')}</div>
               <div style={{ display: 'flex', gap: 6 }}>
                 <select
