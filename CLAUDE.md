@@ -269,6 +269,37 @@ Launch prep (2026-07-14):
 - `docs/EMAIL_TEMPLATES.md` — branded Confirm-signup + Reset-password HTML
   for Supabase Auth → Email Templates (keep {{ .ConfirmationURL }} intact).
 
+Growth + hardening batch (2026-07-14, **migration 0029** — validated in the
+local harness with functional tests for every mechanism):
+- 💝 **Free & Donations**: listings.is_giveaway (trigger forces price 0 + fee 0
+  even from a tampered client); SellModal toggle; sidebar/catbar/chips filter
+  (state.freeOnly rides loadFeed via freeOnlyRef); FREE badges; checkout skips
+  payment + protection for giveaways.
+- 👁 view counts (increment_view RPC skips owners; shown to owners only),
+  🔔 saved-search alerts (search_alerts + DB trigger → notification → push;
+  "Alert me" button on empty search, manage chips in Notifications, cap 10),
+  🚫 blocks (blocks table + message/conversation guard triggers; UI in chat
+  header + member profile; feed/convs filtered via state.blockedIds).
+- 🧾 order receipts (transactions.pickup_code — 6-char handover code chip on
+  active orders, full receipt card + QR on completed), 🔗 storefront share
+  (?member=<id> deep link), ✅ getting-started checklist (BrowseView,
+  localStorage lokita_gs_done), 🎓 moveout season (site_settings 'moveout',
+  admin toggle, homepage strip).
+- Control Room: 📣 broadcast (admin_broadcast RPC → notification+push to all),
+  🧾 audit trail (admin_audit; logAdmin() wired into every admin api fn),
+  🐞 error inbox (client_errors; src/lib/errlog.ts reports window.onerror /
+  unhandledrejection, cap 5/session + 50/hr DB backstop), NEW MEMBERS trend.
+- DB rate limits: 10 listings/day, 20 msgs/min, 10 reports/day, 5 requests/day.
+- Search: fetchFeed matches title OR description (or() with sanitized term);
+  pg_trgm indexes for scale.
+- Feed thumbnails: makeThumb (360px) uploaded as thumb_<i>.jpg next to each
+  photo; grid uses thumbUrl() with onError fallback to the full image.
+- Ops: api/cron/cleanup.js (Vercel daily cron 19:00 UTC — expiries, notif
+  purge, stale-listing nudges via listings.last_nudged_at, ID-photo purge 30d
+  post-verification, 📊 admin daily digest; needs CRON_SECRET env),
+  api/health.js (UptimeRobot target), docs/OPERATIONS.md (owner routines).
+- NOTE: user must run migration 0029 + add CRON_SECRET in Vercel + redeploy.
+
 Remaining / nice-to-have:
 - **Real Midtrans QRIS** — deliberately last; blocked on the owner signing up for
   Midtrans. api/qris scaffolding exists; currently prototype/static-QR mode.

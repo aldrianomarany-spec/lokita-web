@@ -27,6 +27,8 @@ export interface Item {
   sellerVerified?: boolean
   sellerRole?: string
   ownerId?: string
+  isGiveaway?: boolean // Free & Donations — published at Rp 0, no fee
+  viewCount?: number // opens by non-owners; shown to the owner only
 }
 
 // item enriched with proximity fields at render time

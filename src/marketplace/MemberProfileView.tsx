@@ -45,10 +45,11 @@ const metaField = (label: string, value: string) =>
   ) : null
 
 export default function MemberProfileView() {
-  const { state, closeMember, openRequestChat } = useM()
+  const { state, closeMember, openRequestChat, blockMember, unblockMember } = useM()
   const { t } = useLang()
   const s = state
   const id = s.memberId
+  const [copied, setCopied] = useState(false)
   const [info, setInfo] = useState<MemberProfileInfo | null>(null)
   const [stats, setStats] = useState<{ selling: number; sold: number } | null>(null)
   const [items, setItems] = useState<EnrichedItem[] | null>(null)
@@ -85,6 +86,7 @@ export default function MemberProfileView() {
   const isOnline = !!id && s.onlineIds.includes(id)
   const seen = !isOnline && info ? lastSeenLabel(info.last_seen_at, t) : null
   const isMe = !!id && id === uid
+  const isBlocked = !!id && s.blockedIds.includes(id)
   const avgRating = reviews && reviews.length ? reviews.reduce((a, r) => a + r.rating, 0) / reviews.length : null
   const rating = avgRating != null ? avgRating.toFixed(1) : '—'
   const isTopSeller = !!stats && stats.sold >= 5 && avgRating != null && avgRating >= 4.5
@@ -147,12 +149,46 @@ export default function MemberProfileView() {
             {metaField(t('MEMBER SINCE'), info?.since || '')}
           </div>
         </div>
-        {!isMe && (
-          <button onClick={() => id && openRequestChat(id)} className="lok-btn" style={{ flex: 'none', border: 'none', background: 'var(--accent,#000000)', color: '#F7F3EA', fontFamily: 'inherit', fontWeight: 700, fontSize: 13.5, padding: '12px 18px', borderRadius: 0, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, boxShadow: '0 6px 16px -6px rgba(0,0,0,.6)' }}>
-            <MessageBubble size={15} />
-            {t('Message')}
+        <div style={{ flex: 'none', display: 'flex', flexDirection: 'column', gap: 8 }}>
+          {!isMe && !isBlocked && (
+            <button onClick={() => id && openRequestChat(id)} className="lok-btn" style={{ border: 'none', background: 'var(--accent,#000000)', color: '#F7F3EA', fontFamily: 'inherit', fontWeight: 700, fontSize: 13.5, padding: '12px 18px', borderRadius: 0, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, boxShadow: '0 6px 16px -6px rgba(0,0,0,.6)' }}>
+              <MessageBubble size={15} />
+              {t('Message')}
+            </button>
+          )}
+          {/* shareable storefront link — "all my stuff" in one URL */}
+          <button
+            onClick={async () => {
+              const url = `${window.location.origin}/app?member=${id}`
+              const text = `${info?.name || t('A neighbour')} ${t('is selling on LOKITA — see their whole storefront:')} ${url}`
+              if (typeof navigator.share === 'function') {
+                navigator.share({ title: 'LOKITA', text, url }).catch(() => {})
+                return
+              }
+              try {
+                await navigator.clipboard.writeText(url)
+              } catch { /* clipboard blocked — nothing to do */ }
+              setCopied(true)
+              window.setTimeout(() => setCopied(false), 1600)
+            }}
+            className="lok-btn"
+            style={{ border: '1px solid #D8D8D4', background: '#FFFFFF', color: copied ? '#1E9E5A' : '#1E1E1E', fontFamily: 'inherit', fontWeight: 700, fontSize: 12.5, padding: '10px 14px', borderRadius: 0, cursor: 'pointer' }}
+          >
+            {copied ? t('Copied ✓') : '🔗 ' + t(isMe ? 'Share my storefront' : 'Share storefront')}
           </button>
-        )}
+          {!isMe && id && (
+            <button
+              onClick={() => {
+                if (isBlocked) unblockMember(id)
+                else if (window.confirm(t("Block this member? You won't see their listings or messages, and they can't message you."))) blockMember(id)
+              }}
+              className="lok-btn"
+              style={{ border: `1px solid ${isBlocked ? '#BFDCE8' : '#E4C4B8'}`, background: isBlocked ? '#EDF5F9' : '#FBEEE9', color: isBlocked ? '#2F6B85' : '#C0492A', fontFamily: 'inherit', fontWeight: 700, fontSize: 12.5, padding: '10px 14px', borderRadius: 0, cursor: 'pointer' }}
+            >
+              {isBlocked ? '✓ ' + t('Unblock') : '🚫 ' + t('Block')}
+            </button>
+          )}
+        </div>
       </div>
 
       {/* stats */}

@@ -51,7 +51,7 @@ function Avatar({ photo, initial, size }: { photo: string | null; initial: strin
 }
 
 export default function MessagesView() {
-  const { state, openConversation, deleteThread, cancelAttach, sendMsg, sendImage, setMsgDraft, patch, openListingById } = useM()
+  const { state, openConversation, deleteThread, cancelAttach, sendMsg, sendImage, setMsgDraft, patch, openListingById, blockMember } = useM()
   const [emojiOpen, setEmojiOpen] = useState(false)
   const [imgSending, setImgSending] = useState(false)
   const emojiRef = useRef<HTMLDivElement>(null)
@@ -166,6 +166,19 @@ export default function MessagesView() {
                     )}
                   </div>
                 </div>
+                {/* block from inside the chat — hides them everywhere + stops their messages */}
+                <button
+                  onClick={() => {
+                    if (window.confirm(t("Block this member? You won't see their listings or messages, and they can't message you."))) {
+                      blockMember(active.other_id).then(() => patch({ activeConvId: null, msgs: [] }))
+                    }
+                  }}
+                  title={t('Block')}
+                  className="lok-navi"
+                  style={{ flex: 'none', border: '1px solid #E4C4B8', background: '#FBEEE9', color: '#C0492A', width: 34, height: 34, borderRadius: 0, cursor: 'pointer', fontSize: 14, lineHeight: 1 }}
+                >
+                  🚫
+                </button>
               </div>
             )}
             {/* pinned product card — the item this chat is about (like any

@@ -53,6 +53,16 @@ import {
   expireFeatured,
   requestBoost,
   cleanupStaleData,
+  incrementView,
+  fetchMyBlockedIds,
+  blockUser,
+  unblockUser,
+  fetchMyAlerts,
+  createSearchAlert,
+  deleteSearchAlert,
+  fetchMoveoutActive,
+  subscribeSettings,
+  type SearchAlertRow,
   type ProfileStats,
   type OrderRow,
   type ConversationRow,
@@ -109,6 +119,10 @@ export interface State {
   sellOpen: boolean
   menuOpen: boolean
   savedOnly: boolean
+  freeOnly: boolean // 💝 Free & Donations corner (giveaway listings only)
+  blockedIds: string[] // members this user blocked (hidden from feed + chats)
+  alerts: SearchAlertRow[] // saved-search alerts ("tell me when … is posted")
+  moveout: boolean // 🎓 moving-out season strip (admin toggle, site_settings)
   saved: Record<string, boolean>
   feed: EnrichedItem[]
   feedLoading: boolean
@@ -157,6 +171,7 @@ export interface State {
   photoUploading: boolean
   listState: ListState
   bundleOn: boolean
+  giveawayOn: boolean // 💝 give it away for free (price 0, no fee)
   f: SellForm
   openReports: number // open-report count for the admin sidebar badge
   recents: string[] // recently viewed listing ids, newest first (this device only)
@@ -189,6 +204,10 @@ const initialState: State = {
   sellOpen: false,
   menuOpen: false,
   savedOnly: false,
+  freeOnly: false,
+  blockedIds: [],
+  alerts: [],
+  moveout: false,
   saved: {},
   feed: [],
   feedLoading: true,
@@ -232,6 +251,7 @@ const initialState: State = {
   photoUploading: false,
   listState: 'idle',
   bundleOn: false,
+  giveawayOn: false,
   f: { title: '', price: '', cat: 'Furniture', cond: 'Good', loc: 'Thomas Building', floor: '', desc: '', bundleItems: '' },
   openReports: 0,
 }
@@ -259,7 +279,12 @@ export interface MarketplaceApi {
   openRequestChat: (requesterId: string, category?: string) => Promise<void>
   selectSort: (k: Sort) => void
   toggleSavedView: () => void
+  toggleFreeView: () => void
   toggleSaveItem: (id: string) => void
+  blockMember: (id: string) => Promise<void>
+  unblockMember: (id: string) => Promise<void>
+  addAlert: (query: string) => Promise<void>
+  removeAlert: (id: string) => Promise<void>
   openItem: (it: Item) => void
   closeDetail: () => void
   chatSeller: () => void
@@ -267,6 +292,7 @@ export interface MarketplaceApi {
   closeSell: () => void
   setF: (k: keyof SellForm, v: string) => void
   toggleBundle: () => void
+  toggleGiveaway: () => void
   submitListing: (photos: File[]) => void
   reloadFeed: () => void
   deleteMyListing: (id: string) => Promise<void>
@@ -348,12 +374,19 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
     [patch],
   )
 
+  // the 💝 Free & Donations toggle rides every feed fetch via a ref, so the
+  // nine existing loadFeed call sites don't each need to thread it through
+  const freeOnlyRef = useRef(false)
+  useEffect(() => {
+    freeOnlyRef.current = state.freeOnly
+  }, [state.freeOnly])
+
   // live feed from Supabase (filters/sort/cap applied server-side)
   const loadFeed = useCallback(
     async (opts: { cat: string; cond: string; sort: Sort; query: string; building: string }, viewerFloor: string | null) => {
       patch({ feedLoading: true, feedError: null })
       try {
-        const [feed, counts] = await Promise.all([fetchFeed(opts, viewerFloor), fetchCategoryCounts()])
+        const [feed, counts] = await Promise.all([fetchFeed({ ...opts, free: freeOnlyRef.current }, viewerFloor), fetchCategoryCounts()])
         patch({ feed, categoryCounts: counts, feedLoading: false })
       } catch (e) {
         patch({ feedLoading: false, feedError: e instanceof Error ? e.message : 'Failed to load listings' })
@@ -363,13 +396,13 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
   )
 
   // re-fetch whenever the filters or the viewer's floor change (query debounced)
-  const { cat, cond, sort, query, bldg } = state
+  const { cat, cond, sort, query, bldg, freeOnly } = state
   const viewerFloor = state.profile.floor
   useEffect(() => {
     const floorCode = viewerFloor ? viewerFloor.toLowerCase() : null
     const t = window.setTimeout(() => loadFeed({ cat, cond, sort, query, building: bldg }, floorCode), query ? 300 : 0)
     return () => window.clearTimeout(t)
-  }, [cat, cond, sort, query, bldg, viewerFloor, loadFeed])
+  }, [cat, cond, sort, query, bldg, freeOnly, viewerFloor, loadFeed])
 
   // Keep the latest feed params in a ref so the realtime callback can reload
   // with the current filters without re-subscribing on every keystroke.
@@ -395,20 +428,30 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
   // arrival. The param is stripped right away so refresh/back doesn't re-open
   // the modal, and a dead link (sold + cleaned up) just lands on the homepage.
   useEffect(() => {
-    const id = new URLSearchParams(window.location.search).get('item')
-    if (!id) return
+    const params = new URLSearchParams(window.location.search)
+    const id = params.get('item')
+    const member = params.get('member')
+    if (!id && !member) return
     window.history.replaceState({}, '', window.location.pathname)
-    fetchListingById(id, null)
-      .then((it) => {
-        if (it) {
-          recordRecent(id)
-          patch({ sel: it })
-        }
-      })
-      .catch(() => {})
+    if (id) {
+      fetchListingById(id, null)
+        .then((it) => {
+          if (it) {
+            recordRecent(id)
+            patch({ sel: it })
+          }
+        })
+        .catch(() => {})
+    } else if (member) {
+      // shared storefront link — the member view fetches the profile itself
+      patch({ view: 'member', memberId: member, memberName: null, memberReturn: 'browse' })
+    }
   }, [patch, recordRecent])
 
-  const enrichedItems = state.feed
+  // blocked members disappear from the feed and the inbox
+  const enrichedItems = state.blockedIds.length
+    ? state.feed.filter((i) => !i.ownerId || !state.blockedIds.includes(i.ownerId))
+    : state.feed
 
   // Load the signed-in user's real profile + stats (fresh-install: blank until set).
   // No session → guest mode: browsing works, all actions prompt signup.
@@ -510,16 +553,42 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
   // ---- messages + notifications (real, realtime) ----
   // latest grouped conversations, readable from callbacks without re-subscribing
   const convsRef = useRef<ConversationRow[]>([])
+  const blockedRef = useRef<string[]>([])
+  useEffect(() => {
+    blockedRef.current = state.blockedIds
+  }, [state.blockedIds])
   const loadConversations = useCallback(async () => {
     patch({ convsLoading: true })
     try {
-      const convs = await fetchConversations()
+      const all = await fetchConversations()
+      const convs = blockedRef.current.length ? all.filter((c) => !blockedRef.current.includes(c.other_id)) : all
       convsRef.current = convs
       patch({ convs, convsLoading: false })
     } catch {
       patch({ convsLoading: false })
     }
   }, [patch])
+
+  // ---- blocks + saved-search alerts + moveout season (0029) ----
+  const loadBlocked = useCallback(async () => {
+    const ids = await fetchMyBlockedIds()
+    blockedRef.current = ids
+    patch({ blockedIds: ids })
+  }, [patch])
+  const loadAlerts = useCallback(async () => {
+    patch({ alerts: await fetchMyAlerts() })
+  }, [patch])
+  useEffect(() => {
+    getUserId().then((uid) => {
+      if (!uid) return
+      loadBlocked()
+      loadAlerts()
+    })
+    fetchMoveoutActive().then((on) => patch({ moveout: on }))
+    // admin flips the season toggle → every homepage updates live
+    const unsub = subscribeSettings(() => fetchMoveoutActive().then((on) => patch({ moveout: on })))
+    return () => unsub()
+  }, [loadBlocked, loadAlerts, patch])
 
   // resolve a conversation id to its whole one-per-person group
   const groupIdsFor = useCallback((convId: string): string[] => {
@@ -645,10 +714,10 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
     goLogin,
 
     goHome: () =>
-      patch({ cat: 'All', cond: 'All', query: '', sel: null, savedOnly: false, menuOpen: false, view: 'browse' }),
-    setQuery: (v) => patch({ query: v, savedOnly: false, view: 'browse' }),
+      patch({ cat: 'All', cond: 'All', query: '', sel: null, savedOnly: false, freeOnly: false, menuOpen: false, view: 'browse' }),
+    setQuery: (v) => patch({ query: v, savedOnly: false, freeOnly: false, view: 'browse' }),
     clearQuery: () => patch({ query: '' }),
-    selectCat: (label) => patch({ cat: label, savedOnly: false, view: 'browse' }),
+    selectCat: (label) => patch({ cat: label, savedOnly: false, freeOnly: false, view: 'browse' }),
     selectCond: (label) => patch({ cond: label }),
     selectBldg: (label) => patch({ bldg: label, savedOnly: false, view: 'browse' }),
     openRequests: () => patch({ view: 'requests', menuOpen: false, sel: null }),
@@ -686,7 +755,37 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
     },
     selectSort: (k) => patch({ sort: k }),
     toggleSavedView: () =>
-      patch((prev) => ({ savedOnly: !prev.savedOnly, cat: 'All', query: '', menuOpen: false, view: 'browse' })),
+      patch((prev) => ({ savedOnly: !prev.savedOnly, freeOnly: false, cat: 'All', query: '', menuOpen: false, view: 'browse' })),
+    toggleFreeView: () =>
+      patch((prev) => ({ freeOnly: !prev.freeOnly, savedOnly: false, cat: 'All', query: '', menuOpen: false, view: 'browse' })),
+    blockMember: async (id) => {
+      if (state.guest) return goSignup()
+      try {
+        await blockUser(id)
+        await loadBlocked()
+        loadConversations()
+      } catch (e) {
+        alert('Could not block: ' + (e instanceof Error ? e.message : 'unknown error'))
+      }
+    },
+    unblockMember: async (id) => {
+      try {
+        await unblockUser(id)
+        await loadBlocked()
+        loadConversations()
+      } catch (e) {
+        alert('Could not unblock: ' + (e instanceof Error ? e.message : 'unknown error'))
+      }
+    },
+    addAlert: async (q) => {
+      if (state.guest) return goSignup()
+      await createSearchAlert(q)
+      await loadAlerts()
+    },
+    removeAlert: async (id) => {
+      await deleteSearchAlert(id)
+      await loadAlerts()
+    },
     toggleSaveItem: async (id: string) => {
       if (state.guest) return goSignup()
       const wasSaved = !!state.saved[id]
@@ -714,6 +813,7 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
 
     openItem: (it) => {
       recordRecent(it.id)
+      if (!it.mine) incrementView(it.id) // seller sees "N views" (DB skips owners anyway)
       patch({ sel: it, menuOpen: false })
     },
     closeDetail: () => patch({ sel: null }),
@@ -749,6 +849,7 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
         sellOpen: false,
         listState: 'idle',
         bundleOn: false,
+        giveawayOn: false,
         f: { title: '', price: '', cat: 'Furniture', cond: 'Good', loc: 'Thomas Building', floor: '', desc: '', bundleItems: '' },
       }),
     reloadFeed: () => {
@@ -762,16 +863,17 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
     },
     setF: (k, v) => patch((prev) => ({ f: { ...prev.f, [k]: v } })),
     toggleBundle: () => patch((prev) => ({ bundleOn: !prev.bundleOn })),
+    toggleGiveaway: () => patch((prev) => ({ giveawayOn: !prev.giveawayOn })),
     submitListing: async (photos: File[]) => {
       if (state.listState !== 'idle') return
       const f = state.f
-      const priceNum = Number((f.price || '').replace(/[^0-9]/g, ''))
+      const priceNum = state.giveawayOn ? 0 : Number((f.price || '').replace(/[^0-9]/g, ''))
       if (!f.title.trim()) {
         patch({ feedError: null })
         alert('Please enter an item title.')
         return
       }
-      if (!priceNum || priceNum <= 0) {
+      if (!state.giveawayOn && (!priceNum || priceNum <= 0)) {
         alert('Please enter a valid price greater than 0.')
         return
       }
@@ -790,6 +892,7 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
             bundleItems: state.bundleOn
               ? f.bundleItems.split('\n').map((l) => l.trim()).filter(Boolean).slice(0, 20)
               : [],
+            isGiveaway: state.giveawayOn,
           },
           photos,
         )
@@ -1095,7 +1198,7 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
         .catch(() => {})
         .finally(() => navigate('/', { replace: true }))
     },
-    resetFilters: () => patch({ cat: 'All', cond: 'All', query: '', savedOnly: false }),
+    resetFilters: () => patch({ cat: 'All', cond: 'All', query: '', savedOnly: false, freeOnly: false }),
   }
 
   return <Ctx.Provider value={api}>{children}</Ctx.Provider>

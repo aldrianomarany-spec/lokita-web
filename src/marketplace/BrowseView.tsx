@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useM, type Sort } from './context'
-import { fetchBanners, subscribeBanners, type BannerRow } from '../lib/api'
+import { fetchBanners, subscribeBanners, thumbUrl, type BannerRow } from '../lib/api'
 import { Search, Star } from '../components/Icons'
 import { CATEGORIES, CAT_META, BUILDINGS, type Category } from '../theme'
 import { useIsNarrow } from './useIsMobile'
@@ -43,14 +43,25 @@ function GridCard({ it, saved, onOpen, onSave }: { it: EnrichedItem; saved: bool
   const { t } = useLang()
   return (
     <div onClick={onOpen} className="lok-card" style={{ background: '#FFFFFF', padding: '0 0 14px', cursor: 'pointer', position: 'relative' }}>
-      {(it.isFeatured || it.mine) && (
-        <span style={{ position: 'absolute', top: 10, left: 10, fontFamily: "'Spline Sans Mono',monospace", fontWeight: 600, fontSize: 9, letterSpacing: 1, background: it.isFeatured ? GOLD : INK, color: '#FFFFFF', padding: '3px 7px', zIndex: 2 }}>
-          {it.isFeatured ? t('FEATURED') : t('YOURS')}
+      {(it.isFeatured || it.isGiveaway || it.mine) && (
+        <span style={{ position: 'absolute', top: 10, left: 10, fontFamily: "'Spline Sans Mono',monospace", fontWeight: 600, fontSize: 9, letterSpacing: 1, background: it.isFeatured ? GOLD : it.isGiveaway ? '#1E9E5A' : INK, color: '#FFFFFF', padding: '3px 7px', zIndex: 2 }}>
+          {it.isFeatured ? t('FEATURED') : it.isGiveaway ? '💝 ' + t('FREE') : t('YOURS')}
         </span>
       )}
       <div style={{ aspectRatio: '1 / 0.85', background: 'repeating-linear-gradient(45deg,#ECECEA 0 10px,#F3F3F1 10px 20px)', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', overflow: 'hidden' }}>
         {it.photoUrl ? (
-          <img src={it.photoUrl} alt={it.title} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'contain' }} />
+          // grid loads the small thumbnail; onError falls back to the full
+          // photo (older listings have no thumb)
+          <img
+            src={thumbUrl(it.photoUrl) || it.photoUrl}
+            onError={(e) => {
+              const img = e.currentTarget
+              if (img.src !== it.photoUrl) img.src = it.photoUrl!
+            }}
+            alt={it.title}
+            loading="lazy"
+            style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'contain' }}
+          />
         ) : (
           <span style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 10, color: '#9A9A94', padding: '0 14px', textAlign: 'center' }}>{it.title}</span>
         )}
@@ -70,16 +81,19 @@ function GridCard({ it, saved, onOpen, onSave }: { it: EnrichedItem; saved: bool
       <div style={{ padding: '10px 12px 0', display: 'flex', flexDirection: 'column', gap: 3 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 8 }}>
           <span style={{ fontFamily: "'Archivo',sans-serif", fontWeight: 500, fontSize: 13, color: INK, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{it.title}</span>
-          <span style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 600, fontSize: 14, color: INK, flex: 'none' }}>{it.price}</span>
+          <span style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 600, fontSize: 14, color: it.isGiveaway ? '#1E9E5A' : INK, flex: 'none' }}>{it.isGiveaway ? t('FREE') : it.price}</span>
         </div>
-        <div style={{ fontSize: 11, color: GRAY }}>{it.proxTag} · {it.cond.toLowerCase()}</div>
+        <div style={{ fontSize: 11, color: GRAY }}>
+          {it.proxTag} · {it.cond.toLowerCase()}
+          {it.mine && (it.viewCount ?? 0) > 0 ? <span style={{ color: '#2F6B85', fontWeight: 600 }}> · 👁 {it.viewCount}</span> : null}
+        </div>
       </div>
     </div>
   )
 }
 
 export default function BrowseView() {
-  const { state, enrichedItems, selectCond, selectSort, resetFilters, openSell, selectCat, toggleSavedView, selectBldg, openRequests, openPeople, openGuide, openItem, toggleSaveItem, goSignup, openListingById } = useM()
+  const { state, enrichedItems, selectCond, selectSort, resetFilters, openSell, selectCat, toggleSavedView, toggleFreeView, selectBldg, openRequests, openPeople, openGuide, openItem, toggleSaveItem, goSignup, openListingById, addAlert, openNotifs, openProfile } = useM()
   const s = state
   const isNarrow = useIsNarrow()
   const { t } = useLang()
@@ -88,7 +102,23 @@ export default function BrowseView() {
 
   const q = s.query.trim().toLowerCase()
   const list: EnrichedItem[] = s.savedOnly ? enrichedItems.filter((i) => s.saved[i.id]) : enrichedItems
-  const filtersActive = q !== '' || s.cat !== 'All' || s.cond !== 'All' || s.savedOnly
+  const filtersActive = q !== '' || s.cat !== 'All' || s.cond !== 'All' || s.savedOnly || s.freeOnly
+
+  // "🔔 alert me" state for the no-results screen
+  const [alertSet, setAlertSet] = useState(false)
+  useEffect(() => setAlertSet(false), [q])
+
+  // getting-started checklist (new members): verified → installed → first move
+  const [gsDismissed, setGsDismissed] = useState(() => localStorage.getItem('lokita_gs_done') === '1')
+  const gsVerified = s.profile.verification_status === 'verified'
+  const gsInstalled = typeof window !== 'undefined' && (window.matchMedia('(display-mode: standalone)').matches || (navigator as unknown as { standalone?: boolean }).standalone === true)
+  const gsTraded = !!s.stats && (s.stats.selling + s.stats.sold + s.stats.buying > 0)
+  const gsAllDone = gsVerified && gsInstalled && gsTraded
+  const showChecklist = !s.guest && !gsDismissed && !gsAllDone && !s.profileLoading
+  const dismissGs = () => {
+    localStorage.setItem('lokita_gs_done', '1')
+    setGsDismissed(true)
+  }
 
   // admin promotion banners (realtime) — sliding carousel; fall back to the item hero
   const [banners, setBanners] = useState<BannerRow[]>([])
@@ -152,6 +182,7 @@ export default function BrowseView() {
           <button onClick={openRequests} style={{ ...chip(false), flex: 'none' }}>🙋 {t('Requests')}</button>
           {!s.guest && <button onClick={openPeople} style={{ ...chip(false), flex: 'none' }}>👋 {t('People')}</button>}
           <button onClick={toggleSavedView} style={{ ...chip(s.savedOnly), flex: 'none' }}>★ {t('Saved')}</button>
+          <button onClick={toggleFreeView} style={{ ...chip(s.freeOnly), flex: 'none' }}>💝 {t('Free')}</button>
           <button onClick={openGuide} style={{ ...chip(false), flex: 'none' }}>📖 {t('Guide')}</button>
           {CATEGORIES.map((label: Category) => {
             const active = s.cat === label && !s.savedOnly
@@ -237,7 +268,7 @@ export default function BrowseView() {
               <span style={{ fontFamily: "'Spline Sans Mono',monospace", fontWeight: 500, fontSize: 11, color: '#9A9A94' }}>{hero.seller}{hero.sellerVerified ? ' · ' + t('Dorm-Verified') : ''}</span>
             </div>
             <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 600, fontSize: isNarrow ? 26 : 34, lineHeight: 1.05, letterSpacing: '-1px' }}>{hero.title}</div>
-            <div style={{ fontSize: 14, color: '#B9B9B3' }}>{hero.price} · {hero.proxTag} · {hero.cond}</div>
+            <div style={{ fontSize: 14, color: '#B9B9B3' }}>{hero.isGiveaway ? '💝 ' + t('FREE') : hero.price} · {hero.proxTag} · {hero.cond}</div>
             <button style={{ alignSelf: 'flex-start', background: PAPER, color: INK, border: 'none', padding: '11px 22px', fontFamily: "'Archivo',sans-serif", fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>{t('View item →')}</button>
           </div>
           <div style={{ background: 'repeating-linear-gradient(45deg,#1E1E1E 0 12px,#232427 12px 24px)', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', minHeight: isNarrow ? 180 : 0, overflow: 'hidden' }}>
@@ -246,6 +277,43 @@ export default function BrowseView() {
             ) : (
               <span style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 11, color: GRAY, background: INK, padding: '4px 8px' }}>item photo</span>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* 🎓 moving-out season strip (admin toggle in the Control Room) */}
+      {s.moveout && !filtersActive && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap', background: '#EDF5F9', border: '1px solid #BFDCE8', padding: '12px 16px', marginBottom: 14 }}>
+          <span style={{ fontSize: 20, flex: 'none' }}>🎓</span>
+          <div style={{ flex: 1, minWidth: 180 }}>
+            <div style={{ fontWeight: 800, fontSize: 13.5, color: '#2F6B85' }}>{t('Moving-out season is ON')}</div>
+            <div style={{ fontSize: 12, color: '#5F6063', fontWeight: 500 }}>{t('Graduating? Clear your room in one go — buyers, grab the best deals of the year.')}</div>
+          </div>
+          <button onClick={() => selectCat('Bundles')} style={{ ...chip(false), flex: 'none' }}>{t('See bundles')}</button>
+          <button onClick={openSell} style={{ ...chip(true), flex: 'none' }}>{t('Post yours')}</button>
+        </div>
+      )}
+
+      {/* ✅ getting-started checklist — new members see their next step */}
+      {showChecklist && !filtersActive && (
+        <div style={{ background: '#FFFFFF', border: `1px solid ${LINE}`, padding: '14px 16px', marginBottom: 14, position: 'relative' }}>
+          <button onClick={dismissGs} title={t('Hide')} style={{ position: 'absolute', top: 8, right: 8, border: 'none', background: 'none', cursor: 'pointer', color: GRAY, fontSize: 13, fontWeight: 700 }}>✕</button>
+          <div style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 10, letterSpacing: 1, color: GRAY, marginBottom: 10 }}>{t('GETTING STARTED')} · {(gsVerified ? 1 : 0) + (gsInstalled ? 1 : 0) + (gsTraded ? 1 : 0)}/3</div>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            {[
+              { done: gsVerified, icon: '🪪', label: t('Verify your student ID'), act: openProfile },
+              { done: gsInstalled, icon: '📲', label: t('Install LOKITA on your phone'), act: openNotifs },
+              { done: gsTraded, icon: '🛍️', label: t('Post or buy your first item'), act: openSell },
+            ].map((step, i) => (
+              <button
+                key={i}
+                onClick={step.done ? undefined : step.act}
+                style={{ flex: '1 1 170px', display: 'flex', alignItems: 'center', gap: 9, border: `1px solid ${step.done ? '#BFDCE8' : LINE}`, background: step.done ? '#EDF5F9' : PAPER, padding: '10px 12px', cursor: step.done ? 'default' : 'pointer', textAlign: 'left', fontFamily: 'inherit', opacity: step.done ? 0.75 : 1 }}
+              >
+                <span style={{ fontSize: 16, flex: 'none' }}>{step.done ? '✅' : step.icon}</span>
+                <span style={{ fontSize: 12.5, fontWeight: 700, color: step.done ? '#2F6B85' : INK, textDecoration: step.done ? 'line-through' : 'none' }}>{step.label}</span>
+              </button>
+            ))}
           </div>
         </div>
       )}
@@ -284,6 +352,9 @@ export default function BrowseView() {
           <button onClick={toggleSavedView} style={{ ...chip(s.savedOnly), display: 'flex', alignItems: 'center', gap: 6 }}>
             <Star fill={s.savedOnly ? '#E7A81E' : 'none'} size={13} />
             Saved
+          </button>
+          <button onClick={toggleFreeView} style={{ ...chip(s.freeOnly), display: 'flex', alignItems: 'center', gap: 6 }}>
+            💝 {t('Free & Donations')}
           </button>
         </div>
       )}
@@ -331,6 +402,21 @@ export default function BrowseView() {
           <div style={{ fontSize: 14, color: GRAY, lineHeight: 1.6, marginBottom: 24 }}>
             {s.query ? <>{t("We couldn't find anything for")} <b style={{ color: INK }}>"{s.query}"{emptyCat}</b>.</> : t('Nothing here yet with these filters.')} {t('Try widening your filters.')}
           </div>
+          {/* 🔔 saved-search alert — get pinged the moment a match is posted */}
+          {!s.guest && q.length >= 2 && (
+            <div style={{ marginBottom: 14 }}>
+              {alertSet ? (
+                <div style={{ fontSize: 13, fontWeight: 700, color: '#1E9E5A' }}>✓ {t("Alert saved — we'll notify you when it's posted.")}</div>
+              ) : (
+                <button
+                  onClick={() => addAlert(s.query).then(() => setAlertSet(true)).catch((e) => alert(e instanceof Error ? e.message : 'Could not save the alert'))}
+                  style={{ ...chip(false), padding: '11px 20px', fontSize: 13, borderColor: '#519BB8', color: '#2F6B85' }}
+                >
+                  🔔 {t('Alert me when someone posts')} "{s.query}"
+                </button>
+              )}
+            </div>
+          )}
           <button onClick={resetFilters} style={{ ...chip(true), padding: '11px 20px', fontSize: 13 }}>{t('Clear filters')}</button>
         </div>
       ) : (

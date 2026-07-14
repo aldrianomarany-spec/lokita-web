@@ -23,6 +23,14 @@ import {
   adminSetTickerSettings,
   type TickerSettings,
   adminSetReportStatus,
+  adminBroadcast,
+  fetchAdminAudit,
+  type AuditRow,
+  fetchClientErrors,
+  adminClearClientErrors,
+  type ClientErrorRow,
+  fetchMoveoutActive,
+  adminSetMoveoutActive,
   type AdminStats,
   type AdminListingRow,
   type AdminMemberRow,
@@ -151,6 +159,29 @@ export default function AdminView() {
   const [busyId, setBusyId] = useState<string | null>(null)
   // inline student-ID viewer (signed URL from the private verification bucket)
   const [docView, setDocView] = useState<{ id: string; name: string; url: string } | null>(null)
+  // 📣 broadcast to everyone + 🎓 moveout season + audit trail + JS error inbox
+  const [bc, setBc] = useState({ title: '', body: '' })
+  const [bcState, setBcState] = useState<'idle' | 'busy' | number>('idle')
+  const [moveoutOn, setMoveoutOn] = useState<boolean | null>(null)
+  const [audit, setAudit] = useState<AuditRow[] | null>(null)
+  const [auditOpen, setAuditOpen] = useState(false)
+  const [cErrors, setCErrors] = useState<ClientErrorRow[] | null>(null)
+  const [errOpen, setErrOpen] = useState(false)
+
+  const sendBroadcast = async () => {
+    if (bcState === 'busy' || !bc.title.trim()) return
+    if (!window.confirm(`Send "${bc.title.trim()}" to EVERY member? Each gets a notification + a push buzz.`)) return
+    setBcState('busy')
+    try {
+      const n = await adminBroadcast(bc.title, bc.body)
+      setBcState(n)
+      setBc({ title: '', body: '' })
+      window.setTimeout(() => setBcState('idle'), 6000)
+    } catch (e) {
+      setBcState('idle')
+      alert('Broadcast failed: ' + (e instanceof Error ? e.message : 'run migration 0029 first?'))
+    }
+  }
 
   // pending first; rejected stay listed (members may re-upload a better photo)
   const pendingVerif = (members || [])
@@ -185,6 +216,9 @@ export default function AdminView() {
       fetchTickerSettings().then(setTickerCfg).catch(() => setTickerCfg(null))
       fetchAdminBoosts().then(setBoosts).catch(() => setBoosts(null))
       fetchAdminTrends().then(setTrends).catch(() => setTrends(null)) // errors → hide the analytics section
+      fetchMoveoutActive().then(setMoveoutOn).catch(() => setMoveoutOn(null))
+      fetchAdminAudit().then(setAudit).catch(() => setAudit(null))
+      fetchClientErrors().then(setCErrors).catch(() => setCErrors(null))
       setStats(s)
       setListings(l)
       setMembers(m)
@@ -248,10 +282,16 @@ export default function AdminView() {
         }
       }
     }
+    const newMembers = new Array(8).fill(0) as number[]
+    for (const m of members || []) {
+      const mi = bucketIndex(m.created_at, mondays)
+      if (mi >= 0) newMembers[mi]++
+    }
     trendCards = (
       <>
         <div style={{ ...mono, marginBottom: 10 }}>ANALYTICS · LAST 8 WEEKS</div>
         <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 26 }}>
+          <TrendCard label="NEW MEMBERS" values={newMembers} mondays={mondays} />
           <TrendCard label="NEW LISTINGS" values={newListings} mondays={mondays} />
           <TrendCard label="ITEMS SOLD" values={itemsSold} mondays={mondays} />
           <TrendCard label="REVENUE (Rp)" values={revenue} mondays={mondays} isMoney />
@@ -295,6 +335,64 @@ export default function AdminView() {
 
       {/* analytics — three mini weekly bar charts (hidden if the trends fetch failed) */}
       {trendCards}
+
+      {/* 📣 broadcast — one message → in-app notification + push buzz for everyone */}
+      <div style={{ ...mono, marginBottom: 10 }}>📣 ANNOUNCE TO EVERYONE</div>
+      <div style={{ ...card, padding: '14px 16px', marginBottom: 26 }}>
+        <div style={{ fontSize: 12, color: '#8B8B86', fontWeight: 500, marginBottom: 10, lineHeight: 1.5 }}>
+          Every member gets this as a notification — phones buzz even with LOKITA closed. Use it for launches, promos, drop weeks. Don't spam it.
+        </div>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          <input
+            className="lok-field"
+            value={bc.title}
+            maxLength={80}
+            onChange={(e) => setBc({ ...bc, title: e.target.value })}
+            placeholder="Title (e.g. 📣 Free boosts this week for the first 10 sellers!)"
+            style={{ flex: '2 1 260px', background: '#F5F5F3', border: '1px solid #D8D8D4', borderRadius: 0, padding: '10px 12px', fontSize: 12.5, fontFamily: 'inherit', color: '#000000' }}
+          />
+          <input
+            className="lok-field"
+            value={bc.body}
+            maxLength={160}
+            onChange={(e) => setBc({ ...bc, body: e.target.value })}
+            placeholder="Details (optional)"
+            style={{ flex: '2 1 220px', background: '#F5F5F3', border: '1px solid #D8D8D4', borderRadius: 0, padding: '10px 12px', fontSize: 12.5, fontFamily: 'inherit', color: '#000000' }}
+          />
+          <button
+            onClick={sendBroadcast}
+            disabled={bcState === 'busy' || !bc.title.trim()}
+            className="lok-btn"
+            style={{ flex: 'none', border: 'none', background: bc.title.trim() ? '#519BB8' : '#E6E6E3', color: '#FFFFFF', fontFamily: 'inherit', fontWeight: 800, fontSize: 12.5, padding: '10px 18px', borderRadius: 0, cursor: bc.title.trim() ? 'pointer' : 'default' }}
+          >
+            {bcState === 'busy' ? 'Sending…' : 'Send to all →'}
+          </button>
+        </div>
+        {typeof bcState === 'number' && (
+          <div style={{ fontSize: 12.5, fontWeight: 700, color: '#1E9E5A', marginTop: 8 }}>✓ Sent to {bcState} member{bcState === 1 ? '' : 's'} — pushes are on their way.</div>
+        )}
+        {/* 🎓 season switch lives here — one click turns the homepage strip on for everyone */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 12, paddingTop: 12, borderTop: '1px solid #ECECEA', flexWrap: 'wrap' }}>
+          <span style={{ ...mono, fontSize: 9.5 }}>🎓 MOVING-OUT SEASON</span>
+          <button
+            onClick={() => {
+              if (moveoutOn === null) return
+              const next = !moveoutOn
+              setMoveoutOn(next)
+              adminSetMoveoutActive(next).catch(() => {
+                setMoveoutOn(!next)
+                alert('Could not save — run migration 0029 first?')
+              })
+            }}
+            disabled={moveoutOn === null}
+            className="lok-btn"
+            style={{ border: `1px solid ${moveoutOn ? '#1E9E5A' : '#D8D8D4'}`, background: moveoutOn ? '#E7F1EA' : '#FFFFFF', color: moveoutOn ? '#1E9E5A' : '#3A3B3E', fontFamily: 'inherit', fontWeight: 800, fontSize: 12, padding: '7px 14px', borderRadius: 0, cursor: moveoutOn === null ? 'default' : 'pointer' }}
+          >
+            {moveoutOn === null ? '…' : moveoutOn ? 'ON — strip showing' : 'OFF'}
+          </button>
+          <span style={{ fontSize: 11.5, color: '#8B8B86', fontWeight: 500 }}>Shows a 🎓 banner on every homepage pushing bundles — flip it on near semester end.</span>
+        </div>
+      </div>
 
       {/* reports queue — open ones first, resolved/dismissed shown muted */}
       <div style={{ ...mono, marginBottom: 10 }}>
@@ -683,6 +781,59 @@ export default function AdminView() {
           ))
         )}
       </div>
+
+      {/* 🐞 error inbox — crashes reported by members' browsers (migration 0029) */}
+      <div style={{ ...mono, marginBottom: 10 }}>
+        <button onClick={() => setErrOpen((v) => !v)} style={{ border: 'none', background: 'none', cursor: 'pointer', font: 'inherit', color: 'inherit', letterSpacing: 'inherit', padding: 0 }}>
+          🐞 ERROR INBOX {cErrors && cErrors.length > 0 ? `· ${cErrors.length}` : '· 0'} {errOpen ? '▴' : '▾'}
+        </button>
+      </div>
+      {errOpen && (
+        <div style={{ ...card, overflow: 'hidden', marginBottom: 26 }}>
+          {!cErrors || cErrors.length === 0 ? (
+            <div style={{ padding: '24px 20px', textAlign: 'center', color: '#8B8B86', fontSize: 13 }}>No crashes reported — smooth sailing. 🎉</div>
+          ) : (
+            <>
+              <div style={{ padding: '10px 16px', borderBottom: '1px solid #ECECEA', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontSize: 11.5, color: '#8B8B86', fontWeight: 600 }}>JS errors from members' devices — newest first. Tell Claude the top message to get it fixed.</span>
+                <SmallBtn label="Clear all" tone="danger" onClick={() => act('clear-errors', async () => { await adminClearClientErrors() })} />
+              </div>
+              {cErrors.map((e) => (
+                <div key={e.id} style={{ padding: '10px 16px', borderBottom: '1px solid #F0F0EE', fontSize: 12 }}>
+                  <div style={{ fontWeight: 700, color: '#B23A1B', overflowWrap: 'anywhere' }}>{e.message}</div>
+                  <div style={{ ...mono, fontSize: 9.5, marginTop: 3 }}>
+                    {new Date(e.created_at).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                    {e.source ? ` · ${e.source}` : ''}{e.ua ? ` · ${e.ua.slice(0, 60)}` : ''}
+                  </div>
+                </div>
+              ))}
+            </>
+          )}
+        </div>
+      )}
+
+      {/* 🧾 audit trail — every admin action, for accountability (migration 0029) */}
+      <div style={{ ...mono, marginBottom: 10 }}>
+        <button onClick={() => setAuditOpen((v) => !v)} style={{ border: 'none', background: 'none', cursor: 'pointer', font: 'inherit', color: 'inherit', letterSpacing: 'inherit', padding: 0 }}>
+          🧾 ADMIN AUDIT TRAIL {audit ? `· ${audit.length}` : ''} {auditOpen ? '▴' : '▾'}
+        </button>
+      </div>
+      {auditOpen && (
+        <div style={{ ...card, overflow: 'hidden', marginBottom: 26 }}>
+          {!audit || audit.length === 0 ? (
+            <div style={{ padding: '24px 20px', textAlign: 'center', color: '#8B8B86', fontSize: 13 }}>No admin actions recorded yet.</div>
+          ) : (
+            audit.map((a) => (
+              <div key={a.id} style={{ padding: '9px 16px', borderBottom: '1px solid #F0F0EE', display: 'flex', gap: 10, alignItems: 'baseline', flexWrap: 'wrap', fontSize: 12 }}>
+                <span style={{ ...mono, fontSize: 9.5, flex: 'none' }}>{new Date(a.created_at).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</span>
+                <b style={{ color: '#2F6B85' }}>{a.action}</b>
+                {a.detail && <span style={{ color: '#5F6063' }}>{a.detail}</span>}
+                {a.target && <span style={{ ...mono, fontSize: 9, color: '#ABABA6' }}>{a.target.slice(0, 8)}</span>}
+              </div>
+            ))
+          )}
+        </div>
+      )}
     </div>
   )
 }

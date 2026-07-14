@@ -18,7 +18,7 @@ const cap: React.CSSProperties = { flex: 1, fontFamily: "'Spline Sans Mono',mono
 const CONDITIONS = ['Like new', 'Good', 'Fair']
 
 export default function SellModal() {
-  const { state, closeSell, setF, toggleBundle, submitListing } = useM()
+  const { state, closeSell, setF, toggleBundle, toggleGiveaway, submitListing } = useM()
   const { t } = useLang()
   const s = state
   const f = s.f
@@ -89,10 +89,24 @@ export default function SellModal() {
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           <input className="lok-field" value={f.title} onChange={(e) => setF('title', e.target.value)} placeholder={t('Item title')} style={fieldBase} />
-          <input className="lok-field" value={f.price} onChange={(e) => setF('price', e.target.value.replace(/[^0-9]/g, ''))} placeholder={t('Your price in Rp (e.g. 150000)')} inputMode="numeric" style={fieldBase} />
+
+          {/* 💝 Free & Donations — give it away, no price, no fee */}
+          <div onClick={toggleGiveaway} style={{ display: 'flex', alignItems: 'center', gap: 12, background: s.giveawayOn ? '#EDF5F9' : '#F5F5F3', border: `1px solid ${s.giveawayOn ? '#519BB8' : '#D8D8D4'}`, borderRadius: 0, padding: '12px 14px', cursor: 'pointer' }}>
+            <div style={{ width: 40, height: 23, borderRadius: 0, background: s.giveawayOn ? '#519BB8' : '#C2C2BE', position: 'relative', flex: 'none', transition: 'background .2s ease' }}>
+              <div style={{ position: 'absolute', top: 2.5, left: s.giveawayOn ? 19 : 2.5, width: 18, height: 18, borderRadius: '50%', background: '#fff', transition: 'left .2s ease', boxShadow: '0 1px 3px rgba(0,0,0,.2)' }} />
+            </div>
+            <div>
+              <div style={{ fontSize: 13, fontWeight: 700 }}>💝 {t('Give it away for free')}</div>
+              <div style={{ fontSize: 11, color: '#8B8B86', fontWeight: 500 }}>{t('Donate it to a neighbour — no price, no fee. It shows in Free & Donations.')}</div>
+            </div>
+          </div>
+
+          {!s.giveawayOn && (
+            <input className="lok-field" value={f.price} onChange={(e) => setF('price', e.target.value.replace(/[^0-9]/g, ''))} placeholder={t('Your price in Rp (e.g. 150000)')} inputMode="numeric" style={fieldBase} />
+          )}
 
           {/* platform-fee breakdown — appears as soon as a price is typed */}
-          {ask > 0 && (
+          {!s.giveawayOn && ask > 0 && (
             <div style={{ background: '#F5F5F3', border: '1px solid #D8D8D4', borderRadius: 0, padding: '11px 14px', animation: 'lok-fade .25s ease both' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12.5, fontWeight: 600, color: '#1E1E1E' }}>
                 <span>{t('Your price')}</span>
