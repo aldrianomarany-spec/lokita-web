@@ -6,6 +6,7 @@ import { BUILDINGS } from '../theme'
 import { BRAND_LOGO_URL } from '../brand'
 import { useLang, LangToggle } from '../i18n'
 import DarkToggle from '../components/DarkToggle'
+import { isStandalone } from '../lib/install'
 
 const navBtn: React.CSSProperties = {
   position: 'relative',
@@ -91,6 +92,8 @@ export default function TopBar() {
     { icon: '🧑', label: t('My profile'), act: openProfile },
     { icon: '🧾', label: t('My orders'), act: openOrders },
     { icon: '🔔', label: t('Notifications'), act: openNotifs },
+    // install lives on the Notifications page — this row just takes you there
+    ...(!isStandalone() ? [{ icon: '📲', label: t('Install LOKITA app'), act: openNotifs }] : []),
     { icon: '🚪', label: t('Log out'), act: logout },
   ]
 
