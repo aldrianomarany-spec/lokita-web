@@ -20,7 +20,7 @@ const STATUS_META: Record<OrderStatus, { label: string; bg: string; fg: string }
 const PICKUP_LABEL: Record<string, string> = { meet_in_person: 'Meet in person', trusted_handoff: 'LOKITA Handover', security_post: 'Security Post' }
 
 function OrderCard({ o }: { o: OrderRow }) {
-  const { acceptMyOrder, markOrderDropped, confirmOrderPickup, cancelMyOrder, submitReviewFor, chatAdmin } = useM()
+  const { acceptMyOrder, markOrderDropped, confirmOrderPickup, cancelMyOrder, submitReviewFor, chatAdminPickup } = useM()
   const { t } = useLang()
   const [busy, setBusy] = useState(false)
   const [reviewing, setReviewing] = useState(false)
@@ -280,7 +280,7 @@ function OrderCard({ o }: { o: OrderRow }) {
         )}
         {o.status === 'paid' && o.role === 'buyer' && o.pickup_method === 'trusted_handoff' && (
           <>
-            <button disabled={busy} onClick={() => chatAdmin()} className="lok-btn" style={primaryBtn}>💬 {t('Chat the team — arrange pickup')}</button>
+            <button disabled={busy} onClick={() => chatAdminPickup(o)} className="lok-btn" style={primaryBtn}>💬 {t('Chat the team — arrange pickup')}</button>
             <button disabled={busy} onClick={run(() => confirmOrderPickup(o.id))} className="lok-btn" style={ghostBtn}>{t('Got it — confirm pickup ✓')}</button>
           </>
         )}

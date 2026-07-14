@@ -300,6 +300,7 @@ export interface MarketplaceApi {
   toggleFreeView: () => void
   toggleSaveItem: (id: string) => void
   chatAdmin: () => Promise<void>
+  chatAdminPickup: (order: OrderRow) => Promise<void>
   chatMember: (memberId: string) => Promise<void>
   blockMember: (id: string) => Promise<void>
   unblockMember: (id: string) => Promise<void>
@@ -802,6 +803,29 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
         }
         const cid = await getOrCreateRequestConversation(adminId)
         patch({ view: 'messages', activeConvId: cid, msgDraft: '', menuOpen: false, sel: null, checkoutOpen: false, pendingAttach: null })
+        await Promise.all([loadConversations(), loadMessages(cid)])
+      } catch (e) {
+        alert('Could not open chat: ' + errText(e, 'unknown error'))
+      }
+    },
+    // buyer → team pickup request: opens the admin chat with the item card
+    // attached and a draft carrying the order id + handover code, so the team
+    // knows exactly which shelf item to pull without asking
+    chatAdminPickup: async (o) => {
+      if (state.guest) return goSignup()
+      try {
+        const adminId = await fetchAdminContactId()
+        if (!adminId) {
+          alert('The LOKITA team account was not found.')
+          return
+        }
+        const cid = await getOrCreateRequestConversation(adminId)
+        const code = o.pickup_code ? ` · code ${o.pickup_code}` : ''
+        const draft = `🤝 Pickup please — "${o.listing_title}" · order #${o.id.slice(0, 8).toUpperCase()}${code}. When can I come by?`
+        const attach: State['pendingAttach'] = o.listing_id
+          ? { id: o.listing_id, title: o.listing_title, price: 'Rp ' + Number(o.listing_price).toLocaleString('id-ID'), photo: null }
+          : null
+        patch({ view: 'messages', activeConvId: cid, msgDraft: draft, menuOpen: false, sel: null, checkoutOpen: false, pendingAttach: attach })
         await Promise.all([loadConversations(), loadMessages(cid)])
       } catch (e) {
         alert('Could not open chat: ' + errText(e, 'unknown error'))
