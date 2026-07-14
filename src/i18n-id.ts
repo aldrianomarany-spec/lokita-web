@@ -640,4 +640,5 @@ export const ID: Record<string, string> = {
   'Give something away': 'Berikan sesuatu',
   'Things neighbours are giving away — first come, first served.': 'Barang yang diberikan gratis oleh tetangga — siapa cepat dia dapat.',
   'Back to marketplace': 'Kembali ke marketplace',
+  'BROWSE': 'JELAJAH',
 }
