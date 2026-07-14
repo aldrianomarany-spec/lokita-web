@@ -37,3 +37,17 @@ export async function enablePush(): Promise<boolean> {
     return false
   }
 }
+
+// Logout hygiene: remove THIS device's subscription so a shared computer
+// stops receiving someone's pushes after they sign out.
+export async function disablePushForThisDevice(): Promise<void> {
+  try {
+    if (!('serviceWorker' in navigator)) return
+    const reg = await navigator.serviceWorker.getRegistration()
+    const sub = await reg?.pushManager.getSubscription()
+    if (!sub) return
+    await supabase.from('push_subscriptions').delete().eq('endpoint', sub.endpoint)
+  } catch {
+    // best effort — worst case the next push to this endpoint gets pruned by the sender
+  }
+}

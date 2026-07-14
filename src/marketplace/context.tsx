@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import QRCode from 'qrcode'
 import { signOut } from '../lib/auth'
 import { ringNotification, systemAlertsGranted } from '../lib/alerts'
-import { enablePush } from '../lib/push'
+import { enablePush, disablePushForThisDevice } from '../lib/push'
 import {
   fetchMyProfile,
   updateMyProfile,
@@ -1088,6 +1088,7 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
     closeMember: () => patch((prev) => ({ view: prev.memberReturn, memberId: null, memberName: null })),
 
     logout: () => {
+      disablePushForThisDevice()
       // sign out of Supabase (and leave guest mode), then return to login
       sessionStorage.removeItem('lokita-guest')
       signOut()
