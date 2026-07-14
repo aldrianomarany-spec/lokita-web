@@ -22,6 +22,17 @@ const QUICK_BUYER = [
 // compact emoji keyboard — curated set, no library needed
 const EMOJIS = ['😀','😂','🤣','😊','😍','😘','😎','🤔','😅','🙂','😢','😭','😡','🥺','🤝','👍','👎','🙏','👏','💪','✌️','🤙','👋','🫶','❤️','💔','🔥','✨','🎉','🎊','💯','⭐','✅','❌','❓','‼️','💰','💸','🛒','📦','🚚','🏷️','⏰','📍','🏠','🛏️','🪑','📚','💻','📱','🎧','👕','👟','🧺','🍜','☕','🍰','😴','🤗','🤩','😇','🙌','🤞','🆗','🆕']
 
+const lastSeenShort = (iso: string | null): string => {
+  if (!iso) return ''
+  const mins = Math.floor((Date.now() - new Date(iso).getTime()) / 60000)
+  if (isNaN(mins) || mins < 0) return ''
+  if (mins < 1) return 'now'
+  if (mins < 60) return mins + 'm'
+  const hrs = Math.floor(mins / 60)
+  if (hrs < 24) return hrs + 'h'
+  return Math.floor(hrs / 24) + 'd'
+}
+
 const timeShort = (iso: string) => {
   const d = new Date(iso)
   if (isNaN(d.getTime())) return ''
@@ -139,7 +150,18 @@ export default function MessagesView() {
                       active.other_verified && <Verified size={13} />
                     )}
                   </div>
-                  <div style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 11, color: '#8B8B86', marginTop: 2 }}>{active.item_title ? t('About a listing') : t('Direct message')}</div>
+                  <div style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 11, marginTop: 2, display: 'flex', alignItems: 'center', gap: 6 }}>
+                    {s.onlineIds.includes(active.other_id) ? (
+                      <span style={{ color: '#1E9E5A', display: 'flex', alignItems: 'center', gap: 5 }}>
+                        <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#3DBB6E' }} />
+                        {t('Online now')}
+                      </span>
+                    ) : active.other_last_seen && lastSeenShort(active.other_last_seen) ? (
+                      <span style={{ color: '#8B8B86' }}>{t('Last seen')} {lastSeenShort(active.other_last_seen)}</span>
+                    ) : (
+                      <span style={{ color: '#8B8B86' }}>{active.item_title ? t('About a listing') : t('Direct message')}</span>
+                    )}
+                  </div>
                 </div>
               </div>
             )}
