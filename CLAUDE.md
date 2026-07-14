@@ -438,6 +438,27 @@ decline notifications fire, plain moderation of active listings doesn't):
   plain (checkout desk-info box). Chat quick replies updated for
   consignment (LOKITA desk wording — no more Security Post presets).
 
+Consignment polish (2026-07-14, **migration 0037** — validated: service-role
+expiry silent, admin decline still notifies):
+- /terms rewritten for consignment (fees during launch, desk custody, 3-item
+  shelf, 5-day no-show expiry, pay-first buying, contact-share rule).
+- No-show expiry: cron cleanup.js step 3b closes listings pending 5+ days
+  with a tailored "expired" notification; 0037 makes notify_seller_review
+  skip service-role writes (auth.uid() null) so the generic decline notice
+  doesn't double-fire.
+- Drop-off time slots: site_settings 'handover' gains slots: string[]
+  (OpsSettings.handover.slots, ≤12, admin textarea one-per-line in the
+  💰 desk card). SellModal done panel shows 🕐 slot chips — a tap calls
+  chatAdminDropoff(slot) which puts "I'll bring it: <slot>" in the draft;
+  the plain chat button remains ("none of these fit" when slots exist).
+- Stale-copy sweep: ALL user-visible escrow/Security-Post wording replaced
+  with LOKITA-desk consignment copy — GuideView buying/selling steps +
+  custody feature + house rule, AuthFlow splash bullets + tagline,
+  Sidebar trust card, DetailModal trust note, MemberProfileView trust line,
+  ProfileView privacy summary, CheckoutModal protection blurb, ticker
+  placeholder. i18n keys swapped in matching pass (python script).
+  Dormant Security Post / Meet-in-person option labels kept for re-enable.
+
 Remaining / nice-to-have:
 - **Real Midtrans QRIS** — deliberately last; blocked on the owner signing up for
   Midtrans. api/qris scaffolding exists; currently prototype/static-QR mode.

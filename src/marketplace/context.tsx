@@ -223,7 +223,7 @@ const initialState: State = {
   alerts: [],
   moveout: false,
   feesOn: false,
-  handoverInfo: { location: 'Union Building Room 303', hours: 'By appointment — chat the LOKITA team to arrange a time' },
+  handoverInfo: { location: 'Union Building Room 303', hours: 'By appointment — chat the LOKITA team to arrange a time', slots: [] },
   adminPay: { gopay: '', bank_name: '', bank_account: '' },
   saved: {},
   feed: [],
@@ -304,7 +304,7 @@ export interface MarketplaceApi {
   toggleSaveItem: (id: string) => void
   chatAdmin: () => Promise<void>
   chatAdminPickup: (order: OrderRow) => Promise<void>
-  chatAdminDropoff: () => Promise<void>
+  chatAdminDropoff: (slot?: string) => Promise<void>
   chatMember: (memberId: string) => Promise<void>
   blockMember: (id: string) => Promise<void>
   unblockMember: (id: string) => Promise<void>
@@ -837,7 +837,7 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
     // seller → team drop-off request, right after posting: opens the admin
     // thread with the fresh listing attached and a draft asking when to bring
     // it to the desk. Also closes + resets the sell modal.
-    chatAdminDropoff: async () => {
+    chatAdminDropoff: async (slot) => {
       const item = state.justPosted
       try {
         const adminId = await fetchAdminContactId()
@@ -846,7 +846,8 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
           return
         }
         const cid = await getOrCreateRequestConversation(adminId)
-        const draft = item ? `📦 Drop-off please — I just posted "${item.title}". When can I bring it to the desk?` : ''
+        const when = slot ? `I'll bring it: ${slot} — see you there!` : 'When can I bring it to the desk?'
+        const draft = item ? `📦 Drop-off please — I just posted "${item.title}". ${when}` : ''
         const attach: State['pendingAttach'] = item ? { id: item.id, title: item.title, price: item.priceLabel, photo: null } : null
         patch({
           view: 'messages', activeConvId: cid, msgDraft: draft, menuOpen: false, sel: null, pendingAttach: attach,

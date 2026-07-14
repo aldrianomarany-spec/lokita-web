@@ -66,8 +66,22 @@ export default function SellModal() {
           <div style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 10.5, color: '#9A6A12', background: '#FBF2DD', border: '1px solid #EBD9A9', padding: '8px 10px', marginBottom: 16 }}>
             📍 {s.handoverInfo.location} · {t(s.handoverInfo.hours)}
           </div>
+          {/* drop-off slots (admin-defined in the Control Room) — one tap picks
+              a time and opens the team chat with it already in the message */}
+          {s.handoverInfo.slots.length > 0 && (
+            <div style={{ marginBottom: 14, textAlign: 'left' }}>
+              <div style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 9.5, color: '#9A9A94', letterSpacing: '.08em', marginBottom: 7 }}>{t('PICK A DROP-OFF TIME')}</div>
+              <div style={{ display: 'flex', gap: 7, flexWrap: 'wrap' }}>
+                {s.handoverInfo.slots.map((slot) => (
+                  <button key={slot} onClick={() => chatAdminDropoff(slot)} className="lok-navi" style={{ border: '1px solid #519BB8', background: '#EDF5F9', color: '#2F6B85', fontFamily: 'inherit', fontWeight: 700, fontSize: 12.5, padding: '9px 13px', borderRadius: 0, cursor: 'pointer' }}>
+                    🕐 {slot}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
           <button onClick={() => chatAdminDropoff()} className="lok-btn" style={{ width: '100%', border: 'none', background: 'var(--accent,#000000)', color: '#F7F3EA', fontFamily: 'inherit', fontWeight: 700, fontSize: 14, padding: 13, borderRadius: 0, cursor: 'pointer', marginBottom: 8 }}>
-            💬 {t('Chat the team — arrange drop-off')}
+            💬 {s.handoverInfo.slots.length > 0 ? t('Chat the team — none of these fit') : t('Chat the team — arrange drop-off')}
           </button>
           <button onClick={closeSell} className="lok-navi" style={{ width: '100%', border: '1px solid #D8D8D4', background: '#FFFFFF', color: '#3A3B3E', fontFamily: 'inherit', fontWeight: 700, fontSize: 13, padding: 12, borderRadius: 0, cursor: 'pointer' }}>
             {t("Done — I'll drop it by later")}

@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom'
 // audience is students, and honesty reads better than legalese. Update the
 // date line whenever the substance changes.
 
-const UPDATED = '11 July 2026'
+const UPDATED = '14 July 2026'
 const CONTACT = 'jiupoem2026@jiu.ac'
 
 const wrap: React.CSSProperties = { minHeight: '100vh', background: '#ECECEA', padding: '40px 20px 80px', fontFamily: "'Hanken Grotesque',sans-serif", color: '#000000' }
@@ -47,32 +47,44 @@ export function Terms() {
         Anyone can browse as a guest. To buy, sell or chat you need an account. One account per person, with truthful profile
         information. Accounts that scam, harass, or repeatedly break these rules can be restricted or banned by the LOKITA team.
       </p>
-      <h2 style={h2}>3. The platform fee</h2>
+      <h2 style={h2}>3. Fees</h2>
       <p style={p}>
-        When you publish a listing, LOKITA adds a platform fee on top of your asking price: <b>5% of your price, minimum Rp 1.000,
-        maximum Rp 4.000</b>. Buyers pay the listed price with no extra charges at checkout. When your item sells, you receive 100%
-        of your asking price; LOKITA keeps the fee. The fee is always shown to you before you publish.
+        During the launch period LOKITA charges <b>no platform fee</b> — sellers receive the full price. If a fee is introduced
+        later it will be <b>5% of your asking price, minimum Rp 1.000, maximum Rp 4.000</b>, always shown to you before you
+        publish. Optional extras (listing boosts, buyer protection) always display their price before you pay, and are settled by
+        transfer to the LOKITA team with a receipt you upload for review.
       </p>
-      <h2 style={h2}>4. How trades work</h2>
+      <h2 style={h2}>4. How selling works (consignment)</h2>
       <p style={p}>
-        The default exchange is the campus <b>Security Post</b>: the buyer pays in-app (QRIS) or chooses cash, the seller confirms
-        the order and drops the item off within 2 days, and the buyer collects it within 2 days. Orders that are ignored past their
-        deadlines are cancelled automatically and the item returns to sale. Meet-ups and trusted-friend handoffs are available but
-        happen at your own arrangement.
+        Selling on LOKITA is consignment: <b>your post goes live only after you hand the item to the LOKITA team at the desk</b>
+        (location and hours are shown in the app — arrange a time via chat). Until then it stays "pending". You can keep at most
+        <b> 3 items</b> on the LOKITA shelf at once. A pending post that never reaches the desk <b>expires automatically after 5
+        days</b>. If an item hasn't sold after a while, the team will remind you to lower the price or collect it back — items on
+        the shelf remain your property, and you can take them back anytime.
       </p>
-      <h2 style={h2}>5. What's not allowed</h2>
+      <h2 style={h2}>5. How buying works</h2>
+      <p style={p}>
+        Every item you see marked "in LOKITA custody" is physically with the team. Order in-app, then <b>pay the seller
+        directly</b> using the payment details revealed on your order (e-wallet, bank, or QR) and upload your transfer receipt.
+        Once the seller confirms the money arrived, chat the LOKITA team to collect the item — bring your order's pickup code.
+        <b> LOKITA holds items, never your money.</b> Orders ignored past their deadlines are cancelled automatically and the item
+        returns to sale. Sharing phone numbers or chat-app links is blocked until an order exists between you — this keeps trades,
+        and their protections, inside LOKITA.
+      </p>
+      <h2 style={h2}>6. What's not allowed</h2>
       <p style={p}>
         No prohibited or illegal items, no counterfeits sold as genuine, no weapons, no alcohol or drugs, no accounts or digital
         goods that violate other services' terms, and nothing that breaks Indonesian law or JIU campus rules. The LOKITA team may
         remove any listing and restrict any account that violates this.
       </p>
-      <h2 style={h2}>6. Disputes</h2>
+      <h2 style={h2}>7. Disputes</h2>
       <p style={p}>
         Report problems in-app (the 🚩 Report button) or contact the team. We will look at the order history, chat and reports to
         resolve disputes fairly, but LOKITA is a student-run platform — we can't guarantee outcomes and are not liable for the
-        condition of items exchanged between members.
+        condition of items exchanged between members. While an item is on the LOKITA shelf the team looks after it with reasonable
+        care, but LOKITA is not an insurer.
       </p>
-      <h2 style={h2}>7. Changes</h2>
+      <h2 style={h2}>8. Changes</h2>
       <p style={p}>
         These terms can change as LOKITA grows. Meaningful changes will be announced in-app. Continuing to use LOKITA after a
         change means you accept the updated terms.

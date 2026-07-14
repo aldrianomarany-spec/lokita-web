@@ -462,12 +462,28 @@ export default function AdminView() {
           <input className="lok-field" value={ops?.adminPay.bank_account ?? ''} onChange={(e) => ops && setOps({ ...ops, adminPay: { ...ops.adminPay, bank_account: e.target.value } })} placeholder="Account number" style={{ flex: '1 1 150px', background: '#F5F5F3', border: '1px solid #D8D8D4', borderRadius: 0, padding: '10px 12px', fontSize: 12.5, fontFamily: 'inherit', color: '#000000' }} />
           <SmallBtn label={opsSaving ? 'Saving…' : 'Save payment info'} tone="accent" busy={opsSaving} onClick={() => ops && saveOps('admin_pay', { ...ops.adminPay })} />
         </div>
-        {/* the handover desk shown at checkout */}
-        <div style={{ ...mono, fontSize: 9.5, marginBottom: 8 }}>📦 HANDOVER DESK (shown at checkout)</div>
-        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+        {/* the handover desk shown at checkout + after posting */}
+        <div style={{ ...mono, fontSize: 9.5, marginBottom: 8 }}>📦 HANDOVER DESK (shown at checkout & after posting)</div>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 10 }}>
           <input className="lok-field" value={ops?.handover.location ?? ''} onChange={(e) => ops && setOps({ ...ops, handover: { ...ops.handover, location: e.target.value } })} placeholder="Location (e.g. Union Building Room 303)" style={{ flex: '1 1 200px', background: '#F5F5F3', border: '1px solid #D8D8D4', borderRadius: 0, padding: '10px 12px', fontSize: 12.5, fontFamily: 'inherit', color: '#000000' }} />
           <input className="lok-field" value={ops?.handover.hours ?? ''} onChange={(e) => ops && setOps({ ...ops, handover: { ...ops.handover, hours: e.target.value } })} placeholder="Hours (e.g. By appointment — chat the team)" style={{ flex: '2 1 240px', background: '#F5F5F3', border: '1px solid #D8D8D4', borderRadius: 0, padding: '10px 12px', fontSize: 12.5, fontFamily: 'inherit', color: '#000000' }} />
-          <SmallBtn label={opsSaving ? 'Saving…' : 'Save desk info'} tone="accent" busy={opsSaving} onClick={() => ops && saveOps('handover', { ...ops.handover })} />
+        </div>
+        {/* drop-off slots — sellers pick one right after posting (blank = chat only) */}
+        <div style={{ ...mono, fontSize: 9.5, marginBottom: 6 }}>🕐 DROP-OFF TIME SLOTS — one per line, sellers tap one after posting (leave empty for chat-only)</div>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'flex-start' }}>
+          <textarea
+            className="lok-field"
+            value={(ops?.handover.slots ?? []).join('\n')}
+            onChange={(e) => ops && setOps({ ...ops, handover: { ...ops.handover, slots: e.target.value.split('\n') } })}
+            placeholder={'Mon–Fri 16:00–18:00\nSat 10:00–12:00'}
+            style={{ flex: '1 1 280px', minHeight: 64, resize: 'vertical', background: '#F5F5F3', border: '1px solid #D8D8D4', borderRadius: 0, padding: '10px 12px', fontSize: 12.5, fontFamily: 'inherit', color: '#000000' }}
+          />
+          <SmallBtn
+            label={opsSaving ? 'Saving…' : 'Save desk info'}
+            tone="accent"
+            busy={opsSaving}
+            onClick={() => ops && saveOps('handover', { ...ops.handover, slots: ops.handover.slots.map((x) => x.trim()).filter(Boolean).slice(0, 12) })}
+          />
         </div>
       </div>
 
@@ -710,7 +726,7 @@ export default function AdminView() {
           {!tickerCfg && <span style={{ fontSize: 11, color: '#B23A1B', fontWeight: 600 }}>run migration 0026 to enable</span>}
         </div>
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
-          <input className="lok-field" value={tForm.title} onChange={(e) => setTForm({ ...tForm, title: e.target.value })} placeholder="Announcement (e.g. Welcome to LOKITA — trade safely via the Security Post)" style={{ flex: '2 1 300px', background: '#F5F5F3', border: '1px solid #D8D8D4', borderRadius: 0, padding: '10px 12px', fontSize: 12.5, fontFamily: 'inherit', color: '#000000' }} />
+          <input className="lok-field" value={tForm.title} onChange={(e) => setTForm({ ...tForm, title: e.target.value })} placeholder="Announcement (e.g. Welcome to LOKITA — every item checked in at the desk)" style={{ flex: '2 1 300px', background: '#F5F5F3', border: '1px solid #D8D8D4', borderRadius: 0, padding: '10px 12px', fontSize: 12.5, fontFamily: 'inherit', color: '#000000' }} />
           <select className="lok-field" value={tForm.target} onChange={(e) => setTForm({ ...tForm, target: e.target.value })} title="Where a tap goes" style={{ flex: 'none', background: '#F5F5F3', border: '1px solid #D8D8D4', borderRadius: 0, padding: '10px 12px', fontSize: 12.5, fontFamily: 'inherit', color: '#000000' }}>
             <option value="none">Not clickable</option>
             <option value="category">Opens a category</option>

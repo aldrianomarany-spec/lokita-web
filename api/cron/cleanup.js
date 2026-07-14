@@ -62,6 +62,34 @@ export default async function handler(req, res) {
     }
   }
 
+  // 3b. no-show consignments: posted 5+ days ago but the item never reached
+  // the desk → close the post, free the shelf slot, tell the seller kindly.
+  // (0037 keeps the generic "declined" trigger silent for service-role writes,
+  // so this tailored notice is the only one the seller gets.)
+  {
+    const cutoff = new Date(Date.now() - 5 * DAY).toISOString()
+    const { data: ghosts } = await db
+      .from('listings')
+      .select('id, seller_id, title')
+      .eq('status', 'pending')
+      .lt('created_at', cutoff)
+      .limit(100)
+    report.noShowsExpired = 0
+    for (const l of ghosts || []) {
+      const { error } = await db.from('listings').update({ status: 'removed' }).eq('id', l.id)
+      if (!error) {
+        await db.from('notifications').insert({
+          user_id: l.seller_id,
+          type: 'item_update',
+          reference_id: l.id,
+          title: `📦 "${l.title}" expired`,
+          body: 'It waited 5 days but never reached the LOKITA desk, so the post was closed to free your shelf slot. Repost anytime — and bring it over this time. 😊',
+        })
+        report.noShowsExpired++
+      }
+    }
+  }
+
   // 4. privacy: remove ID photos of long-verified members (30+ days)
   {
     const cutoff = new Date(Date.now() - 30 * DAY).toISOString()
