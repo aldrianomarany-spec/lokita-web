@@ -335,6 +335,25 @@ LOKITA's OWN fees only (Option E — item money stays buyer→seller):
   VITE_MIDTRANS_CLIENT_KEY reserved for future Snap use.
 - Sandbox test: pay QRIS via https://simulator.sandbox.midtrans.com
 
+Handover redesign (2026-07-14, **migration 0032** — validated): every item
+payment now happens AT handover, never before (owner decision — the demo
+QRIS pay option was misleading and removed):
+- Checkout: payment method section deleted (pay always 'cod' internally);
+  "Pay at handover" info box; pickup methods relabeled: Security Post
+  (📸 photo proof), 📦 LOKITA Handover (team custody, FREE for now — re-uses
+  pickup_method 'trusted_handoff'), Meet in person (preset MEETUP_SPOTS
+  picker → transactions.meetup_spot).
+- Seller drop-off for security_post/trusted_handoff REQUIRES a camera photo
+  (uploadDropoffPhoto → listing-photos/<uid>/dropoff/<order>.jpg →
+  transactions.dropoff_photo_url); meet_in_person keeps a plain
+  "handed over" button. Buyer sees the proof photo on the order.
+- Chat contact guard (anti fee-dodging, owner opt-in): findContactLeak in
+  moderation.ts blocks phone numbers / wa.me / t.me in messages until the
+  pair has ANY transaction (checked in api.sendMessage; bilingual error).
+- Copy updated (DetailModal trust note, Sidebar card) — no more "escrow /
+  pay in-app now" wording. QRIS coStep flow retained but unreachable for
+  items; boosts + protection still pay by real Midtrans QRIS.
+
 Remaining / nice-to-have:
 - **Real Midtrans QRIS** — deliberately last; blocked on the owner signing up for
   Midtrans. api/qris scaffolding exists; currently prototype/static-QR mode.

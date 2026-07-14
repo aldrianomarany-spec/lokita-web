@@ -189,8 +189,8 @@ export default function DetailModal() {
               <ShieldCheck size={22} />
             </div>
             <div>
-              <div style={{ fontWeight: 700, fontSize: 13, marginBottom: 2 }}>{t('Security Post drop-off')}</div>
-              <div style={{ fontSize: 12.5, color: '#4A5A50', lineHeight: 1.55 }}>{t('Pay in-app now — your money is held in escrow. Seller drops it at the campus Security Post; pick it up whenever suits you. No meetups.')}</div>
+              <div style={{ fontWeight: 700, fontSize: 13, marginBottom: 2 }}>{t('Protected handover')}</div>
+              <div style={{ fontSize: 12.5, color: '#4A5A50', lineHeight: 1.55 }}>{t('Order in-app, pay at handover — cash or the seller’s QR. Security Post drop-offs come with 📸 photo proof, and every trade has a 🔑 code + receipt.')}</div>
             </div>
           </div>
 
