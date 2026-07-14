@@ -694,4 +694,17 @@ export const ID: Record<string, string> = {
   'Protected handover': 'Serah terima terlindungi',
   'Order in-app, pay at handover — cash or the seller’s QR. Security Post drop-offs come with 📸 photo proof, and every trade has a 🔑 code + receipt.': 'Pesan di aplikasi, bayar saat serah terima — tunai atau QR penjual. Penitipan Pos Satpam disertai bukti foto 📸, dan setiap transaksi punya kode 🔑 + struk.',
   'Every seller is a checked-in student. Order in-app, pay at handover — protected by 🔑 codes, 📸 proof and receipts.': 'Setiap penjual adalah mahasiswa terdaftar. Pesan di aplikasi, bayar saat serah terima — dilindungi kode 🔑, bukti 📸, dan struk.',
+  // ---- 0034 middleman launch ----
+  'No platform fees during launch — you receive the full amount.': 'Tanpa biaya platform selama masa launching — kamu terima jumlah penuh.',
+  'Chat the LOKITA team': 'Chat tim LOKITA',
+  'Union Building Room 303': 'Gedung Union Kamar 303',
+  'By appointment — chat the LOKITA team to arrange a time': 'Dengan janji — chat tim LOKITA untuk atur waktunya',
+  'Proof sent — the LOKITA team verifies it and activates this shortly.': 'Bukti terkirim — tim LOKITA memverifikasi dan segera mengaktifkannya.',
+  'Ask the LOKITA team for payment details in chat.': 'Tanyakan detail pembayaran ke tim LOKITA lewat chat.',
+  'Upload transfer screenshot': 'Unggah screenshot transfer',
+  'Transfer the amount, screenshot the receipt, upload it here — the team approves after checking.': 'Transfer jumlahnya, screenshot buktinya, unggah di sini — tim menyetujui setelah mengecek.',
+  'Activate Buyer Protection — transfer the fee': 'Aktifkan Proteksi Pembeli — transfer biayanya',
+  'Transfer the boost fee': 'Transfer biaya boost',
+  'Get the FEATURED spot at the top of the homepage. Transfer the fee, upload your receipt, and the LOKITA team activates it after checking.': 'Dapatkan slot UNGGULAN di puncak beranda. Transfer biayanya, unggah buktimu, dan tim LOKITA mengaktifkannya setelah mengecek.',
+  'Protection · under review': 'Proteksi · sedang dicek',
 }

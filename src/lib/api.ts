@@ -684,6 +684,7 @@ export interface OrderRow {
   pickup_code?: string // 6-char handover code both parties see (0029)
   meetup_spot?: string | null // preset campus spot (0032)
   dropoff_photo_url?: string | null // 📸 drop-off proof (0032)
+  protection_proof_url?: string | null // transfer screenshot for review (0034)
 }
 
 export async function fetchMyOrders(): Promise<OrderRow[]> {
@@ -1490,6 +1491,7 @@ export interface BoostRow {
   amount: number
   status: 'pending' | 'approved' | 'rejected'
   created_at: string
+  proof_url?: string | null // transfer screenshot (0034)
   listing_title: string
   seller_name: string
 }
@@ -1966,4 +1968,106 @@ export async function fetchProtectionPaid(orderId: string): Promise<boolean> {
   const { data, error } = await supabase.from('transactions').select('protection_paid').eq('id', orderId).maybeSingle()
   if (error || !data) return false
   return !!(data as { protection_paid: boolean }).protection_paid
+}
+
+// ===========================================================================
+// 0034 — middleman launch mode
+// ===========================================================================
+export interface HandoverInfo {
+  location: string
+  hours: string
+}
+export interface AdminPayInfo {
+  gopay: string
+  bank_name: string
+  bank_account: string
+}
+export interface OpsSettings {
+  feesOn: boolean
+  handover: HandoverInfo
+  adminPay: AdminPayInfo
+}
+const OPS_DEFAULTS: OpsSettings = {
+  feesOn: false,
+  handover: { location: 'Union Building Room 303', hours: 'By appointment — chat the LOKITA team to arrange a time' },
+  adminPay: { gopay: '', bank_name: '', bank_account: '' },
+}
+
+export async function fetchOpsSettings(): Promise<OpsSettings> {
+  try {
+    const { data, error } = await supabase.from('site_settings').select('key, value').in('key', ['fees', 'handover', 'admin_pay'])
+    if (error || !data) return OPS_DEFAULTS
+    const byKey = new Map((data as { key: string; value: Record<string, unknown> }[]).map((r) => [r.key, r.value || {}]))
+    const fees = byKey.get('fees') as { enabled?: boolean } | undefined
+    const ho = byKey.get('handover') as Partial<HandoverInfo> | undefined
+    const ap = byKey.get('admin_pay') as Partial<AdminPayInfo> | undefined
+    return {
+      feesOn: fees?.enabled === true,
+      handover: { location: ho?.location || OPS_DEFAULTS.handover.location, hours: ho?.hours || OPS_DEFAULTS.handover.hours },
+      adminPay: { gopay: ap?.gopay || '', bank_name: ap?.bank_name || '', bank_account: ap?.bank_account || '' },
+    }
+  } catch {
+    return OPS_DEFAULTS
+  }
+}
+
+export async function adminSetOpsSetting(key: 'fees' | 'handover' | 'admin_pay', value: Record<string, unknown>): Promise<void> {
+  const { error } = await supabase.from('site_settings').upsert({ key, value, updated_at: new Date().toISOString() })
+  if (error) throw error
+  logAdmin('setting_' + key, null, JSON.stringify(value).slice(0, 120))
+}
+
+// transfer-proof screenshots (boosts + protection) — compressed, own folder
+async function uploadProof(name: string, rawFile: File): Promise<string> {
+  const user = await getUser()
+  if (!user) throw new Error('Not signed in')
+  const file = await compressImage(rawFile)
+  const path = `${user.id}/proof/${name}.jpg`
+  const { error } = await supabase.storage.from('listing-photos').upload(path, file, { upsert: true })
+  if (error) throw error
+  return supabase.storage.from('listing-photos').getPublicUrl(path).data.publicUrl
+}
+
+export async function attachBoostProof(boostId: string, file: File): Promise<void> {
+  const url = await uploadProof(`boost_${boostId}`, file)
+  const { error } = await supabase.from('boost_requests').update({ proof_url: url }).eq('id', boostId)
+  if (error) throw error
+}
+
+export async function attachProtectionProof(orderId: string, file: File): Promise<void> {
+  const url = await uploadProof(`protect_${orderId}`, file)
+  const { error } = await supabase.from('transactions').update({ protection_proof_url: url }).eq('id', orderId)
+  if (error) throw error
+}
+
+// Control Room 🛡️ queue (definer function; empty for non-admins)
+export interface AdminProtectionRow {
+  id: string
+  buyer_name: string
+  item_title: string
+  fee: number
+  proof_url: string | null
+  created_at: string
+}
+export async function fetchAdminProtections(): Promise<AdminProtectionRow[]> {
+  const { data, error } = await supabase.rpc('admin_pending_protections')
+  if (error) return []
+  return (data as AdminProtectionRow[]) || []
+}
+export async function adminConfirmProtection(id: string): Promise<void> {
+  const { error } = await supabase.rpc('admin_confirm_protection', { target: id })
+  if (error) throw error
+}
+
+// the admin account to chat with (LOKITA Handover appointments etc.)
+export async function fetchAdminContactId(): Promise<string | null> {
+  const { data, error } = await supabase
+    .from('public_profiles')
+    .select('id')
+    .eq('role', 'admin')
+    .order('created_at', { ascending: true })
+    .limit(1)
+    .maybeSingle()
+  if (error || !data) return null
+  return (data as { id: string }).id
 }
