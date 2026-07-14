@@ -40,6 +40,7 @@ import {
   markConversationRead,
   deleteConversation,
   fetchMarketStats,
+  fetchMyShelf,
   fetchNotifications,
   markAllNotificationsRead,
   markNotificationRead,
@@ -187,6 +188,8 @@ export interface State {
   // product card queued to ride on the next chat message (Shopee-style)
   pendingAttach: { id: string; title: string; price: string; photo: string | null } | null
   marketStats: number | null // completed trades — public trust counter
+  // the member's own consignment shelf, live: items at the review desk vs on the market
+  myShelf: { pending: number; active: number } | null
 }
 
 // recently viewed lives in localStorage — no DB weight, wiped with browser data
@@ -228,6 +231,7 @@ const initialState: State = {
   recents: readRecents(),
   pendingAttach: null,
   marketStats: null,
+  myShelf: null,
   orders: [],
   ordersLoading: false,
   ordersError: null,
@@ -296,6 +300,7 @@ export interface MarketplaceApi {
   toggleFreeView: () => void
   toggleSaveItem: (id: string) => void
   chatAdmin: () => Promise<void>
+  chatMember: (memberId: string) => Promise<void>
   blockMember: (id: string) => Promise<void>
   unblockMember: (id: string) => Promise<void>
   addAlert: (query: string) => Promise<void>
@@ -426,18 +431,27 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
     feedParamsRef.current = { cat, cond, sort, query, bldg, viewerFloor }
   }, [cat, cond, sort, query, bldg, viewerFloor])
 
+  // Own consignment shelf: pending (at the review desk) vs active counts, so
+  // sellers can watch their submission move without refreshing.
+  const loadMyShelf = useCallback(() => {
+    fetchMyShelf().then((shelf) => patch({ myShelf: shelf })).catch(() => {})
+  }, [patch])
+
   // Realtime feed: when any listing changes (new post, price drop, sold), reload
-  // so the browse grid updates live — no manual refresh.
+  // so the browse grid updates live — no manual refresh. RLS scopes the events:
+  // owners also hear their own pending rows, so the shelf tracker rides along.
   useEffect(() => {
     const unsub = subscribeListings(() => {
       const p = feedParamsRef.current
       loadFeed({ cat: p.cat, cond: p.cond, sort: p.sort, query: p.query, building: p.bldg }, p.viewerFloor ? p.viewerFloor.toLowerCase() : null)
       // a sale flips a listing to sold — refresh the public trust counter too
       fetchMarketStats().then((m) => m && patch({ marketStats: m.completed_trades }))
+      loadMyShelf()
     })
     fetchMarketStats().then((m) => m && patch({ marketStats: m.completed_trades }))
+    loadMyShelf()
     return () => unsub()
-  }, [loadFeed, patch])
+  }, [loadFeed, patch, loadMyShelf])
 
   // Deep link: /app?item=<id> (a shared listing link) opens that item on
   // arrival. The param is stripped right away so refresh/back doesn't re-open
@@ -793,6 +807,18 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
         alert('Could not open chat: ' + errText(e, 'unknown error'))
       }
     },
+    // open (or resume) a direct thread with any member — used by the Control
+    // Room to reach a seller about their consignment drop-off
+    chatMember: async (memberId) => {
+      if (state.guest) return goSignup()
+      try {
+        const cid = await getOrCreateRequestConversation(memberId)
+        patch({ view: 'messages', activeConvId: cid, msgDraft: '', menuOpen: false, sel: null, pendingAttach: null })
+        await Promise.all([loadConversations(), loadMessages(cid)])
+      } catch (e) {
+        alert('Could not open chat: ' + errText(e, 'unknown error'))
+      }
+    },
     blockMember: async (id) => {
       if (state.guest) return goSignup()
       try {
@@ -944,10 +970,11 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
           photos,
         )
         patch({ listState: 'done' })
-        // refresh feed + profile stats so the new listing shows immediately
+        // refresh feed + profile stats + shelf tracker so the new listing shows immediately
         const floorCode = state.profile.floor ? state.profile.floor.toLowerCase() : null
         await loadFeed({ cat: state.cat, cond: state.cond, sort: state.sort, query: state.query, building: state.bldg }, floorCode)
         loadProfile()
+        loadMyShelf()
         listTimers.current.push(window.setTimeout(() => api.closeSell(), 900))
       } catch (e) {
         patch({ listState: 'idle' })

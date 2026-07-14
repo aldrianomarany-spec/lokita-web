@@ -288,6 +288,24 @@ export default function BrowseView() {
         </div>
       )}
 
+      {/* 📦 consignment tracker strip — the seller's items waiting at the desk.
+          Live: the realtime listing feed refreshes myShelf, so an approval
+          makes this strip vanish (and a ✅ notification arrives) on its own. */}
+      {!s.guest && (s.myShelf?.pending || 0) > 0 && !filtersActive && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap', background: '#FBF2DD', border: '1px solid #EBD9A9', padding: '12px 16px', marginBottom: 14 }}>
+          <span style={{ fontSize: 20, flex: 'none' }}>📦</span>
+          <div style={{ flex: 1, minWidth: 180 }}>
+            <div style={{ fontWeight: 800, fontSize: 13.5, color: '#9A6A12' }}>
+              {(s.myShelf?.pending || 0) > 1
+                ? `${s.myShelf?.pending} ${t('items waiting at the LOKITA desk')}`
+                : t('Your item is waiting at the LOKITA desk')}
+            </div>
+            <div style={{ fontSize: 12, color: '#5F6063', fontWeight: 500 }}>{t('Bring it over so the team can approve it — you’ll get a buzz the moment it goes live.')}</div>
+          </div>
+          <button onClick={openProfile} style={{ ...chip(false), flex: 'none' }}>{t('Track status')}</button>
+        </div>
+      )}
+
       {/* 🎓 moving-out season strip (admin toggle in the Control Room) */}
       {s.moveout && !filtersActive && (
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap', background: '#EDF5F9', border: '1px solid #BFDCE8', padding: '12px 16px', marginBottom: 14 }}>

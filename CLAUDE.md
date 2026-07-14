@@ -400,6 +400,25 @@ gates; owner decisions: verified sellers, 3-item shelf, receipt required):
   suite and re-enables in the 0035 section; 0030's pending-reveal + hidden-
   after-completion expectations updated for the pay-first policy.
 
+Review tracking (2026-07-14, **migration 0036** — validated: approve +
+decline notifications fire, plain moderation of active listings doesn't):
+- notify_seller_review trigger: pending→active = '✅ "…" is live!',
+  pending→removed = '📦 "…" was not accepted' (rides realtime + web push).
+- Control Room moderation: pending rows sorted FIRST; buttons Approve ✓ /
+  Decline ✗ (confirm, audit 'listing_declined') / 💬 Chat seller (new
+  context action chatMember(id) — opens a direct thread with any member).
+  Queue is LIVE: AdminView subscribes via subscribeListings with its own
+  topic 'listings-admin' (topics must stay unique per subscriber).
+- Seller live tracking: state.myShelf {pending, active} (fetchMyShelf) —
+  loaded on boot, after posting, and on every listings realtime event (RLS
+  scopes events, so owners hear their own pending rows). Sidebar MARKET
+  PULSE gets an amber "📦 Under review" row; BrowseView gets an amber
+  tracker strip (mobile-visible) with "Track status" → Profile; ProfileView
+  re-fetches its cards when myShelf changes so 📦 BRING TO DESK flips to
+  ACTIVE while the seller watches.
+- NOTE: missing Approve buttons in prod = stale tab/old bundle — the code
+  shipped in 0748d63; hard refresh after merge+deploy.
+
 Remaining / nice-to-have:
 - **Real Midtrans QRIS** — deliberately last; blocked on the owner signing up for
   Midtrans. api/qris scaffolding exists; currently prototype/static-QR mode.

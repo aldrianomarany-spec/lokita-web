@@ -202,6 +202,24 @@ export async function fetchMyListings(): Promise<DbListing[]> {
   }))
 }
 
+// The seller's live shelf tracker — how many of their items sit with the
+// review desk (pending) vs on the market (active). Ids only, cheap to poll.
+export async function fetchMyShelf(): Promise<{ pending: number; active: number } | null> {
+  const user = await getUser()
+  if (!user) return null
+  const { data, error } = await supabase
+    .from('listings')
+    .select('status')
+    .eq('seller_id', user.id)
+    .in('status', ['pending', 'active'])
+  if (error) throw error
+  const rows = (data as { status: string }[]) || []
+  return {
+    pending: rows.filter((r) => r.status === 'pending').length,
+    active: rows.filter((r) => r.status === 'active').length,
+  }
+}
+
 export interface ReviewRow {
   id: string
   rating: number
@@ -726,9 +744,11 @@ export async function fetchMyOrders(): Promise<OrderRow[]> {
 
 // Realtime: refetch the feed on any listing change (new post, price change,
 // sold/removed). RLS scopes which rows a client actually receives.
-export function subscribeListings(onChange: () => void): () => void {
+// topic must be UNIQUE per subscriber — two components on one literal topic
+// crash Supabase realtime (same rule as subscribeBanners/subscribeSettings)
+export function subscribeListings(onChange: () => void, topic = 'listings-feed'): () => void {
   const channel = supabase
-    .channel('listings-feed')
+    .channel(topic)
     .on('postgres_changes', { event: '*', schema: 'public', table: 'listings' }, onChange)
     .subscribe()
   return () => {
@@ -1396,10 +1416,14 @@ export async function fetchAdminListings(): Promise<AdminListingRow[]> {
 
 // Hide a bad listing (or put it back). 'removed' keeps the row + photos with
 // the seller so nothing is lost if it was a mistake.
-export async function adminSetListingStatus(id: string, status: 'active' | 'removed'): Promise<void> {
+export async function adminSetListingStatus(
+  id: string,
+  status: 'active' | 'removed',
+  audit?: 'listing_approved' | 'listing_declined',
+): Promise<void> {
   const { error } = await supabase.from('listings').update({ status }).eq('id', id)
   if (error) throw error
-  logAdmin(status === 'removed' ? 'listing_removed' : 'listing_restored', id)
+  logAdmin(audit || (status === 'removed' ? 'listing_removed' : 'listing_restored'), id)
 }
 
 export async function adminSetFeatured(id: string, on: boolean): Promise<void> {

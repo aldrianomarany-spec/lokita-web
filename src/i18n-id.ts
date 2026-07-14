@@ -728,4 +728,11 @@ export const ID: Record<string, string> = {
   'In LOKITA custody — ready for pickup': 'Di tangan LOKITA — siap diambil',
   'Claim confirmed — chat the LOKITA team to arrange your pickup.': 'Klaim dikonfirmasi — chat tim LOKITA untuk atur pengambilanmu.',
   'Now transfer to the seller and upload your receipt in My Orders. Once the seller confirms the money arrived, chat the LOKITA team to collect your item.': 'Sekarang transfer ke penjual dan unggah buktimu di Pesanan Saya. Setelah penjual konfirmasi uangnya masuk, chat tim LOKITA untuk ambil barangmu.',
+  // ---- 0036 review tracking ----
+  'Under review': 'Sedang ditinjau',
+  'Your items waiting at the LOKITA desk — tap to track them': 'Barang-barangmu menunggu di meja LOKITA — ketuk untuk melacaknya',
+  'items waiting at the LOKITA desk': 'barang menunggu di meja LOKITA',
+  'Your item is waiting at the LOKITA desk': 'Barangmu menunggu di meja LOKITA',
+  'Bring it over so the team can approve it — you’ll get a buzz the moment it goes live.': 'Bawa barangnya supaya tim bisa menyetujui — kamu langsung dapat notifikasi begitu tayang.',
+  'Track status': 'Lacak status',
 }

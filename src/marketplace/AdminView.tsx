@@ -3,6 +3,7 @@ import { useM } from './context'
 import {
   fetchAdminStats,
   fetchAdminListings,
+  subscribeListings,
   fetchAdminMembers,
   fetchAdminReports,
   fetchAdminTrends,
@@ -147,7 +148,7 @@ function BannerList({ items, busyId, act, refresh }: { items: BannerRow[]; busyI
 const CTA_PRESETS = ['Shop now', 'See details', 'Check it out', 'Shop bundles', 'Sell yours', 'Learn more', 'Grab yours']
 
 export default function AdminView() {
-  const { state, refreshReports, openMember } = useM()
+  const { state, refreshReports, openMember, chatMember } = useM()
   const isAdmin = !state.guest && state.profile.role === 'admin'
 
   const [stats, setStats] = useState<AdminStats | null>(null)
@@ -257,6 +258,17 @@ export default function AdminView() {
   useEffect(() => {
     if (isAdmin) load()
   }, [isAdmin, load])
+
+  // live queue: a new consignment drop (or a status flip) lands in the
+  // moderation list without a refresh — own realtime topic, see subscribeListings
+  useEffect(() => {
+    if (!isAdmin) return
+    const unsub = subscribeListings(() => {
+      fetchAdminListings().then(setListings).catch(() => {})
+      fetchAdminStats().then(setStats).catch(() => {})
+    }, 'listings-admin')
+    return () => unsub()
+  }, [isAdmin])
 
   const act = async (id: string, fn: () => Promise<void>) => {
     setBusyId(id)
@@ -752,7 +764,8 @@ export default function AdminView() {
         ) : listings.length === 0 ? (
           <div style={{ padding: '30px 20px', textAlign: 'center', color: '#8B8B86', fontSize: 13 }}>No listings yet.</div>
         ) : (
-          listings.map((l) => {
+          // items waiting at the desk float to the top — they need a decision
+          [...listings].sort((a, b) => (a.status === 'pending' ? 0 : 1) - (b.status === 'pending' ? 0 : 1)).map((l) => {
             const chip = STATUS_CHIP[l.status] || STATUS_CHIP.active
             return (
               <div key={l.id} style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap', padding: '12px 16px', borderBottom: '1px solid #E6E6E3' }}>
@@ -766,14 +779,26 @@ export default function AdminView() {
                   </div>
                 </div>
                 <span style={{ ...mono, fontSize: 9, color: chip.fg, background: chip.bg, padding: '4px 9px', borderRadius: 0, flex: 'none' }}>{l.status.toUpperCase()}</span>
-                <div style={{ display: 'flex', gap: 7, flex: 'none' }}>
+                <div style={{ display: 'flex', gap: 7, flex: 'none', flexWrap: 'wrap' }}>
                   {l.status === 'active' && (
                     <SmallBtn label={l.is_featured ? '★ Unfeature' : '☆ Feature'} busy={busyId === l.id} onClick={() => act(l.id, () => adminSetFeatured(l.id, !l.is_featured))} />
                   )}
                   {l.status === 'pending' && (
-                    <SmallBtn label="Approve ✓ (item received)" tone="accent" busy={busyId === l.id} onClick={() => act(l.id, () => adminSetListingStatus(l.id, 'active'))} />
+                    <>
+                      <SmallBtn label="Approve ✓ (item received)" tone="accent" busy={busyId === l.id} onClick={() => act(l.id, () => adminSetListingStatus(l.id, 'active', 'listing_approved'))} />
+                      <SmallBtn
+                        label="Decline ✗"
+                        tone="danger"
+                        busy={busyId === l.id}
+                        onClick={() => {
+                          if (!window.confirm(`Decline "${l.title}"? ${l.seller_name} will be notified — tell them why in chat.`)) return
+                          act(l.id, () => adminSetListingStatus(l.id, 'removed', 'listing_declined'))
+                        }}
+                      />
+                      <SmallBtn label="💬 Chat seller" busy={busyId === l.id} onClick={() => chatMember(l.seller_id)} />
+                    </>
                   )}
-                  {(l.status === 'active' || l.status === 'pending') && (
+                  {l.status === 'active' && (
                     <SmallBtn label="Remove" tone="danger" busy={busyId === l.id} onClick={() => act(l.id, () => adminSetListingStatus(l.id, 'removed'))} />
                   )}
                   {(l.status === 'removed' || l.status === 'flagged') && (
