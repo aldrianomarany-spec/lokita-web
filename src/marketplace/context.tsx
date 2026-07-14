@@ -2,7 +2,8 @@ import { createContext, useCallback, useContext, useEffect, useRef, useState } f
 import { useNavigate } from 'react-router-dom'
 import QRCode from 'qrcode'
 import { signOut } from '../lib/auth'
-import { ringNotification } from '../lib/alerts'
+import { ringNotification, systemAlertsGranted } from '../lib/alerts'
+import { enablePush } from '../lib/push'
 import {
   fetchMyProfile,
   updateMyProfile,
@@ -460,6 +461,10 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
       cleanupStaleData().catch(() => {})
       expireFeatured().catch(() => {})
       touchLastSeen()
+      // self-healing push: members who granted notification permission before
+      // Web Push existed never ran the subscribe step (the enable button hides
+      // once permission is granted) — register this device on every login
+      if (systemAlertsGranted()) enablePush()
       expireStaleOrders()
         .catch(() => {})
         .finally(() => loadOrders())
