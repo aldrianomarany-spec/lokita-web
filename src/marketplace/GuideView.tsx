@@ -65,9 +65,18 @@ export default function GuideView() {
         <Step n={5} title={t('Get paid & reviewed')} body={t('Once the buyer confirms pickup the trade completes. Want more eyes? Tap 🚀 Boost on your listing for the FEATURED slot.')} />
       </div>
 
+      <div style={sectionCap}>💝 {t('FREE & DONATIONS — 3 STEPS')}</div>
+      <div style={card}>
+        <Step n={1} title={t('Post it free')} body={t('Toggle "Give it away for free" (or post from the Free & Donations section). Choose: keep the item and hand it over yourself, or drop it at the LOKITA desk.')} />
+        <Step n={2} title={t('The team approves your post')} body={t('Every donation is checked first, so the section stays clean and real. You get a notification the moment it goes live.')} />
+        <Step n={3} title={t('Pick who gets it')} body={t('Neighbours tap "Ask for it" — you see every ask in My Orders and give it to whoever you like. No money involved, ever.')} />
+      </div>
+
       <div style={sectionCap}>🧭 {t('EVERY FEATURE, EXPLAINED')}</div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(240px,1fr))', gap: 10 }}>
         <Feature icon="📦" name={t('LOKITA desk custody')} body={t('Every item on sale is physically with the LOKITA team. You pay the seller directly and collect from the desk — no ghost listings, no no-shows.')} />
+        <Feature icon="🙋" name={t('Ask for it')} body={t('Free items are never first-come-first-served — everyone can raise a hand and the giver picks. Friendly chat helps!')} />
+        <Feature icon="🔒" name={t('Members-only details')} body={t('Guests see only thumbnails. Item details, chat and trading unlock after you sign up and complete your profile.')} />
         <Feature icon="🪪" name={t('Dorm-Verified badge')} body={t('Upload your student ID in your profile; the LOKITA team checks it by hand. The ✔ badge shows neighbours you are real.')} />
         <Feature icon="⭐" name={t('Top Seller badge')} body={t('Automatic: 5+ completed sales with a 4.5★+ rating. The mark of a seller you can trust.')} />
         <Feature icon="💬" name={t('Chat with product cards')} body={t('One conversation per person. When you message about an item, its card attaches so nobody asks "which one?"')} />

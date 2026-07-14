@@ -787,4 +787,16 @@ export const ID: Record<string, string> = {
   'Desk items go live when the team receives them; donation posts right after a quick check — you’ll get a buzz.': 'Barang meja tayang saat tim menerimanya; postingan donasi setelah dicek sebentar — kamu langsung dapat notifikasi.',
   'The giver hands it over directly': 'Pemberi menyerahkannya langsung',
   'asked — choose in My Orders': 'minta — pilih di Pesanan Saya',
+  // ---- guide: donations section + glossary ----
+  'FREE & DONATIONS — 3 STEPS': 'GRATIS & DONASI — 3 LANGKAH',
+  'Post it free': 'Posting gratis',
+  'Toggle "Give it away for free" (or post from the Free & Donations section). Choose: keep the item and hand it over yourself, or drop it at the LOKITA desk.': 'Nyalakan "Berikan gratis" (atau posting dari bagian Gratis & Donasi). Pilih: simpan barangnya dan serahkan sendiri, atau titipkan di meja LOKITA.',
+  'The team approves your post': 'Tim menyetujui postinganmu',
+  'Every donation is checked first, so the section stays clean and real. You get a notification the moment it goes live.': 'Setiap donasi dicek dulu, supaya bagian ini tetap rapi dan nyata. Kamu dapat notifikasi begitu tayang.',
+  'Pick who gets it': 'Pilih siapa yang dapat',
+  'Neighbours tap "Ask for it" — you see every ask in My Orders and give it to whoever you like. No money involved, ever.': 'Tetangga mengetuk "Minta" — kamu lihat semua permintaan di Pesanan Saya dan berikan ke siapa pun yang kamu pilih. Tanpa uang, selamanya.',
+  'Ask for it': 'Minta barang',
+  'Free items are never first-come-first-served — everyone can raise a hand and the giver picks. Friendly chat helps!': 'Barang gratis bukan siapa cepat dia dapat — semua bisa angkat tangan dan pemberi yang memilih. Ramah di chat membantu!',
+  'Members-only details': 'Detail khusus anggota',
+  'Guests see only thumbnails. Item details, chat and trading unlock after you sign up and complete your profile.': 'Tamu hanya melihat thumbnail. Detail barang, chat, dan transaksi terbuka setelah kamu daftar dan melengkapi profil.',
 }
