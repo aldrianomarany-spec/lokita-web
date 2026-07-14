@@ -404,7 +404,9 @@ export async function fetchFeed(opts: FeedOpts, viewerFloor: string | null): Pro
     const code = BUILDING_CODE[opts.building]
     if (code) q = q.eq('building', code)
   }
-  if (opts.free) q = q.eq('is_giveaway', true)
+  // giveaways live ONLY in the 💝 Free & Donations section — the main feed
+  // (and search) shows priced items exclusively
+  q = q.eq('is_giveaway', !!opts.free)
   if (opts.query && opts.query.trim()) {
     // match title OR description; strip PostgREST or() delimiters from input
     const term = opts.query.trim().replace(/[,()]/g, ' ').trim()
@@ -431,7 +433,7 @@ export async function fetchFeed(opts: FeedOpts, viewerFloor: string | null): Pro
 
 // Category → count of active listings (for the sidebar).
 export async function fetchCategoryCounts(): Promise<Record<string, number>> {
-  const { data, error } = await supabase.from('listings').select('category').eq('status', 'active')
+  const { data, error } = await supabase.from('listings').select('category').eq('status', 'active').eq('is_giveaway', false)
   if (error) throw error
   const counts: Record<string, number> = {}
   for (const r of (data as { category: string | null }[]) || []) {

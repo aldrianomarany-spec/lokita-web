@@ -1031,9 +1031,16 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
       } else if (n.type === 'order_update') {
         patch({ view: 'orders', menuOpen: false, sel: null })
       } else if (n.reference_id) {
-        // price drop / item update → open the listing if it's in the current feed
-        const it = state.feed.find((x) => x.id === n.reference_id) || null
-        patch({ sel: it, view: it ? state.view : 'browse', menuOpen: false })
+        // price drop / item update / search-alert match → open the listing.
+        // Not in the current feed (other filters, giveaway section)? Fetch it
+        // directly so the tap never dead-ends.
+        const inFeed = state.feed.find((x) => x.id === n.reference_id) || null
+        if (inFeed) {
+          patch({ sel: inFeed, menuOpen: false })
+        } else {
+          patch({ menuOpen: false })
+          api.openListingById(n.reference_id)
+        }
       }
       loadNotifications()
     },
