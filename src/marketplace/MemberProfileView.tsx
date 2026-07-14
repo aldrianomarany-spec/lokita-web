@@ -211,7 +211,7 @@ export default function MemberProfileView() {
       {/* trust note */}
       <div style={{ background: '#E8F2F7', border: '1px solid #BFDCE8', borderRadius: 0, padding: '13px 16px', display: 'flex', gap: 11, alignItems: 'center', marginBottom: 24 }}>
         <span style={{ color: 'var(--accent,#000000)', flex: 'none', display: 'flex' }}><ShieldCheck size={19} /></span>
-        <span style={{ fontSize: 12.5, color: '#4A5A50', fontWeight: 600 }}>{t('All trades are paid in-app and exchanged via the campus Security Post — no risky meetups.')}</span>
+        <span style={{ fontSize: 12.5, color: '#4A5A50', fontWeight: 600 }}>{t('All orders are placed in-app and handed over at the LOKITA desk — no risky meetups.')}</span>
       </div>
 
       {/* listings */}

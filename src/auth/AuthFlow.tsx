@@ -58,7 +58,7 @@ const perks = [
         <path d="M9 12l2 2 4-4" />
       </svg>
     ),
-    label: 'Escrow payments held until pickup',
+    label: 'Every item checked in at the LOKITA desk',
   },
   {
     icon: (
@@ -67,7 +67,7 @@ const perks = [
         <circle cx="12" cy="10" r="2.4" />
       </svg>
     ),
-    label: 'Collect at the campus Security Post',
+    label: 'Collect from the LOKITA desk on campus',
   },
 ]
 
@@ -366,7 +366,7 @@ export default function AuthFlow() {
           <div style={{ marginTop: 'auto', position: 'relative' }}>
             <div style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 11, color: 'rgba(245,241,232,.7)', letterSpacing: '.1em', marginBottom: 12 }}>{t('THE DORM MARKETPLACE · JIU CIKARANG')}</div>
             <h1 style={{ fontFamily: "'Bricolage Grotesque',sans-serif", fontWeight: 800, fontSize: 35, lineHeight: 1.08, letterSpacing: '-.025em', margin: 0, color: '#F8F5EE' }}>{t('Buy & sell with the students next door.')}</h1>
-            <p style={{ fontSize: 14.5, lineHeight: 1.55, color: 'rgba(234,240,248,.82)', margin: '12px 0 0', maxWidth: 400 }}>{t('Trade furniture, gadgets and textbooks with verified neighbours in your building. Pay in-app, pick up at the Security Post.')}</p>
+            <p style={{ fontSize: 14.5, lineHeight: 1.55, color: 'rgba(234,240,248,.82)', margin: '12px 0 0', maxWidth: 400 }}>{t('Trade furniture, gadgets and textbooks with verified neighbours in your building. Every item is checked in at the LOKITA desk — order in-app, collect from the team.')}</p>
           </div>
           <div style={{ marginTop: 20, display: 'flex', flexDirection: 'column', gap: 11, position: 'relative' }}>
             {perks.map((p, i) => (

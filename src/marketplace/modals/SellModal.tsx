@@ -18,13 +18,16 @@ const cap: React.CSSProperties = { flex: 1, fontFamily: "'Spline Sans Mono',mono
 const CONDITIONS = ['Like new', 'Good', 'Fair']
 
 export default function SellModal() {
-  const { state, closeSell, setF, toggleBundle, toggleGiveaway, submitListing } = useM()
+  const { state, closeSell, setF, toggleBundle, toggleGiveaway, submitListing, chatAdminDropoff } = useM()
   const { t } = useLang()
   const s = state
   const f = s.f
   const [photos, setPhotos] = useState<File[]>([])
+  const [agreed, setAgreed] = useState(false) // consignment terms — required
   const fileRef = useRef<HTMLInputElement>(null)
   const MAX_PHOTOS = 5
+  // opened from Free & Donations → giveaway is the whole point, no opting out
+  const freeLocked = s.freeOnly
 
   // category must be an explicit choice — start blank every time the modal opens
   useEffect(() => {
@@ -32,8 +35,7 @@ export default function SellModal() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  const listLabel = s.listState === 'saving' ? t('Posting…') : s.listState === 'done' ? t('Sent for review ✓ — bring it to the desk') : t('Post listing')
-  const listBg = s.listState === 'done' ? '#3DBB6E' : 'var(--accent,#000000)'
+  const listLabel = s.listState === 'saving' ? t('Posting…') : !agreed ? t('Tick the agreement above to post ↑') : t('Post listing')
   const busy = s.listState !== 'idle'
 
   // append newly picked files, hard cap at MAX_PHOTOS (extras are ignored)
@@ -50,6 +52,44 @@ export default function SellModal() {
   const fee = platformFee(ask)
   const listed = publishedPrice(ask)
   const rp = (n: number) => 'Rp ' + n.toLocaleString('id-ID')
+
+  // ---- posted ✓ — the drop-off step (consignment is never instant) ----
+  if (s.listState === 'done') {
+    return (
+      <Overlay onClose={closeSell}>
+        <div onClick={stop} style={{ background: '#FFFFFF', borderRadius: 0, padding: '34px 32px', width: '100%', maxWidth: 460, animation: 'lok-pop .26s cubic-bezier(.2,.8,.3,1) both', boxShadow: '0 40px 90px -20px rgba(0,0,0,.5)', textAlign: 'center' }}>
+          <div style={{ fontSize: 42, marginBottom: 10 }}>📦</div>
+          <h2 style={{ fontFamily: "'Bricolage Grotesque',sans-serif", fontSize: 21, fontWeight: 800, margin: '0 0 10px' }}>{t('Sent for review ✓')}</h2>
+          <p style={{ fontSize: 13.5, color: '#4A4B4E', fontWeight: 500, lineHeight: 1.6, margin: '0 0 8px' }}>
+            {t('Your post is saved but NOT live yet. Bring the item to the LOKITA desk — it goes live the moment the team receives it, and you’ll get a notification.')}
+          </p>
+          <div style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 10.5, color: '#9A6A12', background: '#FBF2DD', border: '1px solid #EBD9A9', padding: '8px 10px', marginBottom: 16 }}>
+            📍 {s.handoverInfo.location} · {t(s.handoverInfo.hours)}
+          </div>
+          {/* drop-off slots (admin-defined in the Control Room) — one tap picks
+              a time and opens the team chat with it already in the message */}
+          {s.handoverInfo.slots.length > 0 && (
+            <div style={{ marginBottom: 14, textAlign: 'left' }}>
+              <div style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 9.5, color: '#9A9A94', letterSpacing: '.08em', marginBottom: 7 }}>{t('PICK A DROP-OFF TIME')}</div>
+              <div style={{ display: 'flex', gap: 7, flexWrap: 'wrap' }}>
+                {s.handoverInfo.slots.map((slot) => (
+                  <button key={slot} onClick={() => chatAdminDropoff(slot)} className="lok-navi" style={{ border: '1px solid #519BB8', background: '#EDF5F9', color: '#2F6B85', fontFamily: 'inherit', fontWeight: 700, fontSize: 12.5, padding: '9px 13px', borderRadius: 0, cursor: 'pointer' }}>
+                    🕐 {slot}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+          <button onClick={() => chatAdminDropoff()} className="lok-btn" style={{ width: '100%', border: 'none', background: 'var(--accent,#000000)', color: '#F7F3EA', fontFamily: 'inherit', fontWeight: 700, fontSize: 14, padding: 13, borderRadius: 0, cursor: 'pointer', marginBottom: 8 }}>
+            💬 {s.handoverInfo.slots.length > 0 ? t('Chat the team — none of these fit') : t('Chat the team — arrange drop-off')}
+          </button>
+          <button onClick={closeSell} className="lok-navi" style={{ width: '100%', border: '1px solid #D8D8D4', background: '#FFFFFF', color: '#3A3B3E', fontFamily: 'inherit', fontWeight: 700, fontSize: 13, padding: 12, borderRadius: 0, cursor: 'pointer' }}>
+            {t("Done — I'll drop it by later")}
+          </button>
+        </div>
+      </Overlay>
+    )
+  }
 
   return (
     <Overlay onClose={closeSell}>
@@ -92,14 +132,19 @@ export default function SellModal() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           <input className="lok-field" value={f.title} onChange={(e) => setF('title', e.target.value)} placeholder={t('Item title')} style={fieldBase} />
 
-          {/* 💝 Free & Donations — give it away, no price, no fee */}
-          <div onClick={toggleGiveaway} style={{ display: 'flex', alignItems: 'center', gap: 12, background: s.giveawayOn ? '#EDF5F9' : '#F5F5F3', border: `1px solid ${s.giveawayOn ? '#519BB8' : '#D8D8D4'}`, borderRadius: 0, padding: '12px 14px', cursor: 'pointer' }}>
+          {/* 💝 Free & Donations — give it away, no price, no fee. Locked ON
+              when the modal was opened from the Free & Donations section. */}
+          <div onClick={freeLocked ? undefined : toggleGiveaway} style={{ display: 'flex', alignItems: 'center', gap: 12, background: s.giveawayOn ? '#EDF5F9' : '#F5F5F3', border: `1px solid ${s.giveawayOn ? '#519BB8' : '#D8D8D4'}`, borderRadius: 0, padding: '12px 14px', cursor: freeLocked ? 'default' : 'pointer' }}>
             <div style={{ width: 40, height: 23, borderRadius: 0, background: s.giveawayOn ? '#519BB8' : '#C2C2BE', position: 'relative', flex: 'none', transition: 'background .2s ease' }}>
               <div style={{ position: 'absolute', top: 2.5, left: s.giveawayOn ? 19 : 2.5, width: 18, height: 18, borderRadius: '50%', background: '#fff', transition: 'left .2s ease', boxShadow: '0 1px 3px rgba(0,0,0,.2)' }} />
             </div>
             <div>
-              <div style={{ fontSize: 13, fontWeight: 700 }}>💝 {t('Give it away for free')}</div>
-              <div style={{ fontSize: 11, color: '#8B8B86', fontWeight: 500 }}>{t('Donate it to a neighbour — no price, no fee. It shows in Free & Donations.')}</div>
+              <div style={{ fontSize: 13, fontWeight: 700 }}>💝 {t('Give it away for free')}{freeLocked ? ' 🔒' : ''}</div>
+              <div style={{ fontSize: 11, color: '#8B8B86', fontWeight: 500 }}>
+                {freeLocked
+                  ? t("You're posting in Free & Donations — items here are always free.")
+                  : t('Donate it to a neighbour — no price, no fee. It shows in Free & Donations.')}
+              </div>
             </div>
           </div>
 
@@ -127,7 +172,7 @@ export default function SellModal() {
                 <span>{rp(ask)}</span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, fontWeight: 600, color: '#8B8B86', marginTop: 5 }}>
-                <span>{t('LOKITA platform fee')} <span title={t('5% of your price — min Rp 1.000, max Rp 4.000. Covers escrow, Security Post & support.')} style={{ cursor: 'help' }}>ⓘ</span></span>
+                <span>{t('LOKITA platform fee')} <span title={t('5% of your price — min Rp 1.000, max Rp 4.000. Covers the LOKITA desk service & support.')} style={{ cursor: 'help' }}>ⓘ</span></span>
                 <span>+ {rp(fee)}</span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 8, paddingTop: 8, borderTop: '1px dashed #C9C9C5' }}>
@@ -176,7 +221,7 @@ export default function SellModal() {
           </div>
           <div style={{ fontSize: 11, color: '#8B8B86', fontWeight: 500, lineHeight: 1.5, margin: '-2px 2px 0', display: 'flex', gap: 6 }}>
             <span style={{ color: 'var(--accent,#000000)', flex: 'none' }}>ⓘ</span>
-            {t('Just tells buyers how near the item is. The actual hand-off always happens at the shared campus Security Post — the buyer picks the exchange method at checkout.')}
+            {t('Just tells buyers how near the item is. The hand-off itself happens at the LOKITA desk, where your item waits safely after you drop it off.')}
           </div>
 
           <textarea className="lok-field" value={f.desc} onChange={(e) => setF('desc', e.target.value)} placeholder={t("Description — condition, why you're selling…")} style={{ ...fieldBase, minHeight: 66, resize: 'none' }} />
@@ -206,13 +251,28 @@ export default function SellModal() {
 
         </div>
 
+        {/* consignment agreement — posting is a promise to bring the item over */}
+        <label style={{ display: 'flex', alignItems: 'flex-start', gap: 11, background: agreed ? '#EAF5EE' : '#FBF2DD', border: `1px solid ${agreed ? '#BFE3CC' : '#EBD9A9'}`, borderRadius: 0, padding: '12px 14px', marginTop: 12, cursor: 'pointer' }}>
+          <input
+            type="checkbox"
+            checked={agreed}
+            onChange={(e) => setAgreed(e.target.checked)}
+            style={{ width: 17, height: 17, flex: 'none', marginTop: 1, accentColor: '#1E9E5A', cursor: 'pointer' }}
+          />
+          <span style={{ fontSize: 12, color: '#4A4B4E', fontWeight: 600, lineHeight: 1.55 }}>
+            {t('I agree to the consignment terms: my post goes live only after I hand the item to the LOKITA team at the desk, I can keep max 3 items on the shelf, and I’ll collect it back if it doesn’t sell.')}{' '}
+            <a href="/terms" target="_blank" rel="noreferrer" onClick={stop} style={{ color: '#2F6B85', fontWeight: 700 }}>{t('Full terms')}</a>
+          </span>
+        </label>
+
         <button
-          disabled={busy}
+          disabled={busy || !agreed}
           className="lok-btn"
           onClick={() => {
+            if (!agreed) return
             if (!f.cat) { alert(t('Please choose a category.')); return }
             submitListing(photos)
-          }} style={{ width: '100%', border: 'none', background: listBg, color: '#F7F3EA', fontFamily: 'inherit', fontWeight: 700, fontSize: 14.5, padding: 14, borderRadius: 0, cursor: busy ? 'default' : 'pointer', marginTop: 18, transition: 'background .2s ease', boxShadow: '0 8px 20px -8px rgba(0,0,0,.6)' }}>{listLabel}</button>
+          }} style={{ width: '100%', border: 'none', background: 'var(--accent,#000000)', color: '#F7F3EA', fontFamily: 'inherit', fontWeight: 700, fontSize: 14.5, padding: 14, borderRadius: 0, cursor: busy || !agreed ? 'default' : 'pointer', opacity: !agreed && !busy ? 0.55 : 1, marginTop: 12, transition: 'background .2s ease, opacity .2s ease', boxShadow: '0 8px 20px -8px rgba(0,0,0,.6)' }}>{listLabel}</button>
       </div>
     </Overlay>
   )

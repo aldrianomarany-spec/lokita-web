@@ -148,7 +148,7 @@ export default function Sidebar() {
           <svg width={15} height={15} viewBox="0 0 24 24" fill="#fff"><path d="M12 2l2.4 1.8 3-.2 1 2.8 2.6 1.5-.7 2.9L23 12l-1.7 2.4.7 2.9-2.6 1.5-1 2.8-3-.2L12 22l-2.4-1.8-3 .2-1-2.8L2.7 16.3l.7-2.9L1 12l1.7-2.4L2 6.7l2.6-1.5 1-2.8 3 .2z" /></svg>
           {t('Dorm-Verified trading')}
         </div>
-        <div style={{ fontSize: 12, lineHeight: 1.55, color: '#C6DDD2', position: 'relative', paddingRight: 44 }}>{t('Every seller is a checked-in student. Order in-app, pay at handover — protected by 🔑 codes, 📸 proof and receipts.')}</div>
+        <div style={{ fontSize: 12, lineHeight: 1.55, color: '#C6DDD2', position: 'relative', paddingRight: 44 }}>{t('Every seller is a checked-in student and every item is checked in at the LOKITA desk — protected by receipts, 🔑 codes and the team in the middle.')}</div>
       </div>
     </aside>
   )

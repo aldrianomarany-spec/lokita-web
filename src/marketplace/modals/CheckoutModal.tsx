@@ -178,7 +178,7 @@ export default function CheckoutModal() {
               </span>
               <div style={{ flex: 1 }}>
                 <div style={{ fontWeight: 700, fontSize: 13.5, color: s.protectOn ? '#2F6B85' : '#1E1E1E' }}>🛡️ {t('Buyer Protection')} — Rp {fee.toLocaleString('id-ID')}</div>
-                <div style={{ fontSize: 11.5, color: '#5F6063', fontWeight: 500, marginTop: 3, lineHeight: 1.5 }}>{t('Optional. Unlocks dispute mediation by the LOKITA team and escrow status protection if something goes wrong with this trade.')}</div>
+                <div style={{ fontSize: 11.5, color: '#5F6063', fontWeight: 500, marginTop: 3, lineHeight: 1.5 }}>{t('Optional. Unlocks dispute mediation by the LOKITA team if something goes wrong with this trade.')}</div>
               </div>
             </div>}
             <button onClick={coContinue} className="lok-btn" style={{ width: '100%', border: 'none', background: isFree ? '#1E9E5A' : 'var(--accent,#000000)', color: '#F7F3EA', fontFamily: 'inherit', fontWeight: 700, fontSize: 14.5, padding: 14, borderRadius: 0, cursor: 'pointer', boxShadow: '0 8px 20px -8px rgba(0,0,0,.7)' }}>

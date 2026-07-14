@@ -396,7 +396,7 @@ export default function ProfileView() {
           </div>
           <div style={{ fontSize: 12.5, lineHeight: 1.5, marginTop: 2, color: '#C6DDD2' }}>
             {p.verification_status === 'verified'
-              ? `${t('Verified student')}${p.building ? ' · ' + t('resident of') + ' ' + p.building : ''} · ${t('trades protected by in-app escrow.')}`
+              ? `${t('Verified student')}${p.building ? ' · ' + t('resident of') + ' ' + p.building : ''} · ${t('trades protected by the LOKITA desk.')}`
               : t('Upload a photo of your student ID to earn the ✔ badge neighbours trust.')}
           </div>
         </div>

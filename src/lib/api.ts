@@ -2002,6 +2002,7 @@ export async function fetchProtectionPaid(orderId: string): Promise<boolean> {
 export interface HandoverInfo {
   location: string
   hours: string
+  slots: string[] // admin-defined drop-off windows, e.g. "Mon–Fri 16:00–18:00"
 }
 export interface AdminPayInfo {
   gopay: string
@@ -2015,7 +2016,7 @@ export interface OpsSettings {
 }
 const OPS_DEFAULTS: OpsSettings = {
   feesOn: false,
-  handover: { location: 'Union Building Room 303', hours: 'By appointment — chat the LOKITA team to arrange a time' },
+  handover: { location: 'Union Building Room 303', hours: 'By appointment — chat the LOKITA team to arrange a time', slots: [] },
   adminPay: { gopay: '', bank_name: '', bank_account: '' },
 }
 
@@ -2029,7 +2030,11 @@ export async function fetchOpsSettings(): Promise<OpsSettings> {
     const ap = byKey.get('admin_pay') as Partial<AdminPayInfo> | undefined
     return {
       feesOn: fees?.enabled === true,
-      handover: { location: ho?.location || OPS_DEFAULTS.handover.location, hours: ho?.hours || OPS_DEFAULTS.handover.hours },
+      handover: {
+        location: ho?.location || OPS_DEFAULTS.handover.location,
+        hours: ho?.hours || OPS_DEFAULTS.handover.hours,
+        slots: Array.isArray(ho?.slots) ? (ho!.slots as unknown[]).filter((x): x is string => typeof x === 'string').slice(0, 12) : [],
+      },
       adminPay: { gopay: ap?.gopay || '', bank_name: ap?.bank_name || '', bank_account: ap?.bank_account || '' },
     }
   } catch {

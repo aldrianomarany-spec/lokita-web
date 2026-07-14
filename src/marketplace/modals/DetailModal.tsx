@@ -185,7 +185,7 @@ export default function DetailModal() {
             </div>
             <div>
               <div style={{ fontWeight: 700, fontSize: 13, marginBottom: 2 }}>{t('Protected handover')}</div>
-              <div style={{ fontSize: 12.5, color: '#4A5A50', lineHeight: 1.55 }}>{t('Order in-app, pay at handover — cash or the seller’s QR. Security Post drop-offs come with 📸 photo proof, and every trade has a 🔑 code + receipt.')}</div>
+              <div style={{ fontSize: 12.5, color: '#4A5A50', lineHeight: 1.55 }}>{t('Order in-app, pay the seller directly and upload your receipt. The item is already with the LOKITA team — collect it at the desk, receipt included.')}</div>
             </div>
           </div>
 

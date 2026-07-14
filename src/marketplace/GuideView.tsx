@@ -44,7 +44,7 @@ export default function GuideView() {
       <div style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 11, color: '#9A9A94', letterSpacing: '.08em', marginBottom: 6 }}>{t('THE LOKITA GUIDEBOOK')}</div>
       <h1 style={{ fontFamily: "'Bricolage Grotesque',sans-serif", fontSize: 34, fontWeight: 800, letterSpacing: '-.025em', margin: '0 0 8px', lineHeight: 1.02 }}>{t('How LOKITA works')}</h1>
       <p style={{ fontSize: 14, color: '#5F6063', lineHeight: 1.65, margin: '0 0 6px', maxWidth: 620 }}>
-        {t('Buy and sell secondhand with your dorm neighbours. Money sits safely in escrow and items change hands at the campus Security Post — no risky meetups, no strangers.')}
+        {t('Buy and sell secondhand with your dorm neighbours. Every item is checked in at the LOKITA desk and handed over by the team — no risky meetups, no strangers.')}
       </p>
 
       <div style={sectionCap}>🛒 {t('BUYING — 5 STEPS')}</div>
@@ -52,22 +52,22 @@ export default function GuideView() {
         <Step n={1} title={t('Find something you like')} body={t('Browse the homepage, search, filter by category or building — or check Requests to see what neighbours are hunting for.')} />
         <Step n={2} title={t('Check the seller')} body={t('Open the item, tap the seller card: rating, reviews, Dorm-Verified badge and Top Seller status tell you who you are dealing with.')} />
         <Step n={3} title={t('Chat or make an offer')} body={t('Message the seller (the product card attaches automatically) or tap 💰 Make an offer to propose your price.')} />
-        <Step n={4} title={t('Buy — your money is protected')} body={t('Tap Buy now and pay in-app. The money is held in escrow: the seller only gets it after you receive the item.')} />
-        <Step n={5} title={t('Pick it up at the Security Post')} body={t('The seller drops the item at the campus Security Post. Collect it whenever suits you, tap "Confirm I picked it up", then leave a review.')} />
+        <Step n={4} title={t('Order & pay the seller')} body={t('Tap Buy now. The seller’s payment details appear on your order — transfer, then upload your receipt so the seller can confirm.')} />
+        <Step n={5} title={t('Pick it up at the LOKITA desk')} body={t('The item is already with the LOKITA team. Once the seller confirms your payment, chat the team to arrange pickup — bring your 🔑 code, then leave a review.')} />
       </div>
 
       <div style={sectionCap}>🏷️ {t('SELLING — 5 STEPS')}</div>
       <div style={card}>
         <Step n={1} title={t('Post your item in under a minute')} body={t('Tap Sell, add up to 5 photos (first one is the cover), pick a category and condition, set your price.')} />
-        <Step n={2} title={t('Know your take-home')} body={t('LOKITA adds a small platform fee (5%, min Rp 1.000, max Rp 4.000) on top of your ask — buyers pay it, you receive your full price.')} />
+        <Step n={2} title={t('Bring it to the LOKITA desk')} body={t('Your post stays pending until you hand the item to the team (arrange the time in chat). It goes live the moment they receive it — max 3 items on the shelf at once.')} />
         <Step n={3} title={t('Answer chats fast')} body={t('Use quick replies and counter offers. Fast, friendly sellers get better ratings — and ratings earn the ⭐ Top Seller badge.')} />
-        <Step n={4} title={t('Got an order? Drop it off')} body={t('Confirm the order, then leave the item at the Security Post before the deadline and mark it dropped off.')} />
+        <Step n={4} title={t('Got an order? Confirm the payment')} body={t('The buyer transfers straight to you and uploads a receipt. Check your account, tap "Money received — confirm ✓", and the team handles the handover.')} />
         <Step n={5} title={t('Get paid & reviewed')} body={t('Once the buyer confirms pickup the trade completes. Want more eyes? Tap 🚀 Boost on your listing for the FEATURED slot.')} />
       </div>
 
       <div style={sectionCap}>🧭 {t('EVERY FEATURE, EXPLAINED')}</div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(240px,1fr))', gap: 10 }}>
-        <Feature icon="🛡️" name={t('Escrow payments')} body={t('Your payment is held by LOKITA until you collect the item. Sellers never see your money before you get your stuff.')} />
+        <Feature icon="📦" name={t('LOKITA desk custody')} body={t('Every item on sale is physically with the LOKITA team. You pay the seller directly and collect from the desk — no ghost listings, no no-shows.')} />
         <Feature icon="🪪" name={t('Dorm-Verified badge')} body={t('Upload your student ID in your profile; the LOKITA team checks it by hand. The ✔ badge shows neighbours you are real.')} />
         <Feature icon="⭐" name={t('Top Seller badge')} body={t('Automatic: 5+ completed sales with a 4.5★+ rating. The mark of a seller you can trust.')} />
         <Feature icon="💬" name={t('Chat with product cards')} body={t('One conversation per person. When you message about an item, its card attaches so nobody asks "which one?"')} />
@@ -86,7 +86,7 @@ export default function GuideView() {
         <ul style={{ margin: 0, paddingLeft: 18, fontSize: 13, color: '#5F6063', lineHeight: 1.9 }}>
           <li>{t('Only trade with campus neighbours — that is what keeps LOKITA safe.')}</li>
           <li>{t('Describe items honestly; photos must show the real item.')}</li>
-          <li>{t('Always exchange via the Security Post unless you both agree otherwise.')}</li>
+          <li>{t('All items change hands at the LOKITA desk — that way every trade has a witness.')}</li>
           <li>{t('No prohibited items: weapons, drugs, alcohol, counterfeits, or anything illegal.')}</li>
           <li>{t('Be kind in chat. Harassment or scam attempts mean a ban.')}</li>
         </ul>
