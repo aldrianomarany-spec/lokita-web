@@ -133,6 +133,9 @@ export default function DetailModal() {
             </div>
           )}
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 18 }}>
+            {!isOwner && (
+              <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12.5, fontWeight: 700, color: '#1E9E5A', background: '#EAF5EE', border: '1px solid #BFE3CC', padding: '8px 12px', borderRadius: 0 }}>✓ {t('In LOKITA custody — ready for pickup')}</span>
+            )}
             <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12.5, fontWeight: 600, color: '#1E1E1E', background: '#ECECEA', padding: '8px 12px', borderRadius: 0 }}>{t('Condition')} · {t(sel.cond)}</span>
             <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12.5, fontWeight: 600, color: '#1E1E1E', background: '#ECECEA', padding: '8px 12px', borderRadius: 0 }}>
               <MapPin size={12} />

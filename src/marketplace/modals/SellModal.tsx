@@ -32,7 +32,7 @@ export default function SellModal() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  const listLabel = s.listState === 'saving' ? t('Posting…') : s.listState === 'done' ? t('Posted ✓') : t('Post listing')
+  const listLabel = s.listState === 'saving' ? t('Posting…') : s.listState === 'done' ? t('Sent for review ✓ — bring it to the desk') : t('Post listing')
   const listBg = s.listState === 'done' ? '#3DBB6E' : 'var(--accent,#000000)'
   const busy = s.listState !== 'idle'
 
@@ -58,7 +58,9 @@ export default function SellModal() {
           <h2 style={{ fontFamily: "'Bricolage Grotesque',sans-serif", fontSize: 22, fontWeight: 800, margin: 0 }}>{t('List an item')}</h2>
           <button onClick={closeSell} className="lok-navi" style={{ border: '1px solid #D8D8D4', background: '#F5F5F3', width: 34, height: 34, borderRadius: 0, fontSize: 15, cursor: 'pointer', color: '#4A4B4E' }}>✕</button>
         </div>
-        <p style={{ fontSize: 13, color: '#8B8B86', fontWeight: 600, margin: '0 0 18px' }}>{t('Takes under a minute. Post it, drop it at the Security Post, done.')}</p>
+        <p style={{ fontSize: 13, color: '#8B8B86', fontWeight: 600, margin: '0 0 18px' }}>
+          📦 {t('How it works: post it here, bring the item to the LOKITA desk, and it goes live once the team receives it — buyers know every item is really there.')}
+        </p>
 
         {/* photo picker */}
         <input ref={fileRef} type="file" accept="image/*" multiple onChange={onFiles} style={{ display: 'none' }} />

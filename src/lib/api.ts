@@ -171,7 +171,7 @@ export interface DbListing {
   condition: string | null
   is_graduation_bundle: boolean
   bundle_items: string[] | null
-  status: 'active' | 'sold' | 'removed' | 'flagged'
+  status: 'pending' | 'active' | 'sold' | 'removed' | 'flagged'
   building: string | null
   floor: string | null
   created_at: string
@@ -481,7 +481,8 @@ export async function createListing(input: NewListing, photos: File[]): Promise<
       is_graduation_bundle: input.isBundle,
       bundle_items: input.isBundle && input.bundleItems.length ? input.bundleItems : null,
       is_giveaway: !!input.isGiveaway,
-      status: 'active',
+      // consignment (0035): live only after the LOKITA team receives the item
+      status: 'pending',
     })
     .select('id')
     .single()
@@ -685,6 +686,7 @@ export interface OrderRow {
   meetup_spot?: string | null // preset campus spot (0032)
   dropoff_photo_url?: string | null // 📸 drop-off proof (0032)
   protection_proof_url?: string | null // transfer screenshot for review (0034)
+  payment_proof_url?: string | null // buyer's transfer receipt to the seller (0035)
 }
 
 export async function fetchMyOrders(): Promise<OrderRow[]> {
@@ -2031,6 +2033,13 @@ async function uploadProof(name: string, rawFile: File): Promise<string> {
 export async function attachBoostProof(boostId: string, file: File): Promise<void> {
   const url = await uploadProof(`boost_${boostId}`, file)
   const { error } = await supabase.from('boost_requests').update({ proof_url: url }).eq('id', boostId)
+  if (error) throw error
+}
+
+// the buyer's transfer receipt for the ITEM payment (0035 pay-first flow)
+export async function attachPaymentProof(orderId: string, file: File): Promise<void> {
+  const url = await uploadProof(`pay_${orderId}`, file)
+  const { error } = await supabase.from('transactions').update({ payment_proof_url: url }).eq('id', orderId)
   if (error) throw error
 }
 

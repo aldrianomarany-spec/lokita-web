@@ -54,6 +54,7 @@ const mono: React.CSSProperties = { fontFamily: "'Spline Sans Mono',monospace", 
 const card: React.CSSProperties = { background: '#FFFFFF', border: '1px solid #D8D8D4', borderRadius: 0 }
 
 const STATUS_CHIP: Record<string, { bg: string; fg: string }> = {
+  pending: { bg: '#FBF2DD', fg: '#9A6A12' },
   active: { bg: '#E8F2F7', fg: '#2F6B85' },
   sold: { bg: '#FBF2DD', fg: '#9A6A12' },
   removed: { bg: '#FBEEE9', fg: '#B23A1B' },
@@ -740,7 +741,9 @@ export default function AdminView() {
       </div>
 
       {/* listings moderation */}
-      <div style={{ ...mono, marginBottom: 10 }}>LISTINGS · MODERATION</div>
+      <div style={{ ...mono, marginBottom: 10 }}>
+        LISTINGS · MODERATION {listings && listings.filter((l) => l.status === 'pending').length > 0 ? `· 📦 ${listings.filter((l) => l.status === 'pending').length} TO RECEIVE` : ''}
+      </div>
       <div style={{ ...card, overflow: 'hidden', marginBottom: 26 }}>
         {listings === null ? (
           <div style={{ padding: 28, textAlign: 'center' }}>
@@ -767,7 +770,10 @@ export default function AdminView() {
                   {l.status === 'active' && (
                     <SmallBtn label={l.is_featured ? '★ Unfeature' : '☆ Feature'} busy={busyId === l.id} onClick={() => act(l.id, () => adminSetFeatured(l.id, !l.is_featured))} />
                   )}
-                  {l.status === 'active' && (
+                  {l.status === 'pending' && (
+                    <SmallBtn label="Approve ✓ (item received)" tone="accent" busy={busyId === l.id} onClick={() => act(l.id, () => adminSetListingStatus(l.id, 'active'))} />
+                  )}
+                  {(l.status === 'active' || l.status === 'pending') && (
                     <SmallBtn label="Remove" tone="danger" busy={busyId === l.id} onClick={() => act(l.id, () => adminSetListingStatus(l.id, 'removed'))} />
                   )}
                   {(l.status === 'removed' || l.status === 'flagged') && (

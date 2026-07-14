@@ -375,6 +375,31 @@ decisions: buyer pays seller directly at the desk, pickups by appointment):
   Protection chip: unpaid → under review → Protected. Midtrans code
   (api/qris/fee.js + webhook branches) kept dormant for later automation.
 
+Consignment model (2026-07-14, **migration 0035** — validated incl. all
+gates; owner decisions: verified sellers, 3-item shelf, receipt required):
+- listings.status gains 'pending' (client posts as pending; existing select
+  policy already hides non-active from the public). Admin approves in
+  LISTINGS · MODERATION ("Approve ✓ (item received)", 📦 count in header).
+- DB gates (definer triggers, admin bypass): enforce_seller_ready (complete
+  profile + verified + shelf cap 3 pending/active), enforce_buyer_ready
+  (complete profile). Friendly client-side pre-checks in openSell/
+  openCheckout redirect to Profile.
+- Pay-first flow: payment_details reveal policy now includes status
+  'pending'; transactions.payment_proof_url = buyer's transfer receipt;
+  protect_transaction_update requires it before status→'paid' (giveaways
+  exempt). OrdersView: buyer pending = seller pay card + receipt upload;
+  seller pending = receipt thumb + gated "Money received — confirm ✓";
+  paid + trusted_handoff = buyer chatAdmin pickup button + confirm, seller
+  sees "team hands it over".
+- Admin notifications (definer triggers): 📦 item incoming on pending post,
+  🤝 pickup to arrange on status→paid.
+- UI: SellModal custody explainer + "Sent for review" state; ProfileView
+  📦 BRING TO DESK cards; DetailModal "✓ In LOKITA custody" chip; checkout
+  done-msg pay-first; cron nudge wording = shelf return.
+- HARNESS NOTE: run35.sh disables the two gate triggers for the legacy
+  suite and re-enables in the 0035 section; 0030's pending-reveal + hidden-
+  after-completion expectations updated for the pay-first policy.
+
 Remaining / nice-to-have:
 - **Real Midtrans QRIS** — deliberately last; blocked on the owner signing up for
   Midtrans. api/qris scaffolding exists; currently prototype/static-QR mode.
