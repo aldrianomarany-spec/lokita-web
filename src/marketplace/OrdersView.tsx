@@ -4,6 +4,7 @@ import { useM } from './context'
 import { fetchSellerPayment, uploadDropoffPhoto, type PaymentDetails, type OrderRow, type OrderStatus } from '../lib/api'
 import { Verified } from '../components/Icons'
 import { useLang } from '../i18n'
+import { errText } from '../lib/err'
 
 const rupiah = (n: number) => 'Rp ' + Number(n).toLocaleString('id-ID')
 const when = (iso: string | null) => (iso && !isNaN(new Date(iso).getTime()) ? new Date(iso).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '')
@@ -60,7 +61,7 @@ function OrderCard({ o }: { o: OrderRow }) {
     try {
       await fn()
     } catch (e) {
-      alert((e instanceof Error ? e.message : t('Something went wrong')))
+      alert((errText(e, t('Something went wrong'))))
     } finally {
       setBusy(false)
     }
@@ -73,7 +74,7 @@ function OrderCard({ o }: { o: OrderRow }) {
       await submitReviewFor(o, stars, text)
       setReviewing(false)
     } catch (e) {
-      alert(e instanceof Error ? e.message : t('Could not post review'))
+      alert(errText(e, t('Could not post review')))
     } finally {
       setBusy(false)
     }
@@ -202,7 +203,7 @@ function OrderCard({ o }: { o: OrderRow }) {
                     const url = await uploadDropoffPhoto(o.id, file)
                     await markOrderDropped(o.id, url)
                   } catch (err) {
-                    alert(err instanceof Error ? err.message : t('Something went wrong'))
+                    alert(errText(err, t('Something went wrong')))
                   } finally {
                     setBusy(false)
                   }

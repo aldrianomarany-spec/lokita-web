@@ -71,6 +71,7 @@ import {
 } from '../lib/api'
 import type { EnrichedItem, Item, Profile } from '../types'
 import { protectionFee } from '../theme'
+import { errText } from '../lib/err'
 
 // Payment modes, picked by env — no code changes needed to upgrade:
 //  1. VITE_QRIS_IMAGE_URL set          → show the owner's fixed QRIS image
@@ -393,7 +394,7 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
         const [feed, counts] = await Promise.all([fetchFeed({ ...opts, free: freeOnlyRef.current }, viewerFloor), fetchCategoryCounts()])
         patch({ feed, categoryCounts: counts, feedLoading: false })
       } catch (e) {
-        patch({ feedLoading: false, feedError: e instanceof Error ? e.message : 'Failed to load listings' })
+        patch({ feedLoading: false, feedError: errText(e, 'Failed to load listings') })
       }
     },
     [patch],
@@ -471,7 +472,7 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
       const stats = await fetchProfileStats(db.id)
       patch({ guest: false, profile: ui, pf: ui, photo: ui.profile_photo_url || null, stats, profileLoading: false })
     } catch (e) {
-      patch({ profileLoading: false, profileError: e instanceof Error ? e.message : 'Failed to load profile' })
+      patch({ profileLoading: false, profileError: errText(e, 'Failed to load profile') })
     }
   }, [patch])
 
@@ -494,7 +495,7 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
       const orders = await fetchMyOrders()
       patch({ orders, ordersLoading: false })
     } catch (e) {
-      patch({ ordersLoading: false, ordersError: e instanceof Error ? e.message : 'Failed to load orders' })
+      patch({ ordersLoading: false, ordersError: errText(e, 'Failed to load orders') })
     }
   }, [patch])
 
@@ -691,7 +692,7 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
       loadProfile()
       return id
     } catch (e) {
-      alert('Could not place order: ' + (e instanceof Error ? e.message : 'unknown error'))
+      alert('Could not place order: ' + (errText(e, 'unknown error')))
       return null
     }
   }
@@ -755,7 +756,7 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
         patch({ view: 'messages', activeConvId: cid, msgDraft: '', menuOpen: false, sel: null, pendingAttach: attach })
         await Promise.all([loadConversations(), loadMessages(cid)])
       } catch (e) {
-        alert('Could not open chat: ' + (e instanceof Error ? e.message : 'unknown error'))
+        alert('Could not open chat: ' + (errText(e, 'unknown error')))
       }
     },
     selectSort: (k) => patch({ sort: k }),
@@ -770,7 +771,7 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
         await loadBlocked()
         loadConversations()
       } catch (e) {
-        alert('Could not block: ' + (e instanceof Error ? e.message : 'unknown error'))
+        alert('Could not block: ' + (errText(e, 'unknown error')))
       }
     },
     unblockMember: async (id) => {
@@ -779,7 +780,7 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
         await loadBlocked()
         loadConversations()
       } catch (e) {
-        alert('Could not unblock: ' + (e instanceof Error ? e.message : 'unknown error'))
+        alert('Could not unblock: ' + (errText(e, 'unknown error')))
       }
     },
     addAlert: async (q) => {
@@ -812,7 +813,7 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
           else delete nx[id]
           return { saved: nx }
         })
-        alert('Could not update your saved items: ' + (e instanceof Error ? e.message : 'unknown error'))
+        alert('Could not update your saved items: ' + (errText(e, 'unknown error')))
       }
     },
 
@@ -841,7 +842,7 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
         await loadConversations()
         await loadMessages(cid)
       } catch (e) {
-        alert('Could not open chat: ' + (e instanceof Error ? e.message : 'unknown error'))
+        alert('Could not open chat: ' + (errText(e, 'unknown error')))
       }
     },
 
@@ -909,7 +910,7 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
         listTimers.current.push(window.setTimeout(() => api.closeSell(), 900))
       } catch (e) {
         patch({ listState: 'idle' })
-        alert('Could not post your listing: ' + (e instanceof Error ? e.message : 'unknown error'))
+        alert('Could not post your listing: ' + (errText(e, 'unknown error')))
       }
     },
 
@@ -934,7 +935,7 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
         }
         await loadConversations()
       } catch (e) {
-        alert('Could not delete the chat: ' + (e instanceof Error ? e.message : 'unknown error'))
+        alert('Could not delete the chat: ' + (errText(e, 'unknown error')))
       }
     },
 
@@ -957,7 +958,7 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
         await loadConversations()
         await loadMessages(cid)
       } catch (e) {
-        alert('Could not send the offer: ' + (e instanceof Error ? e.message : 'unknown error'))
+        alert('Could not send the offer: ' + (errText(e, 'unknown error')))
       }
     },
     setMsgDraft: (v) => patch({ msgDraft: v }),
@@ -972,7 +973,7 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
         await loadMessages(convId)
         loadConversations()
       } catch (e) {
-        alert('Could not send the photo: ' + (e instanceof Error ? e.message : 'unknown error'))
+        alert('Could not send the photo: ' + (errText(e, 'unknown error')))
       }
     },
 
@@ -990,7 +991,7 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
         loadConversations()
       } catch (e) {
         if (fromDraft) patch({ msgDraft: d })
-        alert('Could not send: ' + (e instanceof Error ? e.message : 'unknown error'))
+        alert('Could not send: ' + (errText(e, 'unknown error')))
       }
     },
 
@@ -1072,7 +1073,7 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
         await loadProfile() // refetch so the UI reflects the saved values immediately
         patch({ pfSaving: false, editOpen: false })
       } catch (e) {
-        patch({ pfSaving: false, pfError: e instanceof Error ? e.message : 'Could not save. Please try again.' })
+        patch({ pfSaving: false, pfError: errText(e, 'Could not save. Please try again.') })
       }
     },
     refetchProfile: () => {
@@ -1092,7 +1093,7 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
         patch({ photo: url, photoUploading: false })
         await loadProfile()
       } catch (err) {
-        patch({ photoUploading: false, pfError: err instanceof Error ? err.message : 'Photo upload failed.' })
+        patch({ photoUploading: false, pfError: errText(err, 'Photo upload failed.') })
       }
     },
 
@@ -1146,7 +1147,7 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
           const floorCode = state.profile.floor ? state.profile.floor.toLowerCase() : null
           await Promise.all([loadOrders(), loadFeed({ cat: state.cat, cond: state.cond, sort: state.sort, query: state.query, building: state.bldg }, floorCode)])
           patch({ coStep: 'options', qrisLoading: false, qris: null })
-          alert(e instanceof Error ? e.message : 'Could not start QRIS payment')
+          alert(errText(e, 'Could not start QRIS payment'))
         }
         return
       }

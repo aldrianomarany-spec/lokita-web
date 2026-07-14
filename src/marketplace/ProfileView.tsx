@@ -219,7 +219,7 @@ function AccountPrivacyCard() {
       setTimeout(() => setPwState('idle'), 2500)
     } catch (e) {
       setPwState('idle')
-      setPwErr(e instanceof Error ? e.message : t('Could not change the password.'))
+      setPwErr(errText(e, t('Could not change the password.')))
     }
   }
 
@@ -277,7 +277,7 @@ export default function ProfileView() {
       await uploadVerificationDoc(file)
       refetchProfile() // auto-verify trigger grants the badge
     } catch (err) {
-      alert(t('Upload failed:') + ' ' + (err instanceof Error ? err.message : t('unknown error')))
+      alert(t('Upload failed:') + ' ' + (errText(err, t('unknown error'))))
     } finally {
       setIdUploading(false)
     }
@@ -532,6 +532,7 @@ export default function ProfileView() {
 // Minimal adapter so tapping a real listing can reuse the existing detail modal
 // (full listing→card mapping lands in the Listings phase).
 import type { Item } from '../types'
+import { errText } from '../lib/err'
 function dbListingToItem(l: DbListing): Item {
   return {
     id: l.id,

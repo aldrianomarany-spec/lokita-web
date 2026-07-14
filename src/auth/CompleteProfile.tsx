@@ -10,8 +10,9 @@ import {
   type FloorCode,
 } from '../lib/auth'
 import { useLang } from '../i18n'
+import { errText } from '../lib/err'
 
-const errMsg = (e: unknown) => (e instanceof Error ? e.message : 'Something went wrong. Please try again.')
+const errMsg = (e: unknown) => (errText(e, 'Something went wrong. Please try again.'))
 
 const rootStyle = {
   '--accent': ACCENT,

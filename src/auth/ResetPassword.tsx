@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { ACCENT, ACCENT_DEEP } from '../theme'
 import { getSession, onAuthStateChange, updatePassword } from '../lib/auth'
 import { useLang } from '../i18n'
+import { errText } from '../lib/err'
 
 // Landing page for the password-recovery email link. Supabase signs the user in
 // via the link's token, then this page lets them set a new password — the
@@ -69,7 +70,7 @@ export default function ResetPassword() {
       await updatePassword(pw)
       setPhase('done')
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Could not update the password. Try again.')
+      setError(errText(e, 'Could not update the password. Try again.'))
       setSaving(false)
     }
   }

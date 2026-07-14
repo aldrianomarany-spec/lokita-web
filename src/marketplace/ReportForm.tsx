@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { createReport, type ReportTargetType } from '../lib/api'
 import { useLang } from '../i18n'
+import { errText } from '../lib/err'
 
 const REASONS = ['Scam or fraud', 'Prohibited item', 'Wrong information', 'Harassment', 'Other']
 
@@ -21,7 +22,7 @@ export default function ReportForm({ targetType, targetId, label }: { targetType
       setState('done')
     } catch (e) {
       setState('idle')
-      alert(t('Could not send the report:') + ' ' + (e instanceof Error ? e.message : t('unknown error')))
+      alert(t('Could not send the report:') + ' ' + (errText(e, t('unknown error'))))
     }
   }
 
