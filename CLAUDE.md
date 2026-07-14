@@ -459,6 +459,33 @@ expiry silent, admin decline still notifies):
   placeholder. i18n keys swapped in matching pass (python script).
   Dormant Security Post / Meet-in-person option labels kept for re-enable.
 
+Direct deals + asks + privacy gate (2026-07-14, **migration 0038** —
+validated: multi-ask, accept/cancel, reserve, receipt exemption, no team
+ping for direct, desk-only shelf cap, check constraint):
+- listings.fulfillment 'desk'|'direct'. SellModal has a HANDOVER MODE picker
+  (📦 LOKITA desk = consignment default · 🤝 Direct deal = default for
+  giveaways, live immediately, status inserted 'active'). Agreement checkbox
+  text + intro + location note adapt per mode; direct done panel = "You're
+  live! 🎉" (+ chat-the-team switch button). Shelf cap (3) now counts DESK
+  items only.
+- Checkout: pickupOptsFor(direct) → direct items get Meet in person (spot
+  picker, 🔑 code), desk items LOKITA Handover. Pay note per mode (pay-first
+  desk vs pay-when-you-meet). protect_transaction_update exempts
+  meet_in_person from the receipt rule (cash OK); OrdersView seller confirm
+  enabled without receipt for meets ("Accept the order ✓"). 🤝 admin pickup
+  notification fires only for trusted_handoff.
+- Giveaway ASKS: ordering a giveaway no longer reserves it
+  (sync_listing_on_tx skips is_giveaway on INSERT; sold at pending→paid;
+  cancel re-activates only if no other live order). Buttons: "🙋 Ask for
+  it — FREE"; giver sees "Give it to them ✓" per ask and picks ONE; losing
+  asks cancel/expire (48h sweep). createOrder dedupes pending asks per buyer.
+- 🔒 Privacy gate: item details / member profiles / inbox / people /
+  request-chat require signed-in + complete profile. Single choke points:
+  lock panels rendered inside DetailModal + MemberProfileView (cover deep
+  links + recents too); requireReady() in context gates
+  openMessages/openPeople/openRequestChat. Guests & incomplete profiles see
+  grid thumbnails only.
+
 Remaining / nice-to-have:
 - **Real Midtrans QRIS** — deliberately last; blocked on the owner signing up for
   Midtrans. api/qris scaffolding exists; currently prototype/static-QR mode.

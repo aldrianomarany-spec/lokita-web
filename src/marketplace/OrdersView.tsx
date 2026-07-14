@@ -116,7 +116,9 @@ function OrderCard({ o }: { o: OrderRow }) {
                 : o.status === 'pending'
                   ? t('QRIS · Sent, to be confirmed')
                   : t('QRIS · Unpaid')
-            : t('Cash · Pay at pickup')}
+            : o.pickup_method === 'trusted_handoff' && Number(o.listing_price) > 0
+              ? t('Transfer to the seller')
+              : t('Cash · Pay at pickup')}
         </span>
         <span style={chip}>{o.pickup_method ? t(PICKUP_LABEL[o.pickup_method]) : t('Pickup')}</span>
         {o.meetup_spot && <span style={chip}>📍 {t(o.meetup_spot)}</span>}
@@ -136,6 +138,13 @@ function OrderCard({ o }: { o: OrderRow }) {
         </div>
       )}
 
+      {/* 🙋 giveaway ask — the giver picks among everyone who raised a hand */}
+      {o.role === 'buyer' && o.status === 'pending' && freeOrder && (
+        <div style={{ background: '#EAF5EE', border: '1px solid #BFE3CC', padding: '11px 14px', marginBottom: 12, fontSize: 12.5, fontWeight: 700, color: '#2C6E49' }}>
+          🤞 {t('Ask sent — the giver picks who gets it. You’ll get a notification if it’s you.')}
+        </div>
+      )}
+
       {/* 💸 pay-first: the buyer uploads their transfer receipt; the seller
           can only confirm against it (DB-enforced) */}
       {o.role === 'buyer' && o.status === 'pending' && !freeOrder && (
@@ -144,7 +153,11 @@ function OrderCard({ o }: { o: OrderRow }) {
             <div style={{ fontSize: 12.5, fontWeight: 700, color: '#2C6E49' }}>✓ {t('Receipt sent — waiting for the seller to confirm your payment.')}</div>
           ) : (
             <>
-              <div style={{ fontSize: 12.5, fontWeight: 700, color: '#9A6A12', marginBottom: 8 }}>💸 {t('Transfer to the seller above, then upload your receipt — the seller confirms against it.')}</div>
+              <div style={{ fontSize: 12.5, fontWeight: 700, color: '#9A6A12', marginBottom: 8 }}>
+                💸 {o.pickup_method === 'meet_in_person'
+                  ? t('Transfer and upload your receipt — or skip it and pay cash when you meet.')
+                  : t('Transfer to the seller above, then upload your receipt — the seller confirms against it.')}
+              </div>
               <label className="lok-btn" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, border: 'none', background: '#519BB8', color: '#FFFFFF', fontFamily: 'inherit', fontWeight: 700, fontSize: 12.5, padding: '10px 16px', borderRadius: 0, cursor: busy ? 'default' : 'pointer', opacity: busy ? 0.6 : 1 }}>
                 📤 {busy ? t('Uploading…') : t('Upload transfer receipt')}
                 <input
@@ -191,7 +204,7 @@ function OrderCard({ o }: { o: OrderRow }) {
       {sellerPay && (
         <div style={{ background: '#EAF5EE', border: '1px solid #BFE3CC', padding: '11px 14px', marginBottom: 12 }}>
           <div style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 9.5, letterSpacing: '.08em', color: '#2C6E49', marginBottom: 7 }}>
-            💳 {t('PAY THE SELLER DIRECTLY AT HANDOVER')}
+            💳 {o.pickup_method === 'meet_in_person' ? t('PAY THE SELLER DIRECTLY AT HANDOVER') : t('PAY THE SELLER — TRANSFER NOW')}
           </div>
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
             {sellerPay.ewallet_number && (
@@ -216,7 +229,9 @@ function OrderCard({ o }: { o: OrderRow }) {
             </div>
           )}
           <div style={{ fontSize: 10.5, color: '#4A5A50', fontWeight: 500, marginTop: 7, lineHeight: 1.5 }}>
-            {t('Pay only when the item is in your hands. Money goes straight to the seller — LOKITA never holds it.')}
+            {o.pickup_method === 'meet_in_person'
+              ? t('Pay only when the item is in your hands. Money goes straight to the seller — LOKITA never holds it.')
+              : t('Transfer now and upload your receipt below — you collect the item from the LOKITA desk once the seller confirms. LOKITA never holds the money.')}
           </div>
         </div>
       )}
@@ -232,13 +247,17 @@ function OrderCard({ o }: { o: OrderRow }) {
               </a>
             )}
             <button
-              disabled={busy || (!freeOrder && !o.payment_proof_url)}
-              title={!freeOrder && !o.payment_proof_url ? t("Waiting for the buyer's transfer receipt") : undefined}
+              disabled={busy || (!freeOrder && !o.payment_proof_url && o.pickup_method !== 'meet_in_person')}
+              title={!freeOrder && !o.payment_proof_url && o.pickup_method !== 'meet_in_person' ? t("Waiting for the buyer's transfer receipt") : undefined}
               onClick={run(() => acceptMyOrder(o.id))}
               className="lok-btn"
-              style={{ ...primaryBtn, opacity: !freeOrder && !o.payment_proof_url ? 0.5 : 1 }}
+              style={{ ...primaryBtn, opacity: !freeOrder && !o.payment_proof_url && o.pickup_method !== 'meet_in_person' ? 0.5 : 1 }}
             >
-              {freeOrder ? t('Accept ✓') : t('Money received — confirm ✓')}
+              {freeOrder
+                ? t('Give it to them ✓')
+                : o.pickup_method === 'meet_in_person' && !o.payment_proof_url
+                  ? t('Accept the order ✓')
+                  : t('Money received — confirm ✓')}
             </button>
             <button disabled={busy} onClick={run(() => cancelMyOrder(o.id))} className="lok-btn" style={ghostBtn}>{t('Decline')}</button>
           </>
@@ -285,7 +304,11 @@ function OrderCard({ o }: { o: OrderRow }) {
           </>
         )}
         {o.status === 'paid' && o.role === 'buyer' && o.pickup_method !== 'trusted_handoff' && (
-          <span style={{ fontSize: 12.5, color: '#8B8B86', fontWeight: 600, alignSelf: 'center' }}>{t('Waiting for the seller to drop it off…')}</span>
+          <span style={{ fontSize: 12.5, color: '#8B8B86', fontWeight: 600, alignSelf: 'center' }}>
+            {o.pickup_method === 'meet_in_person'
+              ? t('Meet up, check the item & 🔑 code — the seller then marks it handed over.')
+              : t('Waiting for the seller to drop it off…')}
+          </span>
         )}
         {o.status === 'dropped_off' && o.role === 'buyer' && (
           <button disabled={busy} onClick={run(() => confirmOrderPickup(o.id))} className="lok-btn" style={primaryBtn}>{t('Confirm I picked it up')}</button>

@@ -23,11 +23,19 @@ export default function SellModal() {
   const s = state
   const f = s.f
   const [photos, setPhotos] = useState<File[]>([])
-  const [agreed, setAgreed] = useState(false) // consignment terms — required
+  const [agreed, setAgreed] = useState(false) // terms — required either way
+  // how the item reaches the buyer: LOKITA desk (consignment) or direct deal.
+  // Giveaways default to direct — neighbours just hand things to each other.
+  const [mode, setMode] = useState<'desk' | 'direct'>(s.giveawayOn ? 'direct' : 'desk')
   const fileRef = useRef<HTMLInputElement>(null)
   const MAX_PHOTOS = 5
   // opened from Free & Donations → giveaway is the whole point, no opting out
   const freeLocked = s.freeOnly
+
+  // flipping the giveaway toggle moves the handover default with it
+  useEffect(() => {
+    setMode(s.giveawayOn ? 'direct' : 'desk')
+  }, [s.giveawayOn])
 
   // category must be an explicit choice — start blank every time the modal opens
   useEffect(() => {
@@ -53,7 +61,28 @@ export default function SellModal() {
   const listed = publishedPrice(ask)
   const rp = (n: number) => 'Rp ' + n.toLocaleString('id-ID')
 
-  // ---- posted ✓ — the drop-off step (consignment is never instant) ----
+  // ---- posted ✓ — DIRECT deals are live immediately ----
+  if (s.listState === 'done' && mode === 'direct') {
+    return (
+      <Overlay onClose={closeSell}>
+        <div onClick={stop} style={{ background: '#FFFFFF', borderRadius: 0, padding: '34px 32px', width: '100%', maxWidth: 460, animation: 'lok-pop .26s cubic-bezier(.2,.8,.3,1) both', boxShadow: '0 40px 90px -20px rgba(0,0,0,.5)', textAlign: 'center' }}>
+          <div style={{ fontSize: 42, marginBottom: 10 }}>🎉</div>
+          <h2 style={{ fontFamily: "'Bricolage Grotesque',sans-serif", fontSize: 21, fontWeight: 800, margin: '0 0 10px' }}>{t("You're live!")}</h2>
+          <p style={{ fontSize: 13.5, color: '#4A4B4E', fontWeight: 500, lineHeight: 1.6, margin: '0 0 16px' }}>
+            {t('Your post is on the market now. Buyers order in-app and chat you — arrange the handover together. Prefer not to meet? You can still bring it to the LOKITA desk anytime.')}
+          </p>
+          <button onClick={closeSell} className="lok-btn" style={{ width: '100%', border: 'none', background: 'var(--accent,#000000)', color: '#F7F3EA', fontFamily: 'inherit', fontWeight: 700, fontSize: 14, padding: 13, borderRadius: 0, cursor: 'pointer', marginBottom: 8 }}>
+            {t('Done ✓')}
+          </button>
+          <button onClick={() => chatAdminDropoff()} className="lok-navi" style={{ width: '100%', border: '1px solid #D8D8D4', background: '#FFFFFF', color: '#3A3B3E', fontFamily: 'inherit', fontWeight: 700, fontSize: 13, padding: 12, borderRadius: 0, cursor: 'pointer' }}>
+            💬 {t('Chat the team — switch to the LOKITA desk')}
+          </button>
+        </div>
+      </Overlay>
+    )
+  }
+
+  // ---- posted ✓ — the drop-off step (desk consignment is never instant) ----
   if (s.listState === 'done') {
     return (
       <Overlay onClose={closeSell}>
@@ -99,7 +128,7 @@ export default function SellModal() {
           <button onClick={closeSell} className="lok-navi" style={{ border: '1px solid #D8D8D4', background: '#F5F5F3', width: 34, height: 34, borderRadius: 0, fontSize: 15, cursor: 'pointer', color: '#4A4B4E' }}>✕</button>
         </div>
         <p style={{ fontSize: 13, color: '#8B8B86', fontWeight: 600, margin: '0 0 18px' }}>
-          📦 {t('How it works: post it here, bring the item to the LOKITA desk, and it goes live once the team receives it — buyers know every item is really there.')}
+          📦 {t('How it works: choose the LOKITA desk (we store it and hand it over — goes live once we receive it) or a direct deal (live right away, you arrange the handover). Every order still runs in-app.')}
         </p>
 
         {/* photo picker */}
@@ -221,7 +250,9 @@ export default function SellModal() {
           </div>
           <div style={{ fontSize: 11, color: '#8B8B86', fontWeight: 500, lineHeight: 1.5, margin: '-2px 2px 0', display: 'flex', gap: 6 }}>
             <span style={{ color: 'var(--accent,#000000)', flex: 'none' }}>ⓘ</span>
-            {t('Just tells buyers how near the item is. The hand-off itself happens at the LOKITA desk, where your item waits safely after you drop it off.')}
+            {mode === 'desk'
+              ? t('Just tells buyers how near the item is. The hand-off itself happens at the LOKITA desk, where your item waits safely after you drop it off.')
+              : t('Just tells buyers how near the item is. You and the buyer arrange the hand-off together in chat.')}
           </div>
 
           <textarea className="lok-field" value={f.desc} onChange={(e) => setF('desc', e.target.value)} placeholder={t("Description — condition, why you're selling…")} style={{ ...fieldBase, minHeight: 66, resize: 'none' }} />
@@ -251,8 +282,27 @@ export default function SellModal() {
 
         </div>
 
-        {/* consignment agreement — posting is a promise to bring the item over */}
-        <label style={{ display: 'flex', alignItems: 'flex-start', gap: 11, background: agreed ? '#EAF5EE' : '#FBF2DD', border: `1px solid ${agreed ? '#BFE3CC' : '#EBD9A9'}`, borderRadius: 0, padding: '12px 14px', marginTop: 12, cursor: 'pointer' }}>
+        {/* how the item reaches the buyer — desk consignment or direct deal */}
+        <div style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 9.5, color: '#9A9A94', letterSpacing: '.06em', margin: '14px 2px 6px' }}>{t('HOW WILL IT REACH THE BUYER?')}</div>
+        <div style={{ display: 'flex', gap: 8 }}>
+          {([
+            { key: 'desk' as const, icon: '📦', name: t('LOKITA desk'), desc: t('Bring it once — the team stores & hands it over. Buyers trust the ✓ badge.') },
+            { key: 'direct' as const, icon: '🤝', name: t('Direct deal'), desc: t('Live right away — arrange the handover with the buyer in chat.') },
+          ]).map((m) => (
+            <button
+              key={m.key}
+              onClick={() => setMode(m.key)}
+              className="lok-navi"
+              style={{ flex: 1, textAlign: 'left', border: `1.5px solid ${mode === m.key ? '#519BB8' : '#D8D8D4'}`, background: mode === m.key ? '#EDF5F9' : '#F5F5F3', fontFamily: 'inherit', borderRadius: 0, padding: '11px 12px', cursor: 'pointer' }}
+            >
+              <div style={{ fontSize: 13, fontWeight: 800, color: mode === m.key ? '#2F6B85' : '#1E1E1E', marginBottom: 3 }}>{m.icon} {m.name}</div>
+              <div style={{ fontSize: 10.5, color: '#8B8B86', fontWeight: 500, lineHeight: 1.45 }}>{m.desc}</div>
+            </button>
+          ))}
+        </div>
+
+        {/* agreement — required either way, wording matches the chosen mode */}
+        <label style={{ display: 'flex', alignItems: 'flex-start', gap: 11, background: agreed ? '#EAF5EE' : '#FBF2DD', border: `1px solid ${agreed ? '#BFE3CC' : '#EBD9A9'}`, borderRadius: 0, padding: '12px 14px', marginTop: 10, cursor: 'pointer' }}>
           <input
             type="checkbox"
             checked={agreed}
@@ -260,7 +310,9 @@ export default function SellModal() {
             style={{ width: 17, height: 17, flex: 'none', marginTop: 1, accentColor: '#1E9E5A', cursor: 'pointer' }}
           />
           <span style={{ fontSize: 12, color: '#4A4B4E', fontWeight: 600, lineHeight: 1.55 }}>
-            {t('I agree to the consignment terms: my post goes live only after I hand the item to the LOKITA team at the desk, I can keep max 3 items on the shelf, and I’ll collect it back if it doesn’t sell.')}{' '}
+            {mode === 'desk'
+              ? t('I agree to the consignment terms: my post goes live only after I hand the item to the LOKITA team at the desk, I can keep max 3 items on the shelf, and I’ll collect it back if it doesn’t sell.')
+              : t('I agree to the LOKITA rules: honest photos & description, the order runs in-app, and I arrange the handover with the buyer myself.')}{' '}
             <a href="/terms" target="_blank" rel="noreferrer" onClick={stop} style={{ color: '#2F6B85', fontWeight: 700 }}>{t('Full terms')}</a>
           </span>
         </label>
@@ -271,7 +323,7 @@ export default function SellModal() {
           onClick={() => {
             if (!agreed) return
             if (!f.cat) { alert(t('Please choose a category.')); return }
-            submitListing(photos)
+            submitListing(photos, mode)
           }} style={{ width: '100%', border: 'none', background: 'var(--accent,#000000)', color: '#F7F3EA', fontFamily: 'inherit', fontWeight: 700, fontSize: 14.5, padding: 14, borderRadius: 0, cursor: busy || !agreed ? 'default' : 'pointer', opacity: !agreed && !busy ? 0.55 : 1, marginTop: 12, transition: 'background .2s ease, opacity .2s ease', boxShadow: '0 8px 20px -8px rgba(0,0,0,.6)' }}>{listLabel}</button>
       </div>
     </Overlay>

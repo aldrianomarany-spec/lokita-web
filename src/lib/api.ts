@@ -179,6 +179,7 @@ export interface DbListing {
   photoUrl?: string | null
   is_giveaway?: boolean // Free & Donations corner (0029)
   view_count?: number // how many non-owners opened it (0029)
+  fulfillment?: 'desk' | 'direct' // consignment vs arrange-it-yourself (0038)
 }
 
 // first photo url from an embedded listing_photos array
@@ -399,6 +400,7 @@ function mapRow(r: FeedRow, seller: SellerLite | undefined, uid: string | undefi
     isGiveaway: !!r.is_giveaway,
     viewCount: r.view_count ?? 0,
     sellerCashless: !!seller?.accepts_cashless,
+    fulfillment: r.fulfillment === 'direct' ? 'direct' : 'desk',
   }
 }
 
@@ -475,6 +477,7 @@ export interface NewListing {
   isBundle: boolean
   bundleItems: string[] // what's inside a graduation bundle
   isGiveaway?: boolean // Free & Donations: price published as Rp 0, no fee
+  fulfillment?: 'desk' | 'direct' // desk (consignment, pending) or direct (live now)
 }
 
 // Insert a listing owned by the current user, then upload its photos.
@@ -499,8 +502,10 @@ export async function createListing(input: NewListing, photos: File[]): Promise<
       is_graduation_bundle: input.isBundle,
       bundle_items: input.isBundle && input.bundleItems.length ? input.bundleItems : null,
       is_giveaway: !!input.isGiveaway,
-      // consignment (0035): live only after the LOKITA team receives the item
-      status: 'pending',
+      // desk (consignment, 0035): live only after the team receives the item.
+      // direct (0038): buyer & seller arrange the handover — live right away.
+      fulfillment: input.fulfillment === 'direct' ? 'direct' : 'desk',
+      status: input.fulfillment === 'direct' ? 'active' : 'pending',
     })
     .select('id')
     .single()
@@ -566,6 +571,7 @@ export interface NewOrder {
   meetup_spot?: string | null // preset campus spot (meet_in_person only, 0032)
   protection_enabled?: boolean
   protection_fee?: number
+  isGiveaway?: boolean // ask flow: dedupe pending asks per person (0038)
 }
 
 // preset safe meetup spots — public, on-campus, no free text
@@ -582,6 +588,16 @@ export async function createOrder(o: NewOrder): Promise<string> {
   const user = await getUser()
   if (!user) throw new Error('Not signed in')
   if (o.sellerId === user.id) throw new Error("You can't buy your own listing.")
+  // giveaway asks don't reserve the item (0038) — but one ask per person
+  if (o.isGiveaway) {
+    const { count } = await supabase
+      .from('transactions')
+      .select('id', { count: 'exact', head: true })
+      .eq('listing_id', o.listingId)
+      .eq('buyer_id', user.id)
+      .eq('status', 'pending')
+    if ((count || 0) > 0) throw new Error('You already asked for this — the giver will pick soon. 🤞')
+  }
   const { data, error } = await supabase
     .from('transactions')
     .insert({

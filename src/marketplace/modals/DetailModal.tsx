@@ -12,7 +12,7 @@ import { ChevronRight, MapPin, MessageBubble, ShieldCheck, Star, Verified } from
 import { errText } from '../../lib/err'
 
 export default function DetailModal() {
-  const { state, closeDetail, chatSeller, openCheckout, openMember, deleteMyListing, toggleSaveItem, goSignup, sendOffer, boostListing } = useM()
+  const { state, closeDetail, chatSeller, openCheckout, openMember, deleteMyListing, toggleSaveItem, goSignup, sendOffer, boostListing, openProfile } = useM()
   const [deleting, setDeleting] = useState(false)
   const [photoIdx, setPhotoIdx] = useState(0)
   const [copied, setCopied] = useState(false)
@@ -24,7 +24,41 @@ export default function DetailModal() {
   const { t } = useLang()
   const guest = state.guest
   const sel = state.sel
+
+  // 🔒 privacy: item details (seller name, building, chat, trading) are for
+  // members with a complete profile. Everyone else sees the grid thumbnails
+  // only — this panel is the single choke point for every way a detail opens
+  // (card tap, deep link, recently-viewed).
+  const pp = state.profile
+  const memberReady = !guest && !!(pp.name && pp.building && pp.floor && pp.whatsapp)
+
   if (!sel) return null
+
+  if (!memberReady && !sel.mine) {
+    return (
+      <Overlay onClose={closeDetail}>
+        <div onClick={stop} style={{ background: '#FFFFFF', borderRadius: 0, padding: '34px 32px', width: '100%', maxWidth: 420, animation: 'lok-pop .26s cubic-bezier(.2,.8,.3,1) both', boxShadow: '0 40px 90px -20px rgba(0,0,0,.5)', textAlign: 'center' }}>
+          <div style={{ fontSize: 40, marginBottom: 10 }}>🔒</div>
+          <h2 style={{ fontFamily: "'Bricolage Grotesque',sans-serif", fontSize: 20, fontWeight: 800, margin: '0 0 8px' }}>{t('Members only')}</h2>
+          <p style={{ fontSize: 13.5, color: '#4A4B4E', fontWeight: 500, lineHeight: 1.6, margin: '0 0 18px' }}>
+            {guest
+              ? t('Item details, sellers and trading are for signed-in members — that keeps names and buildings inside the dorm community.')
+              : t('Finish your profile (building, floor, WhatsApp) to unlock item details, chat and trading — it keeps LOKITA members-only.')}
+          </p>
+          <button
+            onClick={() => (guest ? goSignup() : (closeDetail(), openProfile()))}
+            className="lok-btn"
+            style={{ width: '100%', border: 'none', background: 'var(--accent,#000000)', color: '#F7F3EA', fontFamily: 'inherit', fontWeight: 700, fontSize: 14, padding: 13, borderRadius: 0, cursor: 'pointer', marginBottom: 8 }}
+          >
+            {guest ? t("Sign up — it's free") : t('Complete my profile')}
+          </button>
+          <button onClick={closeDetail} className="lok-navi" style={{ width: '100%', border: '1px solid #D8D8D4', background: '#FFFFFF', color: '#3A3B3E', fontFamily: 'inherit', fontWeight: 700, fontSize: 13, padding: 12, borderRadius: 0, cursor: 'pointer' }}>
+            {t('Keep browsing')}
+          </button>
+        </div>
+      </Overlay>
+    )
+  }
 
   // derive the tinted placeholder + tag from tone/flags so the modal matches
   // the card aesthetic.
@@ -133,8 +167,11 @@ export default function DetailModal() {
             </div>
           )}
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 18 }}>
-            {!isOwner && (
+            {!isOwner && sel.fulfillment !== 'direct' && (
               <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12.5, fontWeight: 700, color: '#1E9E5A', background: '#EAF5EE', border: '1px solid #BFE3CC', padding: '8px 12px', borderRadius: 0 }}>✓ {t('In LOKITA custody — ready for pickup')}</span>
+            )}
+            {!isOwner && sel.fulfillment === 'direct' && (
+              <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12.5, fontWeight: 700, color: '#2F6B85', background: '#EDF5F9', border: '1px solid #BFDCE8', padding: '8px 12px', borderRadius: 0 }}>🤝 {t('Direct deal — arrange with the seller')}</span>
             )}
             <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12.5, fontWeight: 600, color: '#1E1E1E', background: '#ECECEA', padding: '8px 12px', borderRadius: 0 }}>{t('Condition')} · {t(sel.cond)}</span>
             <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12.5, fontWeight: 600, color: '#1E1E1E', background: '#ECECEA', padding: '8px 12px', borderRadius: 0 }}>
@@ -185,7 +222,11 @@ export default function DetailModal() {
             </div>
             <div>
               <div style={{ fontWeight: 700, fontSize: 13, marginBottom: 2 }}>{t('Protected handover')}</div>
-              <div style={{ fontSize: 12.5, color: '#4A5A50', lineHeight: 1.55 }}>{t('Order in-app, pay the seller directly and upload your receipt. The item is already with the LOKITA team — collect it at the desk, receipt included.')}</div>
+              <div style={{ fontSize: 12.5, color: '#4A5A50', lineHeight: 1.55 }}>
+                {sel.fulfillment === 'direct'
+                  ? t('Order in-app, then arrange the handover with the seller in chat — every order carries a 🔑 code + receipt, and the LOKITA team mediates if anything goes wrong.')
+                  : t('Order in-app, pay the seller directly and upload your receipt. The item is already with the LOKITA team — collect it at the desk, receipt included.')}
+              </div>
             </div>
           </div>
 
@@ -306,7 +347,7 @@ export default function DetailModal() {
                   </button>
                 )}
                 <button className="lok-btn" onClick={openCheckout} style={{ border: 'none', background: sel.isGiveaway ? '#1E9E5A' : 'var(--accent,#000000)', color: '#F7F3EA', fontFamily: 'inherit', fontWeight: 700, fontSize: 14.5, padding: 14, borderRadius: 0, cursor: 'pointer', boxShadow: '0 8px 20px -8px rgba(0,0,0,.6)' }}>
-                  {sel.isGiveaway ? '💝 ' + t('Claim it — FREE') : `${t('Buy now')} · ${sel.price}`}
+                  {sel.isGiveaway ? '🙋 ' + t('Ask for it — FREE') : `${t('Buy now')} · ${sel.price}`}
                 </button>
                 <ReportForm targetType="listing" targetId={sel.id} label={t('this listing')} />
               </>
