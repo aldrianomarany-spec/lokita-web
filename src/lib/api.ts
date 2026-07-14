@@ -60,19 +60,28 @@ export function dbToUiProfile(db: DbProfile): UiProfile & {
 }
 
 // UI edit buffer (pf) → DB update columns.
+// building/floor are only written when their labels map cleanly to codes —
+// NEVER silently nulled. A label mismatch once wiped a member's floor, which
+// made isProfileComplete() false and bounced them back to onboarding.
 export function uiEditsToDb(pf: UiProfile): Partial<DbProfile> {
   const digits = (pf.batch || '').replace(/[^0-9]/g, '')
-  return {
+  const out: Partial<DbProfile> = {
     name: pf.name.trim(),
     student_id_number: pf.studentId.trim() || null,
     whatsapp_number: pf.whatsapp.trim() || null,
-    building: pf.building ? BUILDING_CODE[pf.building] ?? null : null,
-    floor: (pf.floor && pf.building ? floorCodeFor(pf.building, pf.floor) : null) as DbProfile['floor'],
     room_number: pf.room.trim() || null,
     batch_year: digits ? Number(digits) : null,
     class_standing: (pf.standing ? pf.standing.toLowerCase() : null) as DbProfile['class_standing'],
     major: pf.major?.trim() || null,
   }
+  const bCode = pf.building ? BUILDING_CODE[pf.building] : undefined
+  if (bCode) {
+    out.building = bCode
+    const fCode = pf.floor ? floorCodeFor(pf.building, pf.floor) : null
+    if (fCode) out.floor = fCode as DbProfile['floor']
+    // unmapped/blank floor → leave the stored floor untouched
+  }
+  return out
 }
 
 // ---------------------------------------------------------------------------
