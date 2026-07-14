@@ -4,6 +4,7 @@ import { fetchMyListings, fetchReviewsAboutMe, fetchMyWishlist, type DbListing, 
 import { uploadVerificationDoc, updatePassword } from '../lib/auth'
 import { Camera, Edit, Logout, ShieldCheck, Verified } from '../components/Icons'
 import { useLang } from '../i18n'
+import { useIsPhone } from './useIsMobile'
 
 const rupiah = (n: number) => 'Rp ' + Number(n).toLocaleString('id-ID')
 const timeAgo = (iso: string) => {
@@ -134,6 +135,7 @@ function AccountPrivacyCard() {
 export default function ProfileView() {
   const { state, openEdit, pickPhoto, logout, openSell, openItem, refetchProfile } = useM()
   const { t } = useLang()
+  const isPhone = useIsPhone()
   // "Get verified": upload a student ID from the profile (was in onboarding)
   const idFileRef = useRef<HTMLInputElement>(null)
   const [idUploading, setIdUploading] = useState(false)
@@ -210,8 +212,9 @@ export default function ProfileView() {
 
   return (
     <div style={{ animation: 'lok-fade .3s ease both', maxWidth: 940, margin: '0 auto' }}>
-      {/* identity */}
-      <div style={{ background: '#FFFFFF', border: '1px solid #D8D8D4', borderRadius: 0, padding: '26px 28px', display: 'flex', gap: 24, alignItems: 'flex-start', marginBottom: 14 }}>
+      {/* identity — phones stack (avatar + edit button on top, text full-width
+          below) so the name never runs underneath the button */}
+      <div style={{ background: '#FFFFFF', border: '1px solid #D8D8D4', borderRadius: 0, padding: isPhone ? '20px 18px' : '26px 28px', display: 'flex', flexWrap: 'wrap', gap: isPhone ? 16 : 24, alignItems: 'flex-start', marginBottom: 14 }}>
         <div style={{ position: 'relative', flex: 'none' }}>
           <div style={{ width: 96, height: 96, borderRadius: 0, background: 'var(--accent,#000000)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#F7F3EA', fontWeight: 800, fontSize: 38, fontFamily: "'Bricolage Grotesque',sans-serif", overflow: 'hidden' }}>
             {avatarUrl ? <img src={avatarUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : profileInitial}
@@ -220,13 +223,18 @@ export default function ProfileView() {
             {s.photoUploading ? <span className="lok-spin" style={{ width: 14, height: 14, border: '2px solid rgba(247,243,234,.4)', borderTopColor: '#F7F3EA', borderRadius: '50%', display: 'inline-block' }} /> : <Camera />}
           </button>
         </div>
-        <div style={{ flex: 1, minWidth: 0 }}>
+        {isPhone && (
+          <button onClick={openEdit} className="lok-btn" style={{ marginLeft: 'auto', flex: 'none', border: '1px solid #C9C9C5', background: '#F5F5F3', color: '#000000', fontFamily: 'inherit', fontWeight: 700, fontSize: 13.5, padding: '11px 16px', borderRadius: 0, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 7 }}>
+            <Edit /> {t('Edit profile')}
+          </button>
+        )}
+        <div style={{ flex: isPhone ? '1 1 100%' : 1, minWidth: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-            <h1 style={{ fontFamily: "'Bricolage Grotesque',sans-serif", fontSize: 28, fontWeight: 800, letterSpacing: '-.02em', margin: 0 }}>{p.name || t('Your name')}</h1>
+            <h1 style={{ fontFamily: "'Bricolage Grotesque',sans-serif", fontSize: isPhone ? 23 : 28, fontWeight: 800, letterSpacing: '-.02em', margin: 0, overflowWrap: 'anywhere' }}>{p.name || t('Your name')}</h1>
             <VerifyBadge status={p.verification_status} />
             {isTopSeller && <TopSellerChip />}
           </div>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 26, marginTop: 16 }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: isPhone ? 16 : 26, marginTop: 16 }}>
             {metaField(t('STUDENT ID'), p.studentId)}
             {metaField(t('WHATSAPP'), p.whatsapp)}
             {metaField(t('DORM & ROOM'), p.building ? `${p.building}${p.room ? ' · ' + p.room : ''}` : '')}
@@ -236,13 +244,15 @@ export default function ProfileView() {
             {metaField(t('MAJOR'), p.major ? t(p.major) : '')}
           </div>
         </div>
-        <button onClick={openEdit} className="lok-btn" style={{ flex: 'none', border: '1px solid #C9C9C5', background: '#F5F5F3', color: '#000000', fontFamily: 'inherit', fontWeight: 700, fontSize: 13.5, padding: '11px 16px', borderRadius: 0, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 7 }}>
-          <Edit /> {t('Edit profile')}
-        </button>
+        {!isPhone && (
+          <button onClick={openEdit} className="lok-btn" style={{ flex: 'none', border: '1px solid #C9C9C5', background: '#F5F5F3', color: '#000000', fontFamily: 'inherit', fontWeight: 700, fontSize: 13.5, padding: '11px 16px', borderRadius: 0, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 7 }}>
+            <Edit /> {t('Edit profile')}
+          </button>
+        )}
       </div>
 
       {/* verification banner */}
-      <div style={{ background: 'var(--accent,#000000)', borderRadius: 0, padding: '16px 20px', display: 'flex', alignItems: 'center', gap: 14, marginBottom: 20, position: 'relative', overflow: 'hidden' }}>
+      <div style={{ background: 'var(--accent,#000000)', borderRadius: 0, padding: '16px 20px', display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 14, marginBottom: 20, position: 'relative', overflow: 'hidden' }}>
         <div style={{ position: 'absolute', top: -30, right: 40, width: 110, height: 110, borderRadius: '50%', background: 'rgba(255,255,255,.06)' }} />
         <div style={{ width: 42, height: 42, borderRadius: 0, background: 'rgba(255,255,255,.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', flex: 'none' }}>
           <ShieldCheck size={22} />

@@ -3,5 +3,6 @@
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
   "framework": "vite",
+  "crons": [{ "path": "/api/cron/cleanup", "schedule": "0 19 * * *" }],
   "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
 }

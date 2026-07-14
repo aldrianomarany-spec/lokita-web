@@ -64,7 +64,7 @@ const timeAgo = (iso: string, t: (s: string) => string) => {
 }
 
 export default function NotificationsView() {
-  const { state, selectNotifFilter, markAllRead, openNotifTarget } = useM()
+  const { state, selectNotifFilter, markAllRead, openNotifTarget, removeAlert } = useM()
   const { t } = useLang()
   const s = state
 
@@ -187,6 +187,27 @@ export default function NotificationsView() {
           </div>
         )}
       </div>
+
+      {/* saved-search alerts — searches that ping you when a match is posted.
+          Created from the "Alert me" button on an empty search result. */}
+      {s.alerts.length > 0 && (
+        <div style={{ border: '1px solid #D8D8D4', background: '#FFFFFF', padding: '11px 14px', marginBottom: 16 }}>
+          <div style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 10, letterSpacing: '.08em', color: '#8B8B86', marginBottom: 8 }}>
+            🔔 {t('MY SEARCH ALERTS')} · {s.alerts.length}/10
+          </div>
+          <div style={{ display: 'flex', gap: 7, flexWrap: 'wrap' }}>
+            {s.alerts.map((a) => (
+              <span key={a.id} style={{ display: 'inline-flex', alignItems: 'center', gap: 7, border: '1px solid #BFDCE8', background: '#EDF5F9', color: '#2F6B85', fontSize: 12, fontWeight: 700, padding: '6px 10px' }}>
+                "{a.query}"
+                <button onClick={() => removeAlert(a.id)} title={t('Delete alert')} style={{ border: 'none', background: 'none', cursor: 'pointer', color: '#2F6B85', fontWeight: 800, fontSize: 12, padding: 0, lineHeight: 1 }}>✕</button>
+              </span>
+            ))}
+          </div>
+          <div style={{ fontSize: 11.5, color: '#8B8B86', fontWeight: 500, marginTop: 8 }}>
+            {t("You'll get a notification (and a buzz) the moment someone posts a match. Search for something and tap “Alert me” to add more.")}
+          </div>
+        </div>
+      )}
 
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 20 }}>
         {FILTERS.map(([key, label]) => {

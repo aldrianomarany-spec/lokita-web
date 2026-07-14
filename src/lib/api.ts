@@ -2,7 +2,7 @@
 // and the UI display shape the marketplace components already use.
 import { supabase } from './supabase'
 import { assertClean } from './moderation'
-import { compressImage } from './img'
+import { compressImage, makeThumb } from './img'
 import { getUser, type Profile as DbProfile } from './auth'
 import type { Profile as UiProfile, EnrichedItem } from '../types'
 import type { Tone } from '../theme'
@@ -177,6 +177,8 @@ export interface DbListing {
   created_at: string
   updated_at: string
   photoUrl?: string | null
+  is_giveaway?: boolean // Free & Donations corner (0029)
+  view_count?: number // how many non-owners opened it (0029)
 }
 
 // first photo url from an embedded listing_photos array
@@ -375,6 +377,8 @@ function mapRow(r: FeedRow, seller: SellerLite | undefined, uid: string | undefi
     sellerVerified: seller?.verification_status === 'verified',
     sellerRole: seller?.role || 'user',
     ownerId: r.seller_id,
+    isGiveaway: !!r.is_giveaway,
+    viewCount: r.view_count ?? 0,
   }
 }
 
@@ -384,6 +388,7 @@ export interface FeedOpts {
   sort?: 'Nearest' | 'Newest' | 'Price'
   query?: string
   building?: string // display label (e.g. "Thomas Building") or "All"
+  free?: boolean // Free & Donations corner: giveaways only
 }
 
 // Live feed: active listings only, filters applied, featured first, capped at 24.
@@ -399,7 +404,12 @@ export async function fetchFeed(opts: FeedOpts, viewerFloor: string | null): Pro
     const code = BUILDING_CODE[opts.building]
     if (code) q = q.eq('building', code)
   }
-  if (opts.query && opts.query.trim()) q = q.ilike('title', `%${opts.query.trim()}%`)
+  if (opts.free) q = q.eq('is_giveaway', true)
+  if (opts.query && opts.query.trim()) {
+    // match title OR description; strip PostgREST or() delimiters from input
+    const term = opts.query.trim().replace(/[,()]/g, ' ').trim()
+    if (term) q = q.or(`title.ilike.%${term}%,description.ilike.%${term}%`)
+  }
   q = q.order('is_featured', { ascending: false })
   q = opts.sort === 'Price' ? q.order('price', { ascending: true }) : q.order('created_at', { ascending: false })
   q = q.limit(24)
@@ -442,6 +452,7 @@ export interface NewListing {
   description: string
   isBundle: boolean
   bundleItems: string[] // what's inside a graduation bundle
+  isGiveaway?: boolean // Free & Donations: price published as Rp 0, no fee
 }
 
 // Insert a listing owned by the current user, then upload its photos.
@@ -465,6 +476,7 @@ export async function createListing(input: NewListing, photos: File[]): Promise<
       description: input.description || null,
       is_graduation_bundle: input.isBundle,
       bundle_items: input.isBundle && input.bundleItems.length ? input.bundleItems : null,
+      is_giveaway: !!input.isGiveaway,
       status: 'active',
     })
     .select('id')
@@ -480,8 +492,21 @@ export async function createListing(input: NewListing, photos: File[]): Promise<
     const { data: pub } = supabase.storage.from('listing-photos').getPublicUrl(path)
     const { error: insErr } = await supabase.from('listing_photos').insert({ listing_id: id, photo_url: pub.publicUrl, sort_order: i })
     if (insErr) throw insErr
+    // feed thumbnail rides alongside (best-effort — the grid falls back to the
+    // full image when a thumb is missing, e.g. for older listings)
+    const thumb = await makeThumb(f)
+    if (thumb) await supabase.storage.from('listing-photos').upload(`${user.id}/${id}/thumb_${i}.jpg`, thumb, { upsert: true }).catch(() => {})
   }
   return id
+}
+
+// URL of the small feed thumbnail for a full listing photo (upload convention:
+// "<uid>/<listing>/3.jpg" → "<uid>/<listing>/thumb_3.jpg"). Callers must keep
+// the original as an onError fallback — pre-thumbnail listings have none.
+export function thumbUrl(photoUrl: string | null | undefined): string | null {
+  if (!photoUrl) return null
+  const m = photoUrl.match(/^(.*\/)(\d+)\.[a-zA-Z0-9]+$/)
+  return m ? `${m[1]}thumb_${m[2]}.jpg` : null
 }
 
 // Owner-only (enforced by RLS too). Also removes the listing's photo files
@@ -629,6 +654,7 @@ export interface OrderRow {
   reviewed: boolean
   protection_enabled?: boolean
   protection_fee?: number
+  pickup_code?: string // 6-char handover code both parties see (0029)
 }
 
 export async function fetchMyOrders(): Promise<OrderRow[]> {
@@ -1328,6 +1354,7 @@ export async function fetchAdminListings(): Promise<AdminListingRow[]> {
 export async function adminSetListingStatus(id: string, status: 'active' | 'removed'): Promise<void> {
   const { error } = await supabase.from('listings').update({ status }).eq('id', id)
   if (error) throw error
+  logAdmin(status === 'removed' ? 'listing_removed' : 'listing_restored', id)
 }
 
 export async function adminSetFeatured(id: string, on: boolean): Promise<void> {
@@ -1363,12 +1390,14 @@ export async function fetchAdminMembers(): Promise<AdminMemberRow[]> {
 export async function adminSetVerification(id: string, status: 'verified' | 'pending' | 'rejected'): Promise<void> {
   const { error } = await supabase.from('profiles').update({ verification_status: status }).eq('id', id)
   if (error) throw error
+  logAdmin('verification_' + status, id)
 }
 
 // Permanently delete a member account (migration 0024). SECURITY DEFINER
 // function guards: admins only, no self-delete, admins can't delete admins.
 // Cascades wipe the profile + their listings; trade history keeps nulled rows.
 export async function adminDeleteUser(id: string): Promise<void> {
+  logAdmin('account_deleted', id) // log first — the target row is about to vanish
   const { error } = await supabase.rpc('admin_delete_user', { target: id })
   if (error) throw error
 }
@@ -1378,6 +1407,7 @@ export async function adminDeleteUser(id: string): Promise<void> {
 export async function adminSetBanned(id: string, banned: boolean): Promise<void> {
   const { error } = await supabase.from('profiles').update({ is_banned: banned }).eq('id', id)
   if (error) throw error
+  logAdmin(banned ? 'member_banned' : 'member_unbanned', id)
 }
 
 // Cancel overdue orders (pending >48h, paid past drop-off deadline) so items
@@ -1432,6 +1462,7 @@ export async function adminResolveBoost(b: BoostRow, approve: boolean): Promise<
   }
   const { error } = await supabase.from('boost_requests').update({ status: approve ? 'approved' : 'rejected' }).eq('id', b.id)
   if (error) throw error
+  logAdmin(approve ? 'boost_approved' : 'boost_rejected', b.listing_id, `${b.days}d · ${b.listing_title}`)
 }
 
 // clear expired FEATURED windows (0027) — app-start sweep, safe pre-migration
@@ -1678,4 +1709,137 @@ export function subscribeBanners(onChange: () => void): () => void {
   return () => {
     supabase.removeChannel(ch)
   }
+}
+
+// ===========================================================================
+// 0029 batch — growth + hardening data layer
+// ===========================================================================
+
+// ---- view counts (owner-only display; DB ignores the owner's own opens) ----
+export function incrementView(listingId: string): void {
+  supabase.rpc('increment_view', { p_listing: listingId }).then(() => {}, () => {})
+}
+
+// ---- saved-search alerts ---------------------------------------------------
+export interface SearchAlertRow {
+  id: string
+  query: string
+  created_at: string
+}
+
+export async function fetchMyAlerts(): Promise<SearchAlertRow[]> {
+  const { data, error } = await supabase.from('search_alerts').select('id, query, created_at').order('created_at', { ascending: false })
+  if (error) return []
+  return (data as SearchAlertRow[]) || []
+}
+
+export async function createSearchAlert(query: string): Promise<void> {
+  const uid = await getUserId()
+  if (!uid) throw new Error('Not signed in')
+  const q = query.trim().toLowerCase().slice(0, 60)
+  if (q.length < 2) throw new Error('Alert needs at least 2 characters.')
+  const { error } = await supabase.from('search_alerts').insert({ user_id: uid, query: q })
+  if (error && !`${error.message}`.includes('duplicate')) throw error
+}
+
+export async function deleteSearchAlert(id: string): Promise<void> {
+  const { error } = await supabase.from('search_alerts').delete().eq('id', id)
+  if (error) throw error
+}
+
+// ---- blocks ----------------------------------------------------------------
+export async function fetchMyBlockedIds(): Promise<string[]> {
+  const { data, error } = await supabase.from('blocks').select('blocked_id')
+  if (error) return []
+  return ((data as { blocked_id: string }[]) || []).map((r) => r.blocked_id)
+}
+
+export async function blockUser(id: string): Promise<void> {
+  const uid = await getUserId()
+  if (!uid) throw new Error('Not signed in')
+  const { error } = await supabase.from('blocks').insert({ blocker_id: uid, blocked_id: id })
+  if (error && !`${error.message}`.includes('duplicate')) throw error
+}
+
+export async function unblockUser(id: string): Promise<void> {
+  const uid = await getUserId()
+  if (!uid) return
+  const { error } = await supabase.from('blocks').delete().eq('blocker_id', uid).eq('blocked_id', id)
+  if (error) throw error
+}
+
+// ---- admin audit trail ------------------------------------------------------
+// Best-effort: an audit hiccup must never break the admin action itself.
+export function logAdmin(action: string, target?: string | null, detail?: string | null): void {
+  getUserId().then((uid) => {
+    if (!uid) return
+    supabase
+      .from('admin_audit')
+      .insert({ admin_id: uid, action, target: target || null, detail: detail || null })
+      .then(() => {}, () => {})
+  })
+}
+
+export interface AuditRow {
+  id: string
+  admin_id: string | null
+  action: string
+  target: string | null
+  detail: string | null
+  created_at: string
+}
+
+export async function fetchAdminAudit(): Promise<AuditRow[]> {
+  const { data, error } = await supabase.from('admin_audit').select('*').order('created_at', { ascending: false }).limit(60)
+  if (error) return []
+  return (data as AuditRow[]) || []
+}
+
+// ---- admin broadcast --------------------------------------------------------
+export async function adminBroadcast(title: string, body: string): Promise<number> {
+  const { data, error } = await supabase.rpc('admin_broadcast', { p_title: title.trim(), p_body: body.trim() })
+  if (error) throw error
+  return (data as number) ?? 0
+}
+
+// ---- client error reports (in-house monitoring) -----------------------------
+export interface ClientErrorRow {
+  id: string
+  user_id: string | null
+  message: string
+  source: string | null
+  ua: string | null
+  created_at: string
+}
+
+export async function fetchClientErrors(): Promise<ClientErrorRow[]> {
+  const { data, error } = await supabase
+    .from('client_errors')
+    .select('id, user_id, message, source, ua, created_at')
+    .order('created_at', { ascending: false })
+    .limit(50)
+  if (error) return []
+  return (data as ClientErrorRow[]) || []
+}
+
+export async function adminClearClientErrors(): Promise<void> {
+  const { error } = await supabase.from('client_errors').delete().gte('created_at', '1970-01-01')
+  if (error) throw error
+}
+
+// ---- moveout-season toggle (site_settings key 'moveout') --------------------
+export async function fetchMoveoutActive(): Promise<boolean> {
+  try {
+    const { data, error } = await supabase.from('site_settings').select('value').eq('key', 'moveout').maybeSingle()
+    if (error || !data) return false
+    return !!((data as { value: { active?: boolean } }).value || {}).active
+  } catch {
+    return false
+  }
+}
+
+export async function adminSetMoveoutActive(on: boolean): Promise<void> {
+  const { error } = await supabase.from('site_settings').upsert({ key: 'moveout', value: { active: on }, updated_at: new Date().toISOString() })
+  if (error) throw error
+  logAdmin('moveout', null, on ? 'season ON' : 'season OFF')
 }

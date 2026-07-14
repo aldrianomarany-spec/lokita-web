@@ -100,12 +100,13 @@ export default function EditProfileModal() {
             <div style={cap}>{t('FULL NAME')}</div>
             <input className="lok-field" value={pf.name} onChange={(e) => setPf('name', e.target.value)} style={fieldBase} />
           </div>
-          <div style={{ display: 'flex', gap: 11 }}>
-            <div style={{ flex: 1 }}>
+          {/* dial-code + number needs ~220px — wraps to a full row on phones */}
+          <div style={{ display: 'flex', gap: 11, flexWrap: 'wrap' }}>
+            <div style={{ flex: '1 1 140px' }}>
               <div style={cap}>{t('STUDENT ID')}</div>
               <input className="lok-field" value={pf.studentId} onChange={(e) => setPf('studentId', e.target.value)} style={fieldBase} />
             </div>
-            <div style={{ flex: 1 }}>
+            <div style={{ flex: '1 1 220px' }}>
               <div style={cap}>{t('WHATSAPP')}</div>
               <div style={{ display: 'flex', gap: 6 }}>
                 <select

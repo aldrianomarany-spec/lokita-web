@@ -40,6 +40,8 @@ export default function CheckoutModal() {
 
   // the listed price already contains LOKITA's platform fee (added when the
   // seller published) — buyers pay exactly what's on the tag, nothing extra.
+  // Giveaways: nothing to pay at all — just arrange the pickup.
+  const isFree = !!sel.isGiveaway
   const total = sel.priceNum
   const fee = protectionFee(sel.priceNum)
   const grand = total + (s.protectOn ? fee : 0)
@@ -62,18 +64,20 @@ export default function CheckoutModal() {
         {s.coStep === 'options' && (
           <>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
-              <h2 style={{ fontFamily: "'Bricolage Grotesque',sans-serif", fontSize: 21, fontWeight: 800, margin: 0 }}>{t('Complete purchase')}</h2>
+              <h2 style={{ fontFamily: "'Bricolage Grotesque',sans-serif", fontSize: 21, fontWeight: 800, margin: 0 }}>{isFree ? '💝 ' + t('Claim this item') : t('Complete purchase')}</h2>
               <button onClick={closeCheckout} className="lok-navi" style={{ border: '1px solid #D8D8D4', background: '#F5F5F3', width: 34, height: 34, borderRadius: 0, fontSize: 15, cursor: 'pointer', color: '#4A4B4E' }}>✕</button>
             </div>
             <div style={{ background: '#F5F5F3', border: '1px solid #D8D8D4', borderRadius: 0, padding: '12px 15px', margin: '14px 0 18px' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <div style={{ fontWeight: 700, fontSize: 14 }}>{sel.title}</div>
-                <div style={{ fontWeight: 600, fontSize: 13.5, color: '#1E1E1E' }}>{rp(sel.priceNum)}</div>
+                <div style={{ fontWeight: 600, fontSize: 13.5, color: isFree ? '#1E9E5A' : '#1E1E1E' }}>{isFree ? t('FREE') : rp(sel.priceNum)}</div>
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 7 }}>
-                <div style={{ fontSize: 12, color: '#8B8B86', fontWeight: 600 }}>{t('LOKITA platform fee')} <span title={t('Keeps LOKITA running — escrow, Security Post & support')} style={{ cursor: 'help' }}>ⓘ</span></div>
-                <div style={{ fontSize: 12.5, color: '#3D7A54', fontWeight: 700 }}>{t('Included ✓')}</div>
-              </div>
+              {!isFree && (
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 7 }}>
+                  <div style={{ fontSize: 12, color: '#8B8B86', fontWeight: 600 }}>{t('LOKITA platform fee')} <span title={t('Keeps LOKITA running — escrow, Security Post & support')} style={{ cursor: 'help' }}>ⓘ</span></div>
+                  <div style={{ fontSize: 12.5, color: '#3D7A54', fontWeight: 700 }}>{t('Included ✓')}</div>
+                </div>
+              )}
               {s.protectOn && (
                 <>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 7 }}>
@@ -85,9 +89,14 @@ export default function CheckoutModal() {
               )}
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 9, paddingTop: 9, borderTop: '1px dashed #C9C9C5' }}>
                 <div style={{ fontWeight: 800, fontSize: 13.5 }}>{t('Total — no extra charges')}</div>
-                <div style={{ fontFamily: "'Bricolage Grotesque',sans-serif", fontWeight: 800, fontSize: 17, color: 'var(--accent,#000000)' }}>{rp(grand)}</div>
+                <div style={{ fontFamily: "'Bricolage Grotesque',sans-serif", fontWeight: 800, fontSize: 17, color: isFree ? '#1E9E5A' : 'var(--accent,#000000)' }}>{isFree ? t('FREE') : rp(grand)}</div>
               </div>
             </div>
+            {isFree && (
+              <div style={{ background: '#EAF5EE', border: '1px solid #BFE3CC', padding: '11px 14px', marginBottom: 16, fontSize: 12.5, color: '#2C6E49', fontWeight: 600, lineHeight: 1.5 }}>
+                💝 {t('A neighbour is giving this away. Nothing to pay — just choose how to pick it up, and say thanks in chat!')}
+              </div>
+            )}
             <div style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 10, color: '#9A9A94', letterSpacing: '.06em', marginBottom: 10 }}>{t('HOW TO EXCHANGE')}</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 9, marginBottom: 20 }}>
               {PICKUP_OPTS.map((o) => {
@@ -106,8 +115,8 @@ export default function CheckoutModal() {
                 )
               })}
             </div>
-            <div style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 10, color: '#9A9A94', letterSpacing: '.06em', marginBottom: 10 }}>{t('PAYMENT')}</div>
-            <div style={{ display: 'flex', gap: 9, marginBottom: 12 }}>
+            {!isFree && <div style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 10, color: '#9A9A94', letterSpacing: '.06em', marginBottom: 10 }}>{t('PAYMENT')}</div>}
+            {!isFree && <div style={{ display: 'flex', gap: 9, marginBottom: 12 }}>
               {PAY_OPTS.map((o) => {
                 const on = s.pay === o.key
                 return (
@@ -118,8 +127,8 @@ export default function CheckoutModal() {
                   </div>
                 )
               })}
-            </div>
-            <div
+            </div>}
+            {!isFree && <div
               onClick={() => patch({ protectOn: !s.protectOn })}
               className="lok-btn"
               role="checkbox"
@@ -133,8 +142,10 @@ export default function CheckoutModal() {
                 <div style={{ fontWeight: 700, fontSize: 13.5, color: s.protectOn ? '#2F6B85' : '#1E1E1E' }}>🛡️ {t('Buyer Protection')} — Rp {fee.toLocaleString('id-ID')}</div>
                 <div style={{ fontSize: 11.5, color: '#5F6063', fontWeight: 500, marginTop: 3, lineHeight: 1.5 }}>{t('Optional. Unlocks dispute mediation by the LOKITA team and escrow status protection if something goes wrong with this trade.')}</div>
               </div>
-            </div>
-            <button onClick={coContinue} className="lok-btn" style={{ width: '100%', border: 'none', background: 'var(--accent,#000000)', color: '#F7F3EA', fontFamily: 'inherit', fontWeight: 700, fontSize: 14.5, padding: 14, borderRadius: 0, cursor: 'pointer', boxShadow: '0 8px 20px -8px rgba(0,0,0,.7)' }}>{t('Continue')} · {rp(grand)}</button>
+            </div>}
+            <button onClick={coContinue} className="lok-btn" style={{ width: '100%', border: 'none', background: isFree ? '#1E9E5A' : 'var(--accent,#000000)', color: '#F7F3EA', fontFamily: 'inherit', fontWeight: 700, fontSize: 14.5, padding: 14, borderRadius: 0, cursor: 'pointer', boxShadow: '0 8px 20px -8px rgba(0,0,0,.7)' }}>
+              {isFree ? '💝 ' + t('Claim it — FREE') : `${t('Continue')} · ${rp(grand)}`}
+            </button>
           </>
         )}
 

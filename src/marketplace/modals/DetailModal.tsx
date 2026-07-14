@@ -36,7 +36,7 @@ export default function DetailModal() {
   // share kit — every listing has a public deep link (/app?item=<id>) that
   // opens for anyone, even without an account (read-only guest mode)
   const shareUrl = `${window.location.origin}/app?item=${sel.id}`
-  const shareText = `${sel.title} — ${sel.price} ${t('on LOKITA, the JIU dorm marketplace')}`
+  const shareText = `${sel.title} — ${sel.isGiveaway ? t('FREE') : sel.price} ${t('on LOKITA, the JIU dorm marketplace')}`
   const waHref = `https://wa.me/?text=${encodeURIComponent(shareText + '\n' + shareUrl)}`
   const canNativeShare = typeof navigator !== 'undefined' && typeof navigator.share === 'function'
   const doNativeShare = () => navigator.share({ title: sel.title, text: shareText, url: shareUrl }).catch(() => {})
@@ -117,7 +117,10 @@ export default function DetailModal() {
           </div>
           <h2 style={{ fontFamily: "'Bricolage Grotesque',sans-serif", fontSize: 27, fontWeight: 800, letterSpacing: '-.02em', margin: '6px 0 8px', lineHeight: 1.12 }}>{sel.title}</h2>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 9, marginBottom: isOwner && (sel.platformFee || 0) > 0 ? 6 : 16 }}>
-            <span style={{ fontFamily: "'Bricolage Grotesque',sans-serif", fontSize: 28, fontWeight: 800, color: 'var(--accent,#000000)' }}>{sel.price}</span>
+            <span style={{ fontFamily: "'Bricolage Grotesque',sans-serif", fontSize: 28, fontWeight: 800, color: sel.isGiveaway ? '#1E9E5A' : 'var(--accent,#000000)' }}>{sel.isGiveaway ? '💝 ' + t('FREE') : sel.price}</span>
+            {isOwner && (sel.viewCount ?? 0) > 0 && (
+              <span title={t('How many neighbours opened this listing')} style={{ fontSize: 12.5, fontWeight: 700, color: '#2F6B85' }}>👁 {sel.viewCount} {t('views')}</span>
+            )}
           </div>
           {/* only the owner sees the fee split — buyers just see the listed price */}
           {isOwner && (sel.platformFee || 0) > 0 && (
@@ -251,7 +254,7 @@ export default function DetailModal() {
                   {t('Message seller')}
                 </button>
                 {/* make an offer — lands in the seller's chat with the product card attached */}
-                {offerOpen ? (
+                {sel.isGiveaway ? null : offerOpen ? (
                   <div style={{ display: 'flex', gap: 8 }}>
                     <div className="lok-in" style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 7, background: '#F5F5F3', border: '1.5px solid #D8D8D4', borderRadius: 0, padding: '0 12px' }}>
                       <span style={{ fontWeight: 700, fontSize: 13, color: '#8B8B86' }}>Rp</span>
@@ -280,7 +283,9 @@ export default function DetailModal() {
                     💰 {t('Make an offer')}
                   </button>
                 )}
-                <button className="lok-btn" onClick={openCheckout} style={{ border: 'none', background: 'var(--accent,#000000)', color: '#F7F3EA', fontFamily: 'inherit', fontWeight: 700, fontSize: 14.5, padding: 14, borderRadius: 0, cursor: 'pointer', boxShadow: '0 8px 20px -8px rgba(0,0,0,.6)' }}>{t('Buy now')} · {sel.price}</button>
+                <button className="lok-btn" onClick={openCheckout} style={{ border: 'none', background: sel.isGiveaway ? '#1E9E5A' : 'var(--accent,#000000)', color: '#F7F3EA', fontFamily: 'inherit', fontWeight: 700, fontSize: 14.5, padding: 14, borderRadius: 0, cursor: 'pointer', boxShadow: '0 8px 20px -8px rgba(0,0,0,.6)' }}>
+                  {sel.isGiveaway ? '💝 ' + t('Claim it — FREE') : `${t('Buy now')} · ${sel.price}`}
+                </button>
                 <ReportForm targetType="listing" targetId={sel.id} label={t('this listing')} />
               </>
             )}

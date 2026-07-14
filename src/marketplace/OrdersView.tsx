@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import QRCode from 'qrcode'
 import { useM } from './context'
 import type { OrderRow, OrderStatus } from '../lib/api'
 import { Verified } from '../components/Icons'
@@ -23,7 +24,19 @@ function OrderCard({ o }: { o: OrderRow }) {
   const [reviewing, setReviewing] = useState(false)
   const [stars, setStars] = useState(0)
   const [text, setText] = useState('')
+  const [receiptOpen, setReceiptOpen] = useState(false)
+  const [qrUrl, setQrUrl] = useState('')
   const sm = STATUS_META[o.status]
+
+  // handover code is live while the trade is in motion; receipt after
+  const codeActive = !!o.pickup_code && (o.status === 'paid' || o.status === 'dropped_off')
+  useEffect(() => {
+    if (!receiptOpen || qrUrl) return
+    const payload = `LOKITA RECEIPT\nOrder: ${o.id}\nItem: ${o.listing_title}\nPrice: Rp ${Number(o.listing_price).toLocaleString('id-ID')}\nCode: ${o.pickup_code || '-'}\nDate: ${o.completed_at || o.created_at}`
+    QRCode.toDataURL(payload, { width: 320, margin: 1, color: { dark: '#000000', light: '#FFFFFF' } })
+      .then(setQrUrl)
+      .catch(() => {})
+  }, [receiptOpen, qrUrl, o])
 
   const run = (fn: () => Promise<void>) => async () => {
     if (busy) return
@@ -92,6 +105,17 @@ function OrderCard({ o }: { o: OrderRow }) {
         {o.status === 'completed' && o.completed_at && <span style={chip}>{t('Completed')} {when(o.completed_at)}</span>}
       </div>
 
+      {/* 🔑 handover code — buyer shows it, seller checks it matches before
+          handing the item over. Both sides see the same code. */}
+      {codeActive && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, background: '#EDF5F9', border: '1px dashed #519BB8', padding: '10px 14px', marginBottom: 12 }}>
+          <span style={{ fontFamily: "'Spline Sans Mono',monospace", fontWeight: 700, fontSize: 18, letterSpacing: 3, color: '#27607A' }}>🔑 {o.pickup_code}</span>
+          <span style={{ fontSize: 11.5, color: '#2F6B85', fontWeight: 600, lineHeight: 1.45 }}>
+            {o.role === 'buyer' ? t('Show this code at handover — the seller checks it matches.') : t("Ask for the buyer's code — hand it over only if it matches this.")}
+          </span>
+        </div>
+      )}
+
       {/* actions by role + status */}
       <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
         {o.status === 'pending' && o.role === 'seller' && (
@@ -124,7 +148,33 @@ function OrderCard({ o }: { o: OrderRow }) {
         {o.status === 'completed' && o.reviewed && (
           <span style={{ fontSize: 12.5, color: '#1E9E5A', fontWeight: 700, alignSelf: 'center' }}>{t('★ Review posted')}</span>
         )}
+        {o.status === 'completed' && (
+          <button onClick={() => setReceiptOpen((v) => !v)} className="lok-btn" style={ghostBtn}>🧾 {receiptOpen ? t('Hide receipt') : t('View receipt')}</button>
+        )}
       </div>
+
+      {/* 🧾 digital receipt — screenshot-able proof of the completed trade */}
+      {receiptOpen && o.status === 'completed' && (
+        <div style={{ marginTop: 14, border: '1px solid #D8D8D4', background: '#FFFFFF', padding: 0 }}>
+          <div style={{ background: '#101418', color: '#FFFFFF', padding: '10px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 700, letterSpacing: 3, fontSize: 14 }}>LOKITA<span style={{ color: '#519BB8' }}>.</span></span>
+            <span style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 9, letterSpacing: 1, color: '#9A9A94' }}>{t('OFFICIAL RECEIPT')}</span>
+          </div>
+          <div style={{ display: 'flex', gap: 16, padding: '14px 16px', flexWrap: 'wrap', alignItems: 'center' }}>
+            <div style={{ flex: '1 1 220px', display: 'flex', flexDirection: 'column', gap: 6, fontSize: 12.5 }}>
+              <div><span style={{ color: '#8B8B86', fontWeight: 600 }}>{t('Item')}:</span> <b>{o.listing_title}</b></div>
+              <div><span style={{ color: '#8B8B86', fontWeight: 600 }}>{t('Price')}:</span> <b>{rupiah(o.listing_price)}</b>{o.protection_enabled && (o.protection_fee ?? 0) > 0 ? <> + 🛡️ Rp {(o.protection_fee as number).toLocaleString('id-ID')}</> : null}</div>
+              <div><span style={{ color: '#8B8B86', fontWeight: 600 }}>{o.role === 'buyer' ? t('Seller') : t('Buyer')}:</span> <b>{o.counterparty_name}</b></div>
+              <div><span style={{ color: '#8B8B86', fontWeight: 600 }}>{t('Completed')}:</span> <b>{when(o.completed_at) || '—'}</b></div>
+              <div style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 9.5, color: '#9A9A94', marginTop: 4 }}>#{o.id.slice(0, 8).toUpperCase()}{o.pickup_code ? ` · 🔑 ${o.pickup_code}` : ''}</div>
+            </div>
+            {qrUrl && <img src={qrUrl} alt="QR" style={{ width: 108, height: 108, flex: 'none', border: '1px solid #ECECEA' }} />}
+          </div>
+          <div style={{ borderTop: '1px dashed #C9C9C5', padding: '8px 16px', fontSize: 10.5, color: '#8B8B86', fontWeight: 500 }}>
+            {t('Screenshot this as proof of your trade. Verifiable in My Orders on both accounts.')}
+          </div>
+        </div>
+      )}
 
       {/* inline review form */}
       {reviewing && (
