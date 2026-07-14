@@ -585,6 +585,9 @@ export default function AdminView() {
         ) : (
           pendingVerif.map((m) => (
             <div key={m.id} style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap', padding: '12px 16px', borderBottom: '1px solid #E6E6E3', background: '#EDF5F9' }}>
+              <div style={{ width: 36, height: 36, borderRadius: '50%', background: '#DBE1EA', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 14, color: '#1E1E1E', flex: 'none', fontFamily: "'Bricolage Grotesque',sans-serif", overflow: 'hidden' }}>
+                {m.profile_photo_url ? <img src={m.profile_photo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : (m.name.charAt(0) || '?').toUpperCase()}
+              </div>
               <div style={{ flex: '1 1 200px', minWidth: 0 }}>
                 <div style={{ fontWeight: 700, fontSize: 13.5, display: 'flex', alignItems: 'center', gap: 7 }}>
                   <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{m.name}</span>
@@ -628,8 +631,8 @@ export default function AdminView() {
         ) : (
           members.map((m) => (
             <div key={m.id} style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap', padding: '12px 16px', borderBottom: '1px solid #E6E6E3' }}>
-              <div style={{ width: 36, height: 36, borderRadius: '50%', background: '#DBE1EA', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 14, color: '#1E1E1E', flex: 'none', fontFamily: "'Bricolage Grotesque',sans-serif" }}>
-                {(m.name.charAt(0) || '?').toUpperCase()}
+              <div style={{ width: 36, height: 36, borderRadius: '50%', background: '#DBE1EA', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 14, color: '#1E1E1E', flex: 'none', fontFamily: "'Bricolage Grotesque',sans-serif", overflow: 'hidden' }}>
+                {m.profile_photo_url ? <img src={m.profile_photo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : (m.name.charAt(0) || '?').toUpperCase()}
               </div>
               <div style={{ flex: '1 1 200px', minWidth: 0 }}>
                 <div style={{ fontWeight: 700, fontSize: 13.5, display: 'flex', alignItems: 'center', gap: 7 }}>

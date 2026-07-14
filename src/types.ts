@@ -25,6 +25,7 @@ export interface Item {
   platformFee?: number // LOKITA's cut already inside priceNum; seller gets priceNum − platformFee
   isFeatured?: boolean
   sellerVerified?: boolean
+  sellerRole?: string
   ownerId?: string
 }
 

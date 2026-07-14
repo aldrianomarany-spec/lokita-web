@@ -39,8 +39,9 @@ function Avatar({ photo, initial, size }: { photo: string | null; initial: strin
 }
 
 export default function MessagesView() {
-  const { state, openConversation, deleteThread, cancelAttach, sendMsg, setMsgDraft, patch, openListingById } = useM()
+  const { state, openConversation, deleteThread, cancelAttach, sendMsg, sendImage, setMsgDraft, patch, openListingById } = useM()
   const [emojiOpen, setEmojiOpen] = useState(false)
+  const [imgSending, setImgSending] = useState(false)
   const emojiRef = useRef<HTMLDivElement>(null)
   const { t } = useLang()
   const s = state
@@ -95,10 +96,13 @@ export default function MessagesView() {
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
-                    <div style={{ fontWeight: 700, fontSize: 14, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.other_name}</div>
+                    <div style={{ fontWeight: 700, fontSize: 14, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 }}>
+                      <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.other_name}</span>
+                      {c.other_role === 'admin' && <span style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 8.5, fontWeight: 700, background: '#519BB8', color: '#FFFFFF', padding: '2px 6px', letterSpacing: 1, flex: 'none' }}>🛡️ {t('ADMIN')}</span>}
+                    </div>
                     <div style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 10, color: '#9A9A94', flex: 'none' }}>{timeShort(c.last_at)}</div>
                   </div>
-                  <div style={{ fontSize: 12, color: '#5F6063', fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginTop: 2 }}>{c.last_content || t('Say hello 👋')}</div>
+                  <div style={{ fontSize: 12, color: '#5F6063', fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginTop: 2 }}>{c.last_content === '📷' ? t('📷 Photo') : c.last_content || t('Say hello 👋')}</div>
                 </div>
                 {c.unread > 0 && <div style={{ width: 9, height: 9, borderRadius: '50%', background: '#D4562F', flex: 'none' }} />}
                 <button
@@ -129,7 +133,11 @@ export default function MessagesView() {
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 7, fontWeight: 700, fontSize: 15 }}>
                     {active.other_name}
-                    {active.other_verified && <Verified size={13} />}
+                    {active.other_role === 'admin' ? (
+                      <span style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 8.5, fontWeight: 700, background: '#519BB8', color: '#FFFFFF', padding: '2px 6px', letterSpacing: 1 }}>🛡️ {t('ADMIN')}</span>
+                    ) : (
+                      active.other_verified && <Verified size={13} />
+                    )}
                   </div>
                   <div style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 11, color: '#8B8B86', marginTop: 2 }}>{active.item_title ? t('About a listing') : t('Direct message')}</div>
                 </div>
@@ -184,7 +192,17 @@ export default function MessagesView() {
                         </div>
                       </div>
                     )}
-                    <div style={{ background: mine ? 'var(--accent,#000000)' : '#FFFFFF', color: mine ? '#F7F3EA' : '#000000', fontSize: 13.5, lineHeight: 1.45, padding: '10px 14px', borderRadius: mine ? '16px 16px 4px 16px' : '16px 16px 16px 4px', fontWeight: 500, boxShadow: '0 1px 2px rgba(0,0,0,.05)', alignSelf: mine ? 'flex-end' : 'flex-start' }}>{m.content}</div>
+                    {m.image_url && (
+                      <img
+                        src={m.image_url}
+                        alt=""
+                        onClick={() => window.open(m.image_url!, '_blank')}
+                        style={{ maxWidth: 230, maxHeight: 260, objectFit: 'cover', borderRadius: 10, cursor: 'pointer', alignSelf: mine ? 'flex-end' : 'flex-start', boxShadow: '0 1px 2px rgba(0,0,0,.05)', display: 'block' }}
+                      />
+                    )}
+                    {!(m.image_url && m.content === '📷') && (
+                      <div style={{ background: mine ? 'var(--accent,#000000)' : '#FFFFFF', color: mine ? '#F7F3EA' : '#000000', fontSize: 13.5, lineHeight: 1.45, padding: '10px 14px', borderRadius: mine ? '16px 16px 4px 16px' : '16px 16px 16px 4px', fontWeight: 500, boxShadow: '0 1px 2px rgba(0,0,0,.05)', alignSelf: mine ? 'flex-end' : 'flex-start' }}>{m.content}</div>
+                    )}
                   </div>
                 )
               })}
@@ -226,6 +244,35 @@ export default function MessagesView() {
               >
                 😊
               </button>
+              {/* attach photo — hidden file input wrapped in a label styled like the emoji button */}
+              <label
+                title={t('Attach photo')}
+                className="lok-navi"
+                style={{ flex: 'none', border: '1.5px solid #D8D8D4', background: '#F5F5F3', width: 42, height: 42, borderRadius: 0, cursor: imgSending ? 'default' : 'pointer', fontSize: 18, lineHeight: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: imgSending ? 0.5 : 1 }}
+              >
+                {imgSending ? (
+                  <span className="lok-spin" style={{ width: 16, height: 16, border: '2px solid #D8D8D4', borderTopColor: 'var(--accent,#000000)', borderRadius: '50%', display: 'inline-block' }} />
+                ) : (
+                  '📎'
+                )}
+                <input
+                  type="file"
+                  accept="image/*"
+                  disabled={imgSending}
+                  style={{ display: 'none' }}
+                  onChange={async (e) => {
+                    const file = e.target.files?.[0]
+                    e.target.value = ''
+                    if (!file || imgSending) return
+                    setImgSending(true)
+                    try {
+                      await sendImage(file)
+                    } finally {
+                      setImgSending(false)
+                    }
+                  }}
+                />
+              </label>
               {emojiOpen && (
                 <div ref={emojiRef} style={{ position: 'absolute', bottom: 64, left: 18, width: 292, maxHeight: 220, overflowY: 'auto', background: '#FFFFFF', border: '1px solid #D8D8D4', boxShadow: '0 18px 40px -12px rgba(0,0,0,.3)', padding: 8, display: 'grid', gridTemplateColumns: 'repeat(8, 1fr)', gap: 2, zIndex: 30, animation: 'lok-pop .15s ease both' }}>
                   {EMOJIS.map((e) => (

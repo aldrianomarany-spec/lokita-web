@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { useM } from '../context'
 import { useLang } from '../../i18n'
+import { protectionFee } from '../../theme'
 import Overlay, { stop } from './Overlay'
 import { Check } from '../../components/Icons'
 
@@ -40,6 +41,8 @@ export default function CheckoutModal() {
   // the listed price already contains LOKITA's platform fee (added when the
   // seller published) — buyers pay exactly what's on the tag, nothing extra.
   const total = sel.priceNum
+  const fee = protectionFee(sel.priceNum)
+  const grand = total + (s.protectOn ? fee : 0)
   const rp = (n: number) => 'Rp ' + n.toLocaleString('id-ID')
 
   const payLabel = s.pay === 'qris' ? 'QRIS' : 'Cash on Delivery'
@@ -71,9 +74,18 @@ export default function CheckoutModal() {
                 <div style={{ fontSize: 12, color: '#8B8B86', fontWeight: 600 }}>{t('LOKITA platform fee')} <span title={t('Keeps LOKITA running — escrow, Security Post & support')} style={{ cursor: 'help' }}>ⓘ</span></div>
                 <div style={{ fontSize: 12.5, color: '#3D7A54', fontWeight: 700 }}>{t('Included ✓')}</div>
               </div>
+              {s.protectOn && (
+                <>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 7 }}>
+                    <div style={{ fontSize: 12, color: '#2F6B85', fontWeight: 600 }}>🛡️ {t('Buyer Protection')}</div>
+                    <div style={{ fontSize: 12.5, color: '#2F6B85', fontWeight: 700 }}>{rp(fee)}</div>
+                  </div>
+                  <div style={{ fontSize: 10.5, color: '#8B8B86', fontWeight: 500, marginTop: 2 }}>{t('Collected with your payment at pickup.')}</div>
+                </>
+              )}
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 9, paddingTop: 9, borderTop: '1px dashed #C9C9C5' }}>
                 <div style={{ fontWeight: 800, fontSize: 13.5 }}>{t('Total — no extra charges')}</div>
-                <div style={{ fontFamily: "'Bricolage Grotesque',sans-serif", fontWeight: 800, fontSize: 17, color: 'var(--accent,#000000)' }}>{rp(total)}</div>
+                <div style={{ fontFamily: "'Bricolage Grotesque',sans-serif", fontWeight: 800, fontSize: 17, color: 'var(--accent,#000000)' }}>{rp(grand)}</div>
               </div>
             </div>
             <div style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 10, color: '#9A9A94', letterSpacing: '.06em', marginBottom: 10 }}>{t('HOW TO EXCHANGE')}</div>
@@ -95,7 +107,7 @@ export default function CheckoutModal() {
               })}
             </div>
             <div style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 10, color: '#9A9A94', letterSpacing: '.06em', marginBottom: 10 }}>{t('PAYMENT')}</div>
-            <div style={{ display: 'flex', gap: 9, marginBottom: 22 }}>
+            <div style={{ display: 'flex', gap: 9, marginBottom: 12 }}>
               {PAY_OPTS.map((o) => {
                 const on = s.pay === o.key
                 return (
@@ -107,7 +119,22 @@ export default function CheckoutModal() {
                 )
               })}
             </div>
-            <button onClick={coContinue} className="lok-btn" style={{ width: '100%', border: 'none', background: 'var(--accent,#000000)', color: '#F7F3EA', fontFamily: 'inherit', fontWeight: 700, fontSize: 14.5, padding: 14, borderRadius: 0, cursor: 'pointer', boxShadow: '0 8px 20px -8px rgba(0,0,0,.7)' }}>{t('Continue')} · {rp(total)}</button>
+            <div
+              onClick={() => patch({ protectOn: !s.protectOn })}
+              className="lok-btn"
+              role="checkbox"
+              aria-checked={s.protectOn}
+              style={{ cursor: 'pointer', display: 'flex', alignItems: 'flex-start', gap: 12, background: s.protectOn ? '#EDF5F9' : '#FFFFFF', border: `1px solid ${s.protectOn ? '#519BB8' : '#D8D8D4'}`, borderRadius: 0, padding: '13px 14px', marginBottom: 22 }}
+            >
+              <span style={{ width: 18, height: 18, borderRadius: 0, border: `2px solid ${s.protectOn ? '#519BB8' : '#C2C2BE'}`, background: s.protectOn ? '#519BB8' : '#FFFFFF', color: '#FFFFFF', display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 'none', marginTop: 1 }}>
+                {s.protectOn && <Check size={12} />}
+              </span>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontWeight: 700, fontSize: 13.5, color: s.protectOn ? '#2F6B85' : '#1E1E1E' }}>🛡️ {t('Buyer Protection')} — Rp {fee.toLocaleString('id-ID')}</div>
+                <div style={{ fontSize: 11.5, color: '#5F6063', fontWeight: 500, marginTop: 3, lineHeight: 1.5 }}>{t('Optional. Unlocks dispute mediation by the LOKITA team and escrow status protection if something goes wrong with this trade.')}</div>
+              </div>
+            </div>
+            <button onClick={coContinue} className="lok-btn" style={{ width: '100%', border: 'none', background: 'var(--accent,#000000)', color: '#F7F3EA', fontFamily: 'inherit', fontWeight: 700, fontSize: 14.5, padding: 14, borderRadius: 0, cursor: 'pointer', boxShadow: '0 8px 20px -8px rgba(0,0,0,.7)' }}>{t('Continue')} · {rp(grand)}</button>
           </>
         )}
 

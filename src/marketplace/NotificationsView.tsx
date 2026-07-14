@@ -36,6 +36,20 @@ const FILTERS: [string, string][] = [
   ['system', 'System'],
 ]
 
+const startOfDay = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime()
+
+const timeGroup = (iso: string): 'TODAY' | 'YESTERDAY' | 'THIS WEEK' | 'OLDER' => {
+  const d = new Date(iso)
+  if (isNaN(d.getTime())) return 'OLDER'
+  const dayDiff = Math.round((startOfDay(new Date()) - startOfDay(d)) / 86400000)
+  if (dayDiff <= 0) return 'TODAY'
+  if (dayDiff === 1) return 'YESTERDAY'
+  if (dayDiff < 7) return 'THIS WEEK'
+  return 'OLDER'
+}
+
+const TIME_GROUPS = ['TODAY', 'YESTERDAY', 'THIS WEEK', 'OLDER'] as const
+
 const timeAgo = (iso: string, t: (s: string) => string) => {
   const d = new Date(iso)
   if (isNaN(d.getTime())) return ''
@@ -109,11 +123,17 @@ export default function NotificationsView() {
           <span className="lok-spin" style={{ width: 24, height: 24, border: '3px solid #D8D8D4', borderTopColor: 'var(--accent,#000000)', borderRadius: '50%', display: 'inline-block' }} />
         </div>
       ) : filtered.length > 0 ? (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-          {filtered.map((n) => {
-            const m = TYPE_META[n.type]
-            const u = unread(n)
-            return (
+        <div>
+          {TIME_GROUPS.map((g) => ({ g, items: filtered.filter((n) => timeGroup(n.created_at) === g) }))
+            .filter(({ items }) => items.length > 0)
+            .map(({ g, items }, gi) => (
+              <div key={g}>
+                <div style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 10, letterSpacing: '.1em', color: '#9A9A94', margin: gi === 0 ? '0 0 8px' : '18px 0 8px' }}>{t(g)}</div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  {items.map((n) => {
+                    const m = TYPE_META[n.type]
+                    const u = unread(n)
+                    return (
               <div key={n.id} onClick={() => openNotifTarget(n)} className="lok-btn" style={{ cursor: 'pointer', display: 'flex', gap: 14, alignItems: 'flex-start', background: u ? '#FFFFFF' : '#F5F0E6', border: `1px solid ${u ? '#C9C9C5' : '#E6E6E3'}`, borderRadius: 0, padding: '15px 17px' }}>
                 <div style={{ width: 40, height: 40, borderRadius: 0, background: m.iconBg, color: m.iconFg, display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 'none' }}>{m.icon}</div>
                 <div style={{ flex: 1, minWidth: 0 }}>
@@ -129,7 +149,10 @@ export default function NotificationsView() {
                 </div>
               </div>
             )
-          })}
+                  })}
+                </div>
+              </div>
+            ))}
         </div>
       ) : (
         <div style={{ textAlign: 'center', color: '#8B8B86', padding: '60px 20px', background: '#FFFFFF', border: '1px solid #D8D8D4', borderRadius: 0 }}>

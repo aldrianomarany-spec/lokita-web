@@ -154,7 +154,11 @@ export default function DetailModal() {
             <div style={{ flex: 1 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 7, fontWeight: 700, fontSize: 15 }}>
                 {sel.seller}
-                {sel.sellerVerified && <Verified size={14} />}
+                {sel.sellerRole === 'admin' ? (
+                  <span style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 8.5, fontWeight: 700, background: '#519BB8', color: '#FFFFFF', padding: '2px 6px', letterSpacing: 1, borderRadius: 0 }}>🛡️ {t('ADMIN')}</span>
+                ) : (
+                  sel.sellerVerified && <Verified size={14} />
+                )}
               </div>
               <div style={{ fontSize: 12, color: '#8B8B86', fontWeight: 600, marginTop: 2, fontFamily: "'Spline Sans Mono',monospace" }}>{sel.sellerVerified ? t('Dorm-Verified') : t('Student')} · {sel.building || 'JIU'} · {t('chat in-app')}</div>
             </div>

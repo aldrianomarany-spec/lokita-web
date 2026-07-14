@@ -35,7 +35,7 @@ export default function RequestsView() {
   const [rows, setRows] = useState<RequestRow[] | null>(null)
   const [formOpen, setFormOpen] = useState(false)
   const [title, setTitle] = useState('')
-  const [cat, setCat] = useState('Others')
+  const [cat, setCat] = useState('')
   const [budget, setBudget] = useState('')
   const [desc, setDesc] = useState('')
   const [saving, setSaving] = useState(false)
@@ -57,10 +57,12 @@ export default function RequestsView() {
     if (saving) return
     if (s.guest) return goSignup()
     if (!title.trim()) return alert(t('Please describe what you are looking for.'))
+    if (!cat) return alert(t('Please choose a category.'))
     setSaving(true)
     try {
       await createRequest({ title: title.trim(), category: cat, budgetMax: budget ? Number(budget) : null, description: desc.trim() })
       setTitle('')
+      setCat('')
       setBudget('')
       setDesc('')
       setFormOpen(false)
@@ -108,11 +110,12 @@ export default function RequestsView() {
             <input className="lok-field" value={title} onChange={(e) => setTitle(e.target.value)} placeholder={t('What are you looking for? e.g. Mini fridge under 500k')} style={field} />
             <div style={{ display: 'flex', gap: 10 }}>
               <select className="lok-field" value={cat} onChange={(e) => setCat(e.target.value)} style={{ ...field, flex: 1, fontWeight: 600 }}>
+                <option value="" disabled>{t('Select a category…')}</option>
                 {SELL_CATEGORIES.map((c) => (
                   <option key={c} value={c}>{t(c)}</option>
                 ))}
               </select>
-              <input className="lok-field" value={budget} onChange={(e) => setBudget(e.target.value.replace(/[^0-9]/g, ''))} placeholder={t('Max budget in Rp (optional)')} inputMode="numeric" style={{ ...field, flex: 1 }} />
+              <input className="lok-field" value={budget ? Number(budget).toLocaleString('id-ID') : ''} onChange={(e) => setBudget(e.target.value.replace(/[^0-9]/g, ''))} placeholder={t('Max budget in Rp (optional)')} inputMode="numeric" style={{ ...field, flex: 1 }} />
             </div>
             <textarea className="lok-field" value={desc} onChange={(e) => setDesc(e.target.value)} placeholder={t("Details — condition you'd accept, when you need it…")} style={{ ...field, minHeight: 60, resize: 'none' }} />
             <button onClick={post} className="lok-btn" style={{ border: 'none', background: 'var(--accent,#000000)', color: '#F7F3EA', fontFamily: 'inherit', fontWeight: 700, fontSize: 14, padding: 13, borderRadius: 0, cursor: 'pointer' }}>
@@ -160,7 +163,7 @@ export default function RequestsView() {
                       <button disabled={busyId === r.id} onClick={() => close(r, 'closed')} className="lok-btn" style={{ border: '1px solid #D8D8D4', background: '#F5F5F3', color: '#8B8B86', fontFamily: 'inherit', fontWeight: 700, fontSize: 12, padding: '9px 13px', borderRadius: 0, cursor: 'pointer' }}>{t('Remove')}</button>
                     </>
                   ) : (
-                    <button onClick={() => openRequestChat(r.user_id)} className="lok-btn" style={{ border: 'none', background: 'var(--accent,#000000)', color: '#F7F3EA', fontFamily: 'inherit', fontWeight: 700, fontSize: 12.5, padding: '10px 14px', borderRadius: 0, cursor: 'pointer' }}>{t('I have this 💬')}</button>
+                    <button onClick={() => openRequestChat(r.user_id, r.category || undefined)} className="lok-btn" style={{ border: 'none', background: 'var(--accent,#000000)', color: '#F7F3EA', fontFamily: 'inherit', fontWeight: 700, fontSize: 12.5, padding: '10px 14px', borderRadius: 0, cursor: 'pointer' }}>{t('I have this 💬')}</button>
                   )}
                 </div>
               </div>

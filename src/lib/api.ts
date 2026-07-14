@@ -329,6 +329,7 @@ interface SellerLite {
   name: string
   profile_photo_url: string | null
   verification_status: string
+  role?: string
 }
 
 function mapRow(r: FeedRow, seller: SellerLite | undefined, uid: string | undefined, viewerFloor: string | null, i: number): EnrichedItem {
@@ -362,6 +363,7 @@ function mapRow(r: FeedRow, seller: SellerLite | undefined, uid: string | undefi
     platformFee: r.platform_fee || 0,
     isFeatured: r.is_featured,
     sellerVerified: seller?.verification_status === 'verified',
+    sellerRole: seller?.role || 'user',
     ownerId: r.seller_id,
   }
 }
@@ -396,7 +398,7 @@ export async function fetchFeed(opts: FeedOpts, viewerFloor: string | null): Pro
   const rows = (data as FeedRow[]) || []
   const sellerIds = [...new Set(rows.map((r) => r.seller_id))]
   const { data: people } = sellerIds.length
-    ? await supabase.from('public_profiles').select('id, name, profile_photo_url, verification_status').in('id', sellerIds)
+    ? await supabase.from('public_profiles').select('id, name, profile_photo_url, verification_status, role').in('id', sellerIds)
     : { data: [] as SellerLite[] }
   const byId = new Map((people as SellerLite[] | null || []).map((p) => [p.id, p]))
   const items = rows.map((r, i) => mapRow(r, byId.get(r.seller_id), user?.id, viewerFloor, i))
@@ -503,6 +505,8 @@ export interface NewOrder {
   sellerId: string
   payment_method: PaymentMethod
   pickup_method: PickupMethod
+  protection_enabled?: boolean
+  protection_fee?: number
 }
 
 export async function createOrder(o: NewOrder): Promise<string> {
@@ -525,6 +529,9 @@ export async function createOrder(o: NewOrder): Promise<string> {
       status: 'pending',
       paid_at: null,
       dropoff_deadline: null,
+      // opt-in Buyer Protection (0028) — informational until a gateway exists
+      protection_enabled: !!o.protection_enabled,
+      protection_fee: o.protection_enabled ? o.protection_fee || 0 : 0,
     })
     .select('id')
     .single()
@@ -610,6 +617,8 @@ export interface OrderRow {
   counterparty_name: string
   counterparty_verified: boolean
   reviewed: boolean
+  protection_enabled?: boolean
+  protection_fee?: number
 }
 
 export async function fetchMyOrders(): Promise<OrderRow[]> {
@@ -696,6 +705,7 @@ export interface ConversationRow {
   other_name: string
   other_photo: string | null
   other_verified: boolean
+  other_role: string
   i_am_seller: boolean // which side of the trade the viewer is on (picks quick replies)
   conv_ids: string[] // every conversation merged into this thread (one thread per person)
   last_content: string
@@ -732,7 +742,7 @@ export async function fetchConversations(): Promise<ConversationRow[]> {
   }
   const otherIds = [...new Set(rows.map((r) => (r.buyer_id === uid ? r.seller_id : r.buyer_id)).filter(Boolean))]
   const { data: people } = otherIds.length
-    ? await supabase.from('public_profiles').select('id, name, profile_photo_url, verification_status').in('id', otherIds)
+    ? await supabase.from('public_profiles').select('id, name, profile_photo_url, verification_status, role').in('id', otherIds)
     : { data: [] as SellerLite[] }
   const byId = new Map(((people as SellerLite[] | null) || []).map((p) => [p.id, p]))
   const result: ConversationRow[] = rows.map((r) => {
@@ -747,6 +757,7 @@ export async function fetchConversations(): Promise<ConversationRow[]> {
       other_name: other?.name || 'Student',
       other_photo: other?.profile_photo_url || null,
       other_verified: other?.verification_status === 'verified',
+      other_role: other?.role || 'user',
       i_am_seller: r.seller_id === uid,
       conv_ids: [r.id],
       last_content: last?.content || '',
@@ -794,6 +805,7 @@ export interface MessageRow {
   created_at: string
   // product-card attachment (messages.listing_id, migration 0025)
   listing_id?: string | null
+  image_url?: string | null // photo message (migration 0028)
   item_title?: string | null
   item_price?: number | null
   item_photo?: string | null
@@ -847,14 +859,26 @@ export async function getOrCreateConversation(listingId: string, sellerId: strin
   return (data as { id: string }).id
 }
 
-export async function sendMessage(conversationId: string, content: string, listingId?: string | null): Promise<void> {
+// chat photo → public listing-photos bucket under <uid>/chat/ (owner-folder RLS)
+export async function uploadChatImage(rawFile: File): Promise<string> {
+  const user = await getUser()
+  if (!user) throw new Error('Not signed in')
+  const file = await compressImage(rawFile)
+  const path = `${user.id}/chat/${Date.now()}.jpg`
+  const { error } = await supabase.storage.from('listing-photos').upload(path, file, { upsert: false })
+  if (error) throw error
+  return supabase.storage.from('listing-photos').getPublicUrl(path).data.publicUrl
+}
+
+export async function sendMessage(conversationId: string, content: string, listingId?: string | null, imageUrl?: string | null): Promise<void> {
   const uid = await getUserId()
   if (!uid) throw new Error('Not signed in')
   const trimmed = content.trim()
-  if (!trimmed) return
+  if (!trimmed && !imageUrl) return
   assertClean(trimmed)
-  const row: Record<string, unknown> = { conversation_id: conversationId, sender_id: uid, content: trimmed }
+  const row: Record<string, unknown> = { conversation_id: conversationId, sender_id: uid, content: trimmed || '📷' }
   if (listingId) row.listing_id = listingId
+  if (imageUrl) row.image_url = imageUrl
   let { error } = await supabase.from('messages').insert(row)
   if (error && listingId) {
     // pre-0025 fallback: send without the product attachment
@@ -987,7 +1011,7 @@ export async function fetchRequests(): Promise<RequestRow[]> {
   const ids = [...new Set(rows.map((r) => r.user_id))]
   const { data: people } = await supabase
     .from('public_profiles')
-    .select('id, name, profile_photo_url, verification_status')
+    .select('id, name, profile_photo_url, verification_status, role')
     .in('id', ids)
   const byId = new Map(((people as SellerLite[] | null) || []).map((p) => [p.id, p]))
   return rows.map((r) => {
@@ -1064,23 +1088,27 @@ export interface MemberRow {
   photo: string | null
   building: string // display label or ''
   verified: boolean
+  role: string
+  last_seen_at: string | null
   since: string
 }
 
 export async function fetchMembers(): Promise<MemberRow[]> {
   const { data, error } = await supabase
     .from('public_profiles')
-    .select('id, name, profile_photo_url, building, verification_status, created_at')
+    .select('id, name, profile_photo_url, building, verification_status, role, last_seen_at, created_at')
     .order('name', { ascending: true })
     .limit(200)
   if (error) throw error
-  const rows = (data as { id: string; name: string; profile_photo_url: string | null; building: string | null; verification_status: string; created_at: string }[]) || []
+  const rows = (data as { id: string; name: string; profile_photo_url: string | null; building: string | null; verification_status: string; role: string | null; last_seen_at: string | null; created_at: string }[]) || []
   return rows.map((r) => ({
     id: r.id,
     name: r.name || 'Student',
     photo: r.profile_photo_url,
     building: r.building ? BUILDING_LABEL[r.building] || '' : '',
     verified: r.verification_status === 'verified',
+    role: r.role || 'user',
+    last_seen_at: r.last_seen_at,
     since: memberSince(r.created_at),
   }))
 }
@@ -1114,18 +1142,20 @@ export interface MemberProfileInfo {
   standing: string
   major: string
   verified: boolean
+  role: string
+  last_seen_at: string | null
   since: string
 }
 
 export async function fetchMemberProfile(id: string): Promise<MemberProfileInfo | null> {
   const { data, error } = await supabase
     .from('public_profiles')
-    .select('id, name, profile_photo_url, building, floor, batch_year, class_standing, major, verification_status, created_at')
+    .select('id, name, profile_photo_url, building, floor, batch_year, class_standing, major, verification_status, role, last_seen_at, created_at')
     .eq('id', id)
     .maybeSingle()
   if (error) throw error
   if (!data) return null
-  const r = data as { id: string; name: string; profile_photo_url: string | null; building: string | null; floor: string | null; batch_year: number | null; class_standing: string | null; major: string | null; verification_status: string; created_at: string }
+  const r = data as { id: string; name: string; profile_photo_url: string | null; building: string | null; floor: string | null; batch_year: number | null; class_standing: string | null; major: string | null; verification_status: string; role: string | null; last_seen_at: string | null; created_at: string }
   return {
     id: r.id,
     name: r.name || 'Student',
@@ -1136,6 +1166,8 @@ export async function fetchMemberProfile(id: string): Promise<MemberProfileInfo 
     standing: r.class_standing ? STANDING_LABEL[r.class_standing] || '' : '',
     major: r.major || '',
     verified: r.verification_status === 'verified',
+    role: r.role || 'user',
+    last_seen_at: r.last_seen_at,
     since: memberSince(r.created_at),
   }
 }
@@ -1160,7 +1192,7 @@ export async function fetchMemberListings(id: string, viewerFloor: string | null
       .eq('seller_id', id)
       .eq('status', 'active')
       .order('created_at', { ascending: false }),
-    supabase.from('public_profiles').select('id, name, profile_photo_url, verification_status').eq('id', id).maybeSingle(),
+    supabase.from('public_profiles').select('id, name, profile_photo_url, verification_status, role').eq('id', id).maybeSingle(),
   ])
   if (error) throw error
   const seller = (person as SellerLite | null) || undefined
@@ -1206,7 +1238,7 @@ export async function fetchListingById(id: string, viewerFloor: string | null): 
   const row = data as FeedRow
   const { data: person } = await supabase
     .from('public_profiles')
-    .select('id, name, profile_photo_url, verification_status')
+    .select('id, name, profile_photo_url, verification_status, role')
     .eq('id', row.seller_id)
     .maybeSingle()
   return mapRow(row, (person as SellerLite | null) || undefined, user?.id, viewerFloor, 0)
@@ -1294,6 +1326,7 @@ export async function adminSetFeatured(id: string, on: boolean): Promise<void> {
 export interface AdminMemberRow {
   id: string
   name: string
+  profile_photo_url: string | null
   email: string | null
   building: string | null
   verification_status: string
@@ -1306,7 +1339,7 @@ export interface AdminMemberRow {
 export async function fetchAdminMembers(): Promise<AdminMemberRow[]> {
   const { data, error } = await supabase
     .from('profiles')
-    .select('id, name, email, building, verification_status, verification_doc_url, role, is_banned, created_at')
+    .select('id, name, profile_photo_url, email, building, verification_status, verification_doc_url, role, is_banned, created_at')
     .order('created_at', { ascending: false })
     .limit(200)
   if (error) throw error
@@ -1392,6 +1425,37 @@ export async function adminResolveBoost(b: BoostRow, approve: boolean): Promise<
 // clear expired FEATURED windows (0027) — app-start sweep, safe pre-migration
 export async function expireFeatured(): Promise<void> {
   await supabase.rpc('expire_featured').then(() => {}, () => {})
+}
+
+// the caller's active listings — used to auto-attach an item when answering
+// a request ("I have this 💬")
+export interface MyListingLite {
+  id: string
+  title: string
+  price: number
+  category: string | null
+  photo: string | null
+}
+export async function fetchMyActiveListings(): Promise<MyListingLite[]> {
+  const uid = await getUserId()
+  if (!uid) return []
+  const { data, error } = await supabase
+    .from('listings')
+    .select('id, title, price, category, listing_photos(photo_url, sort_order)')
+    .eq('seller_id', uid)
+    .eq('status', 'active')
+    .order('created_at', { ascending: false })
+    .limit(20)
+  if (error) return []
+  type Row = { id: string; title: string; price: number; category: string | null; listing_photos: { photo_url: string; sort_order: number }[] | null }
+  return ((data as Row[]) || []).map((r) => ({ id: r.id, title: r.title, price: r.price, category: r.category, photo: firstPhoto(r.listing_photos) }))
+}
+
+// presence heartbeat — powers "last seen Xh ago" on People (migration 0028)
+export async function touchLastSeen(): Promise<void> {
+  const uid = await getUserId()
+  if (!uid) return
+  await supabase.from('profiles').update({ last_seen_at: new Date().toISOString() }).eq('id', uid).then(() => {}, () => {})
 }
 
 export async function expireStaleOrders(): Promise<void> {
