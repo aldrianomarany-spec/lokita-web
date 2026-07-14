@@ -318,7 +318,7 @@ export interface MarketplaceApi {
   setF: (k: keyof SellForm, v: string) => void
   toggleBundle: () => void
   toggleGiveaway: () => void
-  submitListing: (photos: File[]) => void
+  submitListing: (photos: File[], fulfillment: 'desk' | 'direct') => void
   reloadFeed: () => void
   deleteMyListing: (id: string) => Promise<void>
   toggleMenu: () => void
@@ -715,6 +715,7 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
         meetup_spot: state.pickup === 'meet' ? state.meetSpot : null,
         protection_enabled: state.protectOn,
         protection_fee: state.protectOn ? protectionFee(sel.priceNum) : 0,
+        isGiveaway: !!sel.isGiveaway,
       })
       const floorCode = state.profile.floor ? state.profile.floor.toLowerCase() : null
       await Promise.all([
@@ -744,6 +745,22 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
     navigate('/')
   }
 
+  // 🔒 privacy bar for social surfaces (inbox, people, member chat): signed in
+  // AND complete profile. Guests → signup; incomplete members → their profile.
+  const requireReady = (): boolean => {
+    if (state.guest) {
+      goSignup()
+      return false
+    }
+    const p = state.profile
+    if (!p.name || !p.building || !p.floor || !p.whatsapp) {
+      alert('Finish your profile first (building, floor, WhatsApp) — it keeps LOKITA members-only. Opening your profile now.')
+      patch({ view: 'profile', menuOpen: false, sel: null })
+      return false
+    }
+    return true
+  }
+
   const api: MarketplaceApi = {
     state,
     patch,
@@ -768,11 +785,11 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
     openGuide: () => patch({ view: 'guide', menuOpen: false, sel: null }),
     refreshReports: () => loadReportsCount(),
     openPeople: () => {
-      if (state.guest) return goSignup()
+      if (!requireReady()) return
       patch({ view: 'people', menuOpen: false, sel: null })
     },
     openRequestChat: async (requesterId, category) => {
-      if (state.guest) return goSignup()
+      if (!requireReady()) return
       try {
         const cid = await getOrCreateRequestConversation(requesterId)
         // "I have this" — queue the responder's own matching item so it rides
@@ -992,7 +1009,7 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
     toggleBundle: () => patch((prev) => ({ bundleOn: !prev.bundleOn })),
     // locked ON while browsing Free & Donations — that section is giveaways only
     toggleGiveaway: () => patch((prev) => (prev.freeOnly ? {} : { giveawayOn: !prev.giveawayOn })),
-    submitListing: async (photos: File[]) => {
+    submitListing: async (photos: File[], fulfillment: 'desk' | 'direct') => {
       if (state.listState !== 'idle') return
       const f = state.f
       const priceNum = state.giveawayOn ? 0 : Number((f.price || '').replace(/[^0-9]/g, ''))
@@ -1021,6 +1038,7 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
               ? f.bundleItems.split('\n').map((l) => l.trim()).filter(Boolean).slice(0, 20)
               : [],
             isGiveaway: state.giveawayOn,
+            fulfillment,
           },
           photos,
         )
@@ -1048,7 +1066,7 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
     toggleMenu: () => patch((prev) => ({ menuOpen: !prev.menuOpen })),
 
     openMessages: () => {
-      if (state.guest) return goSignup()
+      if (!requireReady()) return
       patch({ view: 'messages', menuOpen: false, sel: null })
       loadConversations()
     },
@@ -1237,7 +1255,8 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
         patch({ view: 'profile', menuOpen: false, sel: null })
         return
       }
-      patch({ checkoutOpen: true, coStep: 'options', pay: 'cod', pickup: 'leave', qris: null, qrisLoading: false, lastOrderId: null })
+      // direct deals hand over between the two members; desk items via the team
+      patch({ checkoutOpen: true, coStep: 'options', pay: 'cod', pickup: state.sel?.fulfillment === 'direct' ? 'meet' : 'leave', qris: null, qrisLoading: false, lastOrderId: null })
     },
     closeCheckout: () => patch({ checkoutOpen: false, coStep: 'options', sel: null, qris: null, qrisLoading: false, lastOrderId: null }),
     setPay: (v) => patch({ pay: v }),

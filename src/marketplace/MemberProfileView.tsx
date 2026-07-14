@@ -45,7 +45,7 @@ const metaField = (label: string, value: string) =>
   ) : null
 
 export default function MemberProfileView() {
-  const { state, closeMember, openRequestChat, blockMember, unblockMember } = useM()
+  const { state, closeMember, openRequestChat, blockMember, unblockMember, goSignup, openProfile } = useM()
   const { t } = useLang()
   const s = state
   const id = s.memberId
@@ -94,6 +94,34 @@ export default function MemberProfileView() {
   const backBtn = (
     <button onClick={closeMember} className="lok-navi" style={{ border: '1px solid #D8D8D4', background: '#F5F5F3', padding: '9px 14px', borderRadius: 0, cursor: 'pointer', color: '#4A4B4E', fontFamily: 'inherit', fontWeight: 700, fontSize: 13 }}>{t('‹ Back')}</button>
   )
+
+  // 🔒 privacy: member profiles (name, building, listings, chat) are for
+  // members with a complete profile — same bar as item details
+  const pp = s.profile
+  const memberReady = !s.guest && !!(pp.name && pp.building && pp.floor && pp.whatsapp)
+  if (!memberReady && !isMe) {
+    return (
+      <div style={{ animation: 'lok-fade .3s ease both', maxWidth: 760, margin: '0 auto' }}>
+        {backBtn}
+        <div style={{ background: '#FFFFFF', border: '1px solid #D8D8D4', borderRadius: 0, padding: '52px 32px', textAlign: 'center', marginTop: 18 }}>
+          <div style={{ fontSize: 34, marginBottom: 12 }}>🔒</div>
+          <div style={{ fontFamily: "'Bricolage Grotesque',sans-serif", fontWeight: 800, fontSize: 19, color: '#000000', marginBottom: 8 }}>{t('Members only')}</div>
+          <div style={{ fontSize: 13.5, color: '#5F6063', lineHeight: 1.6, maxWidth: 400, margin: '0 auto 18px' }}>
+            {s.guest
+              ? t('Item details, sellers and trading are for signed-in members — that keeps names and buildings inside the dorm community.')
+              : t('Finish your profile (building, floor, WhatsApp) to unlock item details, chat and trading — it keeps LOKITA members-only.')}
+          </div>
+          <button
+            onClick={() => (s.guest ? goSignup() : openProfile())}
+            className="lok-btn"
+            style={{ border: 'none', background: 'var(--accent,#000000)', color: '#F7F3EA', fontFamily: 'inherit', fontWeight: 700, fontSize: 14, padding: '13px 26px', borderRadius: 0, cursor: 'pointer' }}
+          >
+            {s.guest ? t("Sign up — it's free") : t('Complete my profile')}
+          </button>
+        </div>
+      </div>
+    )
+  }
 
   if (missing) {
     return (

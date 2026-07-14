@@ -37,7 +37,9 @@ const PICKUP_OPTS_ALL = [
   { key: 'leave' as const, label: 'LOKITA Handover', desc: 'The LOKITA team keeps it safe until you collect it — FREE', ic: s2(<><path d="M21 8l-9-5-9 5v8l9 5 9-5z" /><path d="M3 8l9 5 9-5M12 13v9" /></>) },
   { key: 'meet' as const, label: 'Meet in person', desc: 'Pick a campus spot below — check the 🔑 code when you meet', ic: s2(<><path d="M12 21c4-4 7-7.4 7-11a7 7 0 1 0-14 0c0 3.6 3 7 7 11z" /><circle cx="12" cy="10" r="2.4" /></>) },
 ]
-const PICKUP_OPTS = PICKUP_OPTS_ALL.filter((o) => ENABLED_PICKUPS.includes(o.key))
+// desk items → LOKITA Handover; direct deals → meet the seller (0038)
+const pickupOptsFor = (direct: boolean) =>
+  PICKUP_OPTS_ALL.filter((o) => (direct ? o.key === 'meet' : ENABLED_PICKUPS.includes(o.key)))
 
 export default function CheckoutModal() {
   const { state, patch, closeCheckout, setPickup, coContinue, confirmQrisPaid, cancelQrisPayment, openOrders, chatAdmin } = useM()
@@ -60,16 +62,20 @@ export default function CheckoutModal() {
   // seller published) — buyers pay exactly what's on the tag, nothing extra.
   // Giveaways: nothing to pay at all — just arrange the pickup.
   const isFree = !!sel.isGiveaway
+  const isDirect = sel.fulfillment === 'direct'
+  const pickupOpts = pickupOptsFor(isDirect)
   const total = sel.priceNum
   const fee = protectionFee(sel.priceNum)
   const grand = total + (s.protectOn ? fee : 0)
   const rp = (n: number) => 'Rp ' + n.toLocaleString('id-ID')
 
-  const payLabel = 'Pay at handover'
+  const payLabel = isDirect ? 'Pay at handover' : 'Pay by transfer'
   const pickupLabel = s.pickup === 'meet' ? 'Meet in person' : s.pickup === 'leave' ? 'LOKITA Handover' : 'Security Post'
   const doneMsg = isFree
-    ? t('Claim confirmed — chat the LOKITA team to arrange your pickup.')
-    : t('Now transfer to the seller and upload your receipt in My Orders. Once the seller confirms the money arrived, chat the LOKITA team to collect your item.')
+    ? t('🙋 Ask sent! The giver picks who gets it — you’ll get a notification if it’s you. Say hi in chat to boost your chances.')
+    : isDirect
+      ? t('Order sent! Chat the seller to arrange the handover — transfer to them (upload the receipt in My Orders) or pay cash when you meet.')
+      : t('Now transfer to the seller and upload your receipt in My Orders. Once the seller confirms the money arrived, chat the LOKITA team to collect your item.')
 
   return (
     <Overlay onClose={closeCheckout} z={90}>
@@ -77,7 +83,7 @@ export default function CheckoutModal() {
         {s.coStep === 'options' && (
           <>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
-              <h2 style={{ fontFamily: "'Bricolage Grotesque',sans-serif", fontSize: 21, fontWeight: 800, margin: 0 }}>{isFree ? '💝 ' + t('Claim this item') : t('Complete purchase')}</h2>
+              <h2 style={{ fontFamily: "'Bricolage Grotesque',sans-serif", fontSize: 21, fontWeight: 800, margin: 0 }}>{isFree ? '🙋 ' + t('Ask for this item') : t('Complete purchase')}</h2>
               <button onClick={closeCheckout} className="lok-navi" style={{ border: '1px solid #D8D8D4', background: '#F5F5F3', width: 34, height: 34, borderRadius: 0, fontSize: 15, cursor: 'pointer', color: '#4A4B4E' }}>✕</button>
             </div>
             <div style={{ background: '#F5F5F3', border: '1px solid #D8D8D4', borderRadius: 0, padding: '12px 15px', margin: '14px 0 18px' }}>
@@ -102,12 +108,12 @@ export default function CheckoutModal() {
             </div>
             {isFree && (
               <div style={{ background: '#EAF5EE', border: '1px solid #BFE3CC', padding: '11px 14px', marginBottom: 16, fontSize: 12.5, color: '#2C6E49', fontWeight: 600, lineHeight: 1.5 }}>
-                💝 {t('A neighbour is giving this away. Nothing to pay — just choose how to pick it up, and say thanks in chat!')}
+                💝 {t('A neighbour is giving this away. Nothing to pay — raise your hand, and the giver picks who gets it. Being friendly in chat helps!')}
               </div>
             )}
             <div style={{ fontFamily: "'Spline Sans Mono',monospace", fontSize: 10, color: '#9A9A94', letterSpacing: '.06em', marginBottom: 10 }}>{t('HOW TO EXCHANGE')}</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 9, marginBottom: 20 }}>
-              {PICKUP_OPTS.map((o) => {
+              {pickupOpts.map((o) => {
                 const on = s.pickup === o.key
                 return (
                   <div key={o.key} onClick={() => setPickup(o.key)} className="lok-btn" style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 12, background: on ? '#E8F2F7' : '#F5F5F3', border: `1.5px solid ${on ? 'var(--accent,#000000)' : '#D8D8D4'}`, borderRadius: 0, padding: '12px 14px' }}>
@@ -157,12 +163,16 @@ export default function CheckoutModal() {
               </div>
             )}
 
-            {/* one honest payment rule: money moves at handover, never before */}
+            {/* one honest payment note per mode */}
             {!isFree && (
               <div style={{ display: 'flex', gap: 11, alignItems: 'flex-start', background: '#F5F5F3', border: '1px solid #D8D8D4', padding: '12px 14px', marginBottom: 12 }}>
                 <span style={{ fontSize: 17, flex: 'none' }}>💵</span>
                 <div style={{ fontSize: 12, color: '#4A4B4E', fontWeight: 500, lineHeight: 1.55 }}>
-                  <b>{t('Pay at handover')}</b> — {t("cash, or scan the seller's QR / transfer to their e-wallet (shown to you after the seller accepts). Never pay before the item is in your hands.")}
+                  {isDirect ? (
+                    <><b>{t('Pay when you meet')}</b> — {t('cash, or transfer to the seller (their details appear on your order). Check the item and match the 🔑 code before paying.')}</>
+                  ) : (
+                    <><b>{t('Pay first, collect at the desk')}</b> — {t('the seller’s payment details appear on your order. Transfer, upload your receipt, and collect the item from the LOKITA team once the seller confirms.')}</>
+                  )}
                 </div>
               </div>
             )}
@@ -182,7 +192,7 @@ export default function CheckoutModal() {
               </div>
             </div>}
             <button onClick={coContinue} className="lok-btn" style={{ width: '100%', border: 'none', background: isFree ? '#1E9E5A' : 'var(--accent,#000000)', color: '#F7F3EA', fontFamily: 'inherit', fontWeight: 700, fontSize: 14.5, padding: 14, borderRadius: 0, cursor: 'pointer', boxShadow: '0 8px 20px -8px rgba(0,0,0,.7)' }}>
-              {isFree ? '💝 ' + t('Claim it — FREE') : `${t('Continue')} · ${rp(grand)}`}
+              {isFree ? '🙋 ' + t('Ask for it — FREE') : `${t('Continue')} · ${rp(grand)}`}
             </button>
           </>
         )}

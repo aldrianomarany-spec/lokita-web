@@ -30,6 +30,7 @@ export interface Item {
   isGiveaway?: boolean // Free & Donations — published at Rp 0, no fee
   viewCount?: number // opens by non-owners; shown to the owner only
   sellerCashless?: boolean // seller saved payment details (💳 chip); details themselves stay locked
+  fulfillment?: 'desk' | 'direct' // desk = LOKITA custody · direct = arrange with the seller
 }
 
 // item enriched with proximity fields at render time
