@@ -486,6 +486,30 @@ ping for direct, desk-only shelf cap, check constraint):
   openMessages/openPeople/openRequestChat. Guests & incomplete profiles see
   grid thumbnails only.
 
+Donation review + panel reorg (2026-07-14, **migration 0039** — validated:
+paid-direct blocked, 💝 review notify, direct approve notify, handover queue
++ member guard):
+- EVERY post is pending now (donations too): createListing always inserts
+  'pending'; DB trigger enforce_direct_giveaway_only limits fulfillment
+  'direct' to giveaways (paid items are desk-only — the mode picker in
+  SellModal only renders for giveaways: "I keep the item" vs "LOKITA desk").
+- notify_admins_new_pending branches: 💝 "Donation post to review" (direct)
+  vs 📦 "Item incoming" (desk). notify_seller_review approve body matches.
+- Control Room reorg: LISTINGS · MODERATION moved up (right after
+  analytics), approve label per mode ("post checked" vs "item received"),
+  rows show FREE/desk/direct markers. NEW 🤝 HANDOVER DESK QUEUE
+  (admin_pending_handovers definer fn): one row per paid desk order — 🔑
+  code, item, buyer collects, seller, 💬 chat buttons per party; realtime
+  via subscribeOrders('admin', cb, 'orders-admin-queue') (unique topic!).
+- OrdersView: All/🛒Buying/🏷️Selling tabs (active counts) + per-tab empty
+  states; free orders chip "💝 Free — nothing to pay"; desk orders chip
+  "Transfer to the seller". NotificationsView: the "All" feed groups by
+  CATEGORY (Messages/Order/Item/Price/System with counts); a picked filter
+  still groups by time. Requests: placeholder simplified (budget already
+  live-formats id-ID).
+- Homepage tracker strip generalized: "post waiting for approval" (covers
+  desk + direct-donation pendings).
+
 Remaining / nice-to-have:
 - **Real Midtrans QRIS** — deliberately last; blocked on the owner signing up for
   Midtrans. api/qris scaffolding exists; currently prototype/static-QR mode.

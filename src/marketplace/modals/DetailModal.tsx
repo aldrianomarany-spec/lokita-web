@@ -171,7 +171,7 @@ export default function DetailModal() {
               <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12.5, fontWeight: 700, color: '#1E9E5A', background: '#EAF5EE', border: '1px solid #BFE3CC', padding: '8px 12px', borderRadius: 0 }}>✓ {t('In LOKITA custody — ready for pickup')}</span>
             )}
             {!isOwner && sel.fulfillment === 'direct' && (
-              <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12.5, fontWeight: 700, color: '#2F6B85', background: '#EDF5F9', border: '1px solid #BFDCE8', padding: '8px 12px', borderRadius: 0 }}>🤝 {t('Direct deal — arrange with the seller')}</span>
+              <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12.5, fontWeight: 700, color: '#2F6B85', background: '#EDF5F9', border: '1px solid #BFDCE8', padding: '8px 12px', borderRadius: 0 }}>🤝 {t('The giver hands it over directly')}</span>
             )}
             <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12.5, fontWeight: 600, color: '#1E1E1E', background: '#ECECEA', padding: '8px 12px', borderRadius: 0 }}>{t('Condition')} · {t(sel.cond)}</span>
             <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12.5, fontWeight: 600, color: '#1E1E1E', background: '#ECECEA', padding: '8px 12px', borderRadius: 0 }}>
