@@ -418,6 +418,13 @@ decline notifications fire, plain moderation of active listings doesn't):
   ACTIVE while the seller watches.
 - NOTE: missing Approve buttons in prod = stale tab/old bundle — the code
   shipped in 0748d63; hard refresh after merge+deploy.
+- Pickup requests carry context: OrdersView "💬 Chat the team" now calls
+  chatAdminPickup(order) (context action) — opens the admin thread with the
+  item card attached (pendingAttach → messages.listing_id) and a draft
+  '🤝 Pickup please — "<item>" · order #XXXXXXXX · code YYYYYY. When can I
+  come by?' so the team knows which shelf item to pull. chatAdmin() stays
+  plain (checkout desk-info box). Chat quick replies updated for
+  consignment (LOKITA desk wording — no more Security Post presets).
 
 Remaining / nice-to-have:
 - **Real Midtrans QRIS** — deliberately last; blocked on the owner signing up for

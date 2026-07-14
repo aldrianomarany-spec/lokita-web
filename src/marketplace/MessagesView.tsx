@@ -10,13 +10,13 @@ import { useClickOutside } from '../lib/useClickOutside'
 const QUICK_SELLER = [
   'Still available! 👍',
   'Sorry, it just sold 🙏',
-  "Deal — order it in the app and I'll drop it off",
-  "I'll drop it at the Security Post tomorrow",
+  "Deal — order it in the app, it's already at the LOKITA desk",
+  "I'll bring it to the LOKITA desk tomorrow",
 ]
 const QUICK_BUYER = [
   'Is this still available?',
   'Can you do a lower price?',
-  'When can you drop it at the Security Post?',
+  'Is it at the LOKITA desk already?',
   "Deal — I'll order now 👍",
 ]
 
