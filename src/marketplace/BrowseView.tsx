@@ -7,6 +7,7 @@ import { useIsNarrow } from './useIsMobile'
 import { MASCOT_URL } from '../brand'
 import { useLang } from '../i18n'
 import type { EnrichedItem } from '../types'
+import { errText } from '../lib/err'
 
 // ============================================================================
 // GRID MARKET homepage (design exploration 1a) — crisp neutrals, sharp grid,
@@ -439,7 +440,7 @@ export default function BrowseView() {
                 <div style={{ fontSize: 13, fontWeight: 700, color: '#1E9E5A' }}>✓ {t("Alert saved — we'll notify you when it's posted.")}</div>
               ) : (
                 <button
-                  onClick={() => addAlert(s.query).then(() => setAlertSet(true)).catch((e) => alert(e instanceof Error ? e.message : 'Could not save the alert'))}
+                  onClick={() => addAlert(s.query).then(() => setAlertSet(true)).catch((e) => alert(errText(e, 'Could not save the alert')))}
                   style={{ ...chip(false), padding: '11px 20px', fontSize: 13, borderColor: '#519BB8', color: '#2F6B85' }}
                 >
                   🔔 {t('Alert me when someone posts')} "{s.query}"

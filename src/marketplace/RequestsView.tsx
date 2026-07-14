@@ -4,6 +4,7 @@ import { fetchRequests, createRequest, setRequestStatus, subscribeRequests, type
 import { SELL_CATEGORIES } from '../theme'
 import { Verified } from '../components/Icons'
 import { useLang } from '../i18n'
+import { errText } from '../lib/err'
 
 // Buyers post "looking for X"; anyone can respond via chat.
 const rupiah = (n: number) => 'Rp ' + Number(n).toLocaleString('id-ID')
@@ -68,7 +69,7 @@ export default function RequestsView() {
       setFormOpen(false)
       load()
     } catch (e) {
-      alert(t('Could not post your request:') + ' ' + (e instanceof Error ? e.message : t('unknown error')))
+      alert(t('Could not post your request:') + ' ' + (errText(e, t('unknown error'))))
     } finally {
       setSaving(false)
     }
@@ -81,7 +82,7 @@ export default function RequestsView() {
       await setRequestStatus(r.id, status)
       load()
     } catch (e) {
-      alert(e instanceof Error ? e.message : t('Could not update the request'))
+      alert(errText(e, t('Could not update the request')))
     } finally {
       setBusyId(null)
     }

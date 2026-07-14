@@ -8,6 +8,7 @@ import { useLang } from '../../i18n'
 import Overlay, { stop } from './Overlay'
 import ReportForm from '../ReportForm'
 import { ChevronRight, MapPin, MessageBubble, ShieldCheck, Star, Verified } from '../../components/Icons'
+import { errText } from '../../lib/err'
 
 export default function DetailModal() {
   const { state, closeDetail, chatSeller, openCheckout, openMember, deleteMyListing, toggleSaveItem, goSignup, sendOffer, boostListing } = useM()
@@ -76,7 +77,7 @@ export default function DetailModal() {
       closeDetail()
     } catch (e) {
       setDeleting(false)
-      alert(t('Could not remove listing:') + ' ' + (e instanceof Error ? e.message : t('unknown error')))
+      alert(t('Could not remove listing:') + ' ' + (errText(e, t('unknown error'))))
     }
   }
 
@@ -270,7 +271,7 @@ export default function DetailModal() {
                               }
                             } catch (e) {
                               setBoostState('idle')
-                              alert(t('Could not request the boost:') + ' ' + (e instanceof Error ? e.message : t('unknown error')))
+                              alert(t('Could not request the boost:') + ' ' + (errText(e, t('unknown error'))))
                             }
                           }}
                           style={{ border: '1px solid #519BB8', background: '#FFFFFF', color: '#27607A', fontFamily: 'inherit', fontWeight: 700, fontSize: 12.5, padding: '9px 14px', borderRadius: 0, cursor: 'pointer' }}

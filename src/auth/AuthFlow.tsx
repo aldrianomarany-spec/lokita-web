@@ -15,8 +15,9 @@ import {
   isProfileComplete,
   onAuthStateChange,
 } from '../lib/auth'
+import { errText } from '../lib/err'
 
-const errMsg = (e: unknown) => (e instanceof Error ? e.message : 'Something went wrong. Please try again.')
+const errMsg = (e: unknown) => (errText(e, 'Something went wrong. Please try again.'))
 
 type View = 'login' | 'signup' | 'forgot' | 'reset'
 

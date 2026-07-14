@@ -41,6 +41,7 @@ import {
 import { Verified } from '../components/Icons'
 import { getVerificationDocUrl } from '../lib/auth'
 import { SELL_CATEGORIES } from '../theme'
+import { errText } from '../lib/err'
 
 const rp = (n: number) => 'Rp ' + Math.round(n).toLocaleString('id-ID')
 const mono: React.CSSProperties = { fontFamily: "'Spline Sans Mono',monospace", fontSize: 11, color: '#9A9A94', letterSpacing: '.08em' }
@@ -179,7 +180,7 @@ export default function AdminView() {
       window.setTimeout(() => setBcState('idle'), 6000)
     } catch (e) {
       setBcState('idle')
-      alert('Broadcast failed: ' + (e instanceof Error ? e.message : 'run migration 0029 first?'))
+      alert('Broadcast failed: ' + (errText(e, 'run migration 0029 first?')))
     }
   }
 
@@ -194,7 +195,7 @@ export default function AdminView() {
       await adminSetTickerSettings(next)
     } catch (e) {
       setTickerCfg(prev)
-      alert('Could not save ticker settings: ' + (e instanceof Error ? e.message : 'run migration 0026 first?'))
+      alert('Could not save ticker settings: ' + (errText(e, 'run migration 0026 first?')))
     }
   }
 
@@ -204,7 +205,7 @@ export default function AdminView() {
       const url = await getVerificationDocUrl(m.verification_doc_url, 300)
       setDocView({ id: m.id, name: m.name, url })
     } catch (e) {
-      alert('Could not open the ID photo: ' + (e instanceof Error ? e.message : 'unknown error'))
+      alert('Could not open the ID photo: ' + (errText(e, 'unknown error')))
     }
   }
 
@@ -224,7 +225,7 @@ export default function AdminView() {
       setMembers(m)
       setReports(r)
     } catch (e) {
-      setErr(e instanceof Error ? e.message : 'Could not load admin data')
+      setErr(errText(e, 'Could not load admin data'))
     }
   }, [])
 
@@ -239,7 +240,7 @@ export default function AdminView() {
       await load()
       refreshReports() // keep the sidebar badge in sync
     } catch (e) {
-      alert('Action failed: ' + (e instanceof Error ? e.message : 'unknown error'))
+      alert('Action failed: ' + (errText(e, 'unknown error')))
     } finally {
       setBusyId(null)
     }
@@ -548,7 +549,7 @@ export default function AdminView() {
                 setBImage(null)
                 fetchAdminBanners().then(setBannersA).catch(() => {})
               } catch (e) {
-                alert('Could not publish: ' + (e instanceof Error ? e.message : 'run migration 0021 first?'))
+                alert('Could not publish: ' + (errText(e, 'run migration 0021 first?')))
               } finally {
                 setBSaving(false)
               }
@@ -621,7 +622,7 @@ export default function AdminView() {
                 setTForm({ title: '', target: 'none', value: '' })
                 fetchAdminBanners().then(setBannersA).catch(() => {})
               } catch (e) {
-                alert('Could not publish: ' + (e instanceof Error ? e.message : 'run migration 0023 first?'))
+                alert('Could not publish: ' + (errText(e, 'run migration 0023 first?')))
               } finally {
                 setTSaving(false)
               }
