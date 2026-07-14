@@ -163,7 +163,10 @@ export default function DetailModal() {
                   sel.sellerVerified && <Verified size={14} />
                 )}
               </div>
-              <div style={{ fontSize: 12, color: '#8B8B86', fontWeight: 600, marginTop: 2, fontFamily: "'Spline Sans Mono',monospace" }}>{sel.sellerVerified ? t('Dorm-Verified') : t('Student')} · {sel.building || 'JIU'} · {t('chat in-app')}</div>
+              <div style={{ fontSize: 12, color: '#8B8B86', fontWeight: 600, marginTop: 2, fontFamily: "'Spline Sans Mono',monospace" }}>
+                {sel.sellerVerified ? t('Dorm-Verified') : t('Student')} · {sel.building || 'JIU'} · {t('chat in-app')}
+                {sel.sellerCashless ? <span style={{ color: '#1E9E5A' }}> · 💳 {t('Cashless ready')}</span> : null}
+              </div>
             </div>
             <ChevronRight size={18} style={{ color: '#9A9A94' }} />
           </div>

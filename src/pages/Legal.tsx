@@ -98,6 +98,12 @@ export function Privacy() {
         <b>Never visible to other members:</b> your WhatsApp number, email, student ID number, room number, and your verification
         document. All contact between members happens through in-app chat.
       </p>
+      <p style={p}>
+        <b>Payment details (optional):</b> if you save how buyers can pay you (e-wallet number, bank account, personal QR code),
+        those details are shown to exactly one person — a buyer whose order you have accepted, and only while that trade is
+        active. They are never on your public profile, never in notifications, and LOKITA never holds or moves the money itself.
+        Other members only see a "💳 Cashless ready" mark, never the details. You can edit or delete them anytime.
+      </p>
       <h2 style={h2}>3. What we use it for</h2>
       <p style={p}>
         To run the marketplace: showing your listings to neighbours, matching orders, delivering chats and notifications, verifying

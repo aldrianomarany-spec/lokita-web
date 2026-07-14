@@ -300,6 +300,21 @@ local harness with functional tests for every mechanism):
   api/health.js (UptimeRobot target), docs/OPERATIONS.md (owner routines).
 - NOTE: user must run migration 0029 + add CRON_SECRET in Vercel + redeploy.
 
+Payments phase 1 (2026-07-14, **migration 0030** — validated in harness incl.
+all RLS states): Option E model — item money moves buyer→seller directly
+(cash or seller's own e-wallet/QR); only boosts+protection fees will flow
+through Midtrans (phase 2, awaiting owner's Sandbox keys in Vercel as
+MIDTRANS_SERVER_KEY + VITE_MIDTRANS_CLIENT_KEY).
+- payment_details table: e-wallet/bank/QR-as-data-url (NO storage bucket —
+  the QR lives inline in the RLS-protected row). Reveal policy: owner + a
+  buyer with an order in status paid/dropped_off ONLY. profiles.
+  accepts_cashless synced by trigger; public_profiles recreated with it.
+- UI: ProfileView "💳 How buyers can pay you" editor (fileToQrDataUrl in
+  img.ts); OrdersView buyer card shows seller payment methods + scannable QR
+  while active (hidden for qris-paid orders); 💳 chips on feed cards +
+  DetailModal seller card (sellerCashless via public_profiles flag);
+  privacy-policy paragraph added.
+
 Remaining / nice-to-have:
 - **Real Midtrans QRIS** — deliberately last; blocked on the owner signing up for
   Midtrans. api/qris scaffolding exists; currently prototype/static-QR mode.

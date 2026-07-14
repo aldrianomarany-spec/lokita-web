@@ -342,6 +342,7 @@ interface SellerLite {
   verification_status: string
   role?: string
   last_seen_at?: string | null
+  accepts_cashless?: boolean
 }
 
 function mapRow(r: FeedRow, seller: SellerLite | undefined, uid: string | undefined, viewerFloor: string | null, i: number): EnrichedItem {
@@ -379,6 +380,7 @@ function mapRow(r: FeedRow, seller: SellerLite | undefined, uid: string | undefi
     ownerId: r.seller_id,
     isGiveaway: !!r.is_giveaway,
     viewCount: r.view_count ?? 0,
+    sellerCashless: !!seller?.accepts_cashless,
   }
 }
 
@@ -420,7 +422,7 @@ export async function fetchFeed(opts: FeedOpts, viewerFloor: string | null): Pro
   const rows = (data as FeedRow[]) || []
   const sellerIds = [...new Set(rows.map((r) => r.seller_id))]
   const { data: people } = sellerIds.length
-    ? await supabase.from('public_profiles').select('id, name, profile_photo_url, verification_status, role, last_seen_at').in('id', sellerIds)
+    ? await supabase.from('public_profiles').select('id, name, profile_photo_url, verification_status, role, last_seen_at, accepts_cashless').in('id', sellerIds)
     : { data: [] as SellerLite[] }
   const byId = new Map((people as SellerLite[] | null || []).map((p) => [p.id, p]))
   const items = rows.map((r, i) => mapRow(r, byId.get(r.seller_id), user?.id, viewerFloor, i))
@@ -1844,4 +1846,43 @@ export async function adminSetMoveoutActive(on: boolean): Promise<void> {
   const { error } = await supabase.from('site_settings').upsert({ key: 'moveout', value: { active: on }, updated_at: new Date().toISOString() })
   if (error) throw error
   logAdmin('moveout', null, on ? 'season ON' : 'season OFF')
+}
+
+// ===========================================================================
+// 0030 — seller payment details (privacy-first, Option E)
+// LOKITA only DISPLAYS these; money moves wallet-to-wallet between students.
+// RLS: owner + a buyer with an accepted still-active order — nobody else.
+// ===========================================================================
+export interface PaymentDetails {
+  ewallet_provider: string | null
+  ewallet_number: string | null
+  bank_name: string | null
+  bank_account: string | null
+  qris_data_url: string | null
+}
+
+export const EWALLET_PROVIDERS = ['GoPay', 'OVO', 'DANA', 'ShopeePay', 'LinkAja'] as const
+
+export async function fetchMyPaymentDetails(): Promise<PaymentDetails | null> {
+  const uid = await getUserId()
+  if (!uid) return null
+  const { data, error } = await supabase.from('payment_details').select('*').eq('user_id', uid).maybeSingle()
+  if (error) return null
+  return (data as PaymentDetails) || null
+}
+
+export async function saveMyPaymentDetails(d: PaymentDetails): Promise<void> {
+  const uid = await getUserId()
+  if (!uid) throw new Error('Not signed in')
+  const { error } = await supabase.from('payment_details').upsert({ user_id: uid, ...d, updated_at: new Date().toISOString() })
+  if (error) throw error
+}
+
+// buyer side: returns the seller's details ONLY while an accepted order is
+// active (RLS decides) — null means "cash at handover"
+export async function fetchSellerPayment(sellerId: string): Promise<PaymentDetails | null> {
+  const { data, error } = await supabase.from('payment_details').select('*').eq('user_id', sellerId).maybeSingle()
+  if (error || !data) return null
+  const p = data as PaymentDetails
+  return p.ewallet_number || p.bank_account || p.qris_data_url ? p : null
 }
