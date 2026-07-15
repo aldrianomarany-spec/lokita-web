@@ -555,6 +555,15 @@ price, fees-on edit recomputes once, no double fee on unchanged price):
   after the 20-slot fill (quota consumed; the limit itself is tested
   earlier with user 01).
 
+Today's Pick = paid placement (2026-07-15, no SQL):
+- BrowseView hero renders ONLY when a FEATURED item exists (list.find
+  isFeatured) — no more free spotlight for the newest item. Label is always
+  "⭐ TODAY'S PICK". Two ways in: seller pays a 🚀 boost → admin approves
+  (adminResolveBoost sets is_featured), or the admin stars it manually —
+  moderation button relabeled "☆ Today's Pick" / "★ Remove Today's Pick"
+  (adminSetFeatured). Admin banners still take priority over the hero;
+  expire_featured() sweeps paid picks when their window ends.
+
 Remaining / nice-to-have:
 - **Real Midtrans QRIS** — deliberately last; blocked on the owner signing up for
   Midtrans. api/qris scaffolding exists; currently prototype/static-QR mode.
