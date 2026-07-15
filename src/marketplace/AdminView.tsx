@@ -431,7 +431,7 @@ export default function AdminView() {
                 <span style={{ ...mono, fontSize: 9, color: chip.fg, background: chip.bg, padding: '4px 9px', borderRadius: 0, flex: 'none' }}>{l.status.toUpperCase()}</span>
                 <div style={{ display: 'flex', gap: 7, flex: 'none', flexWrap: 'wrap' }}>
                   {l.status === 'active' && (
-                    <SmallBtn label={l.is_featured ? '★ Unfeature' : '☆ Feature'} busy={busyId === l.id} onClick={() => act(l.id, () => adminSetFeatured(l.id, !l.is_featured))} />
+                    <SmallBtn label={l.is_featured ? "★ Remove Today's Pick" : "☆ Today's Pick"} busy={busyId === l.id} onClick={() => act(l.id, () => adminSetFeatured(l.id, !l.is_featured))} />
                   )}
                   {l.status === 'pending' && (
                     <>

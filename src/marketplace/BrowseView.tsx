@@ -148,11 +148,13 @@ export default function BrowseView() {
   }, [banners.length, slide])
   const activeSlide = banners.length ? slide % banners.length : 0
 
-  // hero: top item (featured sorts first) gets the dark promo panel — but only
-  // when no admin banner occupies the slot, so the item stays in the grid
-  const showHero = !filtersActive && !s.feedLoading && list.length >= 3 && banners.length === 0
-  const hero = showHero ? list[0] : null
-  const gridItems = hero ? list.slice(1) : list
+  // hero (Today's Pick): PAID placement only — a listing appears here solely
+  // when it's FEATURED (seller paid for a boost the admin approved, or the
+  // admin starred it via ☆ Feature in the Control Room). No featured item →
+  // no hero; nobody gets the spotlight for free. Admin banners take priority.
+  const showHero = !filtersActive && !s.feedLoading && banners.length === 0
+  const hero = showHero ? list.find((i) => i.isFeatured) || null : null
+  const gridItems = hero ? list.filter((i) => i.id !== hero.id) : list
   const bannerCta = (b: BannerRow) => {
     if (b.target_type === 'category' && b.target_value) selectCat(b.target_value)
     else if (b.target_type === 'listing' && b.target_value) openListingById(b.target_value)
@@ -270,7 +272,7 @@ export default function BrowseView() {
           <div style={{ padding: isNarrow ? '26px 22px' : '36px 32px', display: 'flex', flexDirection: 'column', gap: 14, justifyContent: 'center' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
               <span style={{ fontFamily: "'Spline Sans Mono',monospace", fontWeight: 600, fontSize: 10, letterSpacing: 1, background: GOLD, color: '#FFFFFF', padding: '3px 8px' }}>
-                {hero.isFeatured ? t('FEATURED') : t("TODAY'S PICK")}
+                ⭐ {t("TODAY'S PICK")}
               </span>
               <span style={{ fontFamily: "'Spline Sans Mono',monospace", fontWeight: 500, fontSize: 11, color: '#9A9A94' }}>{hero.seller}{hero.sellerVerified ? ' · ' + t('Dorm-Verified') : ''}</span>
             </div>
