@@ -7,6 +7,7 @@ import { tagStyle } from '../tagStyle'
 import { useIsPhone } from '../useIsMobile'
 import { useLang } from '../../i18n'
 import Overlay, { stop } from './Overlay'
+import EditListingModal from './EditListingModal'
 import ReportForm from '../ReportForm'
 import { ChevronRight, MapPin, MessageBubble, ShieldCheck, Star, Verified } from '../../components/Icons'
 import { errText } from '../../lib/err'
@@ -14,6 +15,7 @@ import { errText } from '../../lib/err'
 export default function DetailModal() {
   const { state, closeDetail, chatSeller, openCheckout, openMember, deleteMyListing, toggleSaveItem, goSignup, sendOffer, boostListing, openProfile } = useM()
   const [deleting, setDeleting] = useState(false)
+  const [editOpen, setEditOpen] = useState(false)
   const [photoIdx, setPhotoIdx] = useState(0)
   const [copied, setCopied] = useState(false)
   const [offerOpen, setOfferOpen] = useState(false)
@@ -323,9 +325,13 @@ export default function DetailModal() {
                     </div>
                   )}
                 </div>
+                <button className="lok-btn" onClick={() => setEditOpen(true)} style={{ border: '1px solid #C9C9C5', background: '#F5F5F3', color: '#000000', fontFamily: 'inherit', fontWeight: 700, fontSize: 14.5, padding: 14, borderRadius: 0, cursor: 'pointer' }}>
+                  ✏️ {t('Edit listing')}
+                </button>
                 <button className="lok-btn" onClick={onDelete} disabled={deleting} style={{ border: '1px solid #E4C4B8', background: '#FBEEE9', color: '#C0492A', fontFamily: 'inherit', fontWeight: 700, fontSize: 14.5, padding: 14, borderRadius: 0, cursor: 'pointer' }}>
                   {deleting ? t('Removing…') : t('Remove listing')}
                 </button>
+                {editOpen && <EditListingModal item={sel} onClose={() => setEditOpen(false)} />}
               </>
             ) : (
               <>

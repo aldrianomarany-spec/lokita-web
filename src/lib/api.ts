@@ -203,6 +203,34 @@ export async function fetchMyListings(): Promise<DbListing[]> {
   }))
 }
 
+// Owner edits their listing (title/price/details — photos unchanged, 0040).
+// RLS restricts this to the owner; the fee trigger recomputes on price change.
+export interface ListingEdits {
+  title: string
+  priceNum: number
+  category: string
+  condition: string
+  building: string
+  floor: string
+  description: string
+}
+export async function updateListing(id: string, e: ListingEdits): Promise<void> {
+  assertClean(e.title, e.description)
+  const { error } = await supabase
+    .from('listings')
+    .update({
+      title: e.title,
+      price: e.priceNum,
+      category: e.category ? e.category.toLowerCase() : null,
+      condition: e.condition || null,
+      building: e.building ? BUILDING_CODE[e.building] ?? null : null,
+      floor: e.floor || null,
+      description: e.description || null,
+    })
+    .eq('id', id)
+  if (error) throw error
+}
+
 // The seller's live shelf tracker — how many of their items sit with the
 // review desk (pending) vs on the market (active). Ids only, cheap to poll.
 export async function fetchMyShelf(): Promise<{ pending: number; active: number } | null> {

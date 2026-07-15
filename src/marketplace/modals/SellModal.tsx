@@ -319,7 +319,7 @@ export default function SellModal() {
           />
           <span style={{ fontSize: 12, color: '#4A4B4E', fontWeight: 600, lineHeight: 1.55 }}>
             {effMode === 'desk'
-              ? t('I agree to the consignment terms: my post goes live only after I hand the item to the LOKITA team at the desk, I can keep max 3 items on the shelf, and I’ll collect it back if it doesn’t sell.')
+              ? t('I agree to the consignment terms: my post goes live only after I hand the item to the LOKITA team at the desk, I can keep max 20 items on the shelf, and I’ll collect it back if it doesn’t sell.')
               : t('I agree to the LOKITA rules: honest photos & description, the team reviews my post before it goes live, and I arrange the handover with the receiver myself.')}{' '}
             <a href="/terms" target="_blank" rel="noreferrer" onClick={stop} style={{ color: '#2F6B85', fontWeight: 700 }}>{t('Full terms')}</a>
           </span>

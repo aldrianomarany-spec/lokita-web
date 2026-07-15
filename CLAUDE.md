@@ -538,6 +538,23 @@ Launch-fresh polish (2026-07-14, no SQL migrations — reset script updated):
   the protect trigger may block SQL deletes → dashboard fallback).
 - Mobile: sell mode cards wrap (flex 1 1 170px); admin rows already wrap.
 
+Listing edits + shelf 20 (2026-07-15, **migration 0040** — validated:
+shelf cap 20 incl. 21st blocked, direct bypass, fees-off edit keeps typed
+price, fees-on edit recomputes once, no double fee on unchanged price):
+- ✏️ EditListingModal (modals/EditListingModal.tsx): owner edits title/
+  price (ask)/category/condition/building/floor/description; photos stay.
+  Opened from DetailModal owner panel ("Edit listing" above Remove, z=95
+  nested overlay). api.updateListing; sel patched in place + reloadFeed.
+  Giveaways: price field hidden, ask stays 0. Floor prefill maps the
+  display label back to the code.
+- Shelf cap 3 → 20 (enforce_seller_ready; UI copy swept: SellModal
+  agreement, Guide step, /terms). Daily post rate limit stays 10.
+- apply_platform_fee trigger now BEFORE INSERT OR UPDATE OF price with an
+  unchanged-price guard — price edits recompute the fee when fees are ON,
+  never double-charge. HARNESS: run40.sh disables trg_rate_limit_listings
+  after the 20-slot fill (quota consumed; the limit itself is tested
+  earlier with user 01).
+
 Remaining / nice-to-have:
 - **Real Midtrans QRIS** — deliberately last; blocked on the owner signing up for
   Midtrans. api/qris scaffolding exists; currently prototype/static-QR mode.

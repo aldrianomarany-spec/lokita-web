@@ -59,7 +59,7 @@ export default function GuideView() {
       <div style={sectionCap}>🏷️ {t('SELLING — 5 STEPS')}</div>
       <div style={card}>
         <Step n={1} title={t('Post your item in under a minute')} body={t('Tap Sell, add up to 5 photos (first one is the cover), pick a category and condition, set your price.')} />
-        <Step n={2} title={t('Bring it to the LOKITA desk')} body={t('Your post stays pending until you hand the item to the team (arrange the time in chat). It goes live the moment they receive it — max 3 items on the shelf at once.')} />
+        <Step n={2} title={t('Bring it to the LOKITA desk')} body={t('Your post stays pending until you hand the item to the team (arrange the time in chat). It goes live the moment they receive it — max 20 items on the shelf at once.')} />
         <Step n={3} title={t('Answer chats fast')} body={t('Use quick replies and counter offers. Fast, friendly sellers get better ratings — and ratings earn the ⭐ Top Seller badge.')} />
         <Step n={4} title={t('Got an order? Confirm the payment')} body={t('The buyer transfers straight to you and uploads a receipt. Check your account, tap "Money received — confirm ✓", and the team handles the handover.')} />
         <Step n={5} title={t('Get paid & reviewed')} body={t('Once the buyer confirms pickup the trade completes. Want more eyes? Tap 🚀 Boost on your listing for the FEATURED slot.')} />

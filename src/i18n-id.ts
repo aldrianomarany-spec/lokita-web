@@ -77,7 +77,7 @@ export const ID: Record<string, string> = {
   'HOW-TO': 'PANDUAN',
   'How LOKITA works': 'Cara kerja LOKITA',
   'Bring it to the LOKITA desk': 'Bawa ke meja LOKITA',
-  'Your post stays pending until you hand the item to the team (arrange the time in chat). It goes live the moment they receive it — max 3 items on the shelf at once.': 'Postinganmu berstatus menunggu sampai kamu serahkan barangnya ke tim (atur waktunya lewat chat). Langsung tayang begitu diterima — maksimal 3 barang di rak sekaligus.',
+  'Your post stays pending until you hand the item to the team (arrange the time in chat). It goes live the moment they receive it — max 20 items on the shelf at once.': 'Postinganmu berstatus menunggu sampai kamu serahkan barangnya ke tim (atur waktunya lewat chat). Langsung tayang begitu diterima — maksimal 20 barang di rak sekaligus.',
   'Message the seller (the product card attaches automatically) or tap 💰 Make an offer to propose your price.': 'Chat penjualnya (kartu produk terlampir otomatis) atau ketuk 💰 Ajukan tawaran untuk mengusulkan hargamu.',
   'No prohibited items: weapons, drugs, alcohol, counterfeits, or anything illegal.': 'Tanpa barang terlarang: senjata, narkoba, alkohol, barang palsu, atau apa pun yang ilegal.',
   'Notifications that ring': 'Notifikasi yang berbunyi',
@@ -709,7 +709,7 @@ export const ID: Record<string, string> = {
   'Chat the team — arrange drop-off': 'Chat tim — atur pengantaran',
   "Done — I'll drop it by later": 'Selesai — nanti aku antar',
   "You're posting in Free & Donations — items here are always free.": 'Kamu posting di Gratis & Donasi — barang di sini selalu gratis.',
-  'I agree to the consignment terms: my post goes live only after I hand the item to the LOKITA team at the desk, I can keep max 3 items on the shelf, and I’ll collect it back if it doesn’t sell.': 'Saya setuju dengan ketentuan konsinyasi: postingan saya tayang hanya setelah saya serahkan barangnya ke tim LOKITA di meja, maksimal 3 barang di rak, dan saya ambil kembali kalau tidak laku.',
+  'I agree to the consignment terms: my post goes live only after I hand the item to the LOKITA team at the desk, I can keep max 20 items on the shelf, and I’ll collect it back if it doesn’t sell.': 'Saya setuju dengan ketentuan konsinyasi: postingan saya tayang hanya setelah saya serahkan barangnya ke tim LOKITA di meja, maksimal 20 barang di rak, dan saya ambil kembali kalau tidak laku.',
   'Full terms': 'Ketentuan lengkap',
   'Tick the agreement above to post ↑': 'Centang persetujuan di atas untuk posting ↑',
   'How it works: post it here, bring the item to the LOKITA desk, and it goes live once the team receives it — buyers know every item is really there.': 'Cara kerjanya: posting di sini, bawa barangnya ke meja LOKITA, dan tayang setelah tim menerimanya — pembeli tahu setiap barang benar-benar ada.',
@@ -799,4 +799,9 @@ export const ID: Record<string, string> = {
   'Free items are never first-come-first-served — everyone can raise a hand and the giver picks. Friendly chat helps!': 'Barang gratis bukan siapa cepat dia dapat — semua bisa angkat tangan dan pemberi yang memilih. Ramah di chat membantu!',
   'Members-only details': 'Detail khusus anggota',
   'Guests see only thumbnails. Item details, chat and trading unlock after you sign up and complete your profile.': 'Tamu hanya melihat thumbnail. Detail barang, chat, dan transaksi terbuka setelah kamu daftar dan melengkapi profil.',
+  // ---- 0040 edit listing ----
+  'Edit listing': 'Edit postingan',
+  'Fix the title, price or details. Photos stay as posted — remove and repost if the photos themselves are wrong.': 'Perbaiki judul, harga, atau detailnya. Foto tetap seperti saat posting — hapus dan posting ulang kalau fotonya yang salah.',
+  'Save changes ✓': 'Simpan perubahan ✓',
+  'Could not save.': 'Tidak bisa menyimpan.',
 }

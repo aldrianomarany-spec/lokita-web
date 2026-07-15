@@ -58,7 +58,7 @@ export function Terms() {
       <p style={p}>
         Selling on LOKITA is consignment: <b>your post goes live only after you hand the item to the LOKITA team at the desk</b>
         (location and hours are shown in the app — arrange a time via chat). Until then it stays "pending". You can keep at most
-        <b> 3 items</b> on the LOKITA shelf at once. A pending post that never reaches the desk <b>expires automatically after 5
+        <b> 20 items</b> on the LOKITA shelf at once. A pending post that never reaches the desk <b>expires automatically after 5
         days</b>. If an item hasn't sold after a while, the team will remind you to lower the price or collect it back — items on
         the shelf remain your property, and you can take them back anytime.
       </p>
